@@ -1,0 +1,22 @@
+services:
+  db:
+    # Always pin PostgreSQL 18 for local dev to match production
+    image: postgres:18-alpine
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB: goctrithuc
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      - dev-network
+
+volumes:
+  pgdata:
+
+
+networks:
+  dev-network:
+    driver: bridge

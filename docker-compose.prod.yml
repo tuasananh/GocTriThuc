@@ -1,0 +1,40 @@
+services:
+  db:
+    image: postgres:18-alpine
+    restart: always # Automatically restarts if the server reboots
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: goctrithuc
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      - goctrithuc-network
+
+  app:
+    # Instead of building locally, pull the pre-packaged App from GitHub Container Registry
+    # Use: 'docker compose -f docker-compose.prod.yml pull' to fetch the latest
+    image: ghcr.io/${GITHUB_REPOSITORY}/goctrithuc-app:latest
+    restart: always
+    ports:
+      - "8080:8080"
+    depends_on:
+      - db
+    environment:
+      # These pass your server's .env file directly into the Spring Boot container
+      - DB_HOST=db
+      - POSTGRES_DB=goctrithuc
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
+      - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
+    networks:
+      - goctrithuc-network
+
+volumes:
+  pgdata:
+
+
+networks:
+  goctrithuc-network:
+    driver: bridge
