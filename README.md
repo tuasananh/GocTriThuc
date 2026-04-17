@@ -19,12 +19,23 @@
 - pnpm
 - Docker và Docker Compose
 
+### 0. Cài đặt biến môi trường (.env)
+
+Trước khi chạy dự án, bạn cần tạo file cấu hình biến môi trường `.env` ở thư mục gốc của dự án.
+Bạn có thể copy file mẫu đã được cung cấp để bắt đầu:
+
+```bash
+cp .env.example .env
+```
+
+Sau đó, hãy mở file `.env` vừa tạo ra và cập nhật các thông tin cài đặt (ví dụ: `POSTGRES_PORT`, `POSTGRES_USER`, `POSTGRES_PASSWORD`, cấu hình OAuth cho Google...).
+
 ### 1. Khởi chạy Database
 
 Dự án sử dụng PostgreSQL thông qua Docker (môi trường dev).
 
 ```bash
-# Tạo file .env chứa các biến môi trường cấu hình database nếu cần (ví dụ POSTGRES_USER, POSTGRES_PASSWORD)
+# Đảm bảo đã setup file .env ở bước trên
 docker compose -f docker-compose.dev.yml up -d
 ```
 
