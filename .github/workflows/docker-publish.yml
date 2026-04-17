@@ -22,7 +22,7 @@ jobs:
         with: { node-version: 24 }
 
       - name: Install pnpm
-        uses: pnpm/action-setup@v3
+        uses: pnpm/action-setup@v6
         with: { version: 10 }
 
       - name: Setup Java 21
