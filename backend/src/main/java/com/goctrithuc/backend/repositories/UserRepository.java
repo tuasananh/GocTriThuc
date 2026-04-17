@@ -9,4 +9,6 @@ import org.springframework.stereotype.Repository;
 public interface UserRepository extends JpaRepository<User, Long> {
   // Spring automatically writes the SQL: SELECT * FROM users WHERE email = ?
   Optional<User> findByEmail(String email);
+
+  boolean existsByUsername(String username);
 }

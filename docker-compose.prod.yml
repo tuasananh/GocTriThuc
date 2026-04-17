@@ -14,7 +14,7 @@ services:
   app:
     # Instead of building locally, pull the pre-packaged App from GitHub Container Registry
     # Use: 'docker compose -f docker-compose.prod.yml pull' to fetch the latest
-    image: ghcr.io/${GITHUB_REPOSITORY}/goctrithuc-app:latest
+    image: ghcr.io/tuasananh/goctrithuc/goctrithuc-app:latest
     restart: always
     ports:
       - "8080:8080"

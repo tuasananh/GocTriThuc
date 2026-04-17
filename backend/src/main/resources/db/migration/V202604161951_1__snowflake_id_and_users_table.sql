@@ -31,7 +31,7 @@ $$;
 CREATE TABLE users (
     id BIGINT PRIMARY KEY DEFAULT generate_snowflake_id(),
     email TEXT UNIQUE NOT NULL,
-    display_name TEXT UNIQUE NOT NULL,
+    display_name TEXT NOT NULL,
     username TEXT UNIQUE NOT NULL,
     avatar_url TEXT,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
