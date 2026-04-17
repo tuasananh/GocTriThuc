@@ -1,0 +1,73 @@
+name: Build & Publish Full-Stack App
+
+on:
+  push:
+    branches: ["main"]
+  workflow_dispatch: # Allows manual trigger from GH Actions tab
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    permissions:
+      packages: write
+      contents: read
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      # 1. SETUP ENVIRONMENTS
+      - name: Setup Node.js 24
+        uses: actions/setup-node@v4
+        with: { node-version: 24 }
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v3
+        with: { version: 10 }
+
+      - name: Setup Java 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: "21"
+          distribution: "temurin"
+          cache: maven
+
+      # 2. BUILD FRONTEND
+      - name: Build Frontend
+        working-directory: ./frontend
+        run: |
+          pnpm install --frozen-lockfile
+          pnpm build
+
+      # 3. MOVE FRONTEND TO BACKEND STATIC FOLDER
+      - name: Inject Frontend into Spring Boot
+        run: |
+          mkdir -p backend/src/main/resources/static
+          cp -r frontend/dist/* backend/src/main/resources/static/
+
+      # 4. BUILD BACKEND FAT JAR
+      - name: Build Backend (with embedded Frontend)
+        working-directory: ./backend
+        run: ./mvnw -B clean package -DskipTests
+
+      # 5. DOCKER REGISTRY LOGIN
+      - name: Login to GitHub Container Registry (GHCR)
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # 6. BUILD DOCKER IMAGE & PUBLISH
+      # lowercase github.repository is required by docker
+      - name: Convert repository string to lowercase
+        id: repo_string
+        run: echo "repo=$(echo ${{ github.repository }} | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
+
+      - name: Build and Push unified Docker Image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./backend
+          # The Dockerfile in /backend will now pick up the fat .jar packaged in step 4
+          push: true
+          tags: ghcr.io/${{ env.repo }}/goctrithuc-app:latest

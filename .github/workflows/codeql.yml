@@ -1,0 +1,44 @@
+name: CodeQL Security Scan
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+    paths-ignore:
+      - "**/*.md"
+      - "**/*.svg"
+      - "**/*.png"
+      - ".github/dependabot.yml"
+  schedule:
+    - cron: "30 1 * * 0" # Runs weekly on Sunday at 1:30 AM UT
+
+jobs:
+  analyze:
+    name: Analyze codebase
+    runs-on: ubuntu-latest
+    permissions:
+      security-events: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # Add this step to set up Java 21
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: "21"
+          distribution: "temurin"
+          cache: "maven"
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: java, javascript, typescript # Scans Spring Boot and React
+
+      - name: Autobuild
+        uses: github/codeql-action/autobuild@v3
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v3

@@ -1,0 +1,10 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://${DB_HOST}:5432/goctrithuc
+
+  jpa:
+    show-sql: false
+
+app:
+  frontend:
+    oauth2-redirect-uri: /dashboard
