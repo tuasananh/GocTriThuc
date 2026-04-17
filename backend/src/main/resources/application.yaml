@@ -1,0 +1,33 @@
+spring:
+  config:
+    # Tell Spring to import your root .env file
+    import: optional:file:../.env[.properties]
+
+  application:
+    name: backend
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/goctrithuc
+    username: ${POSTGRES_USER}
+    password: ${POSTGRES_PASSWORD}
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: true
+
+  flyway:
+    enabled: true
+
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            client-id: ${GOOGLE_CLIENT_ID} # Get this from Google Cloud Console
+            client-secret: ${GOOGLE_CLIENT_SECRET}
+            scope: email, profile
+
+app:
+  frontend:
+    oauth2-redirect-uri: http://localhost:5173/dashboard
