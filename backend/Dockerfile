@@ -16,7 +16,8 @@ WORKDIR /app
 COPY target/*.jar app.jar
 
 # Expose the standard web port
-EXPOSE 8080
+ARG APP_PORT=8080
+EXPOSE ${APP_PORT}
 
 # Run the app, explicitly telling it to use the 'prod' profile
 ENTRYPOINT ["java", "-Dspring.profiles.active=prod", "-jar", "app.jar"]

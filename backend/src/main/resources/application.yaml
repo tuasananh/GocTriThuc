@@ -1,3 +1,6 @@
+server:
+  port: ${APP_PORT:8080}
+
 spring:
   config:
     # Tell Spring to import your root .env file
@@ -30,4 +33,4 @@ spring:
 
 app:
   frontend:
-    oauth2-redirect-uri: http://localhost:5173/dashboard
+    oauth2-redirect-uri: http://localhost:${FRONTEND_PORT:5173}/dashboard

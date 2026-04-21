@@ -17,11 +17,12 @@ services:
     image: ghcr.io/tuasananh/goctrithuc/goctrithuc-app:latest
     restart: always
     ports:
-      - "8080:8080"
+      - "${APP_PORT:-8080}:${APP_PORT:-8080}"
     depends_on:
       - db
     environment:
       # These pass your server's .env file directly into the Spring Boot container
+      - APP_PORT=${APP_PORT:-8080}
       - DB_HOST=db
       - POSTGRES_DB=goctrithuc
       - POSTGRES_USER=${POSTGRES_USER}
