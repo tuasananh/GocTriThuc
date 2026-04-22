@@ -1,122 +1,37 @@
-import { BrowserRouter, Routes, Route, Link, useNavigate } from 'react-router-dom';
-import { useState, useEffect } from 'react';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import axios from 'axios';
+import { MainLayout } from '@/layouts/MainLayout';
+import { LandingPage } from '@/pages/LandingPage';
+import { LoginPage } from '@/pages/LoginPage';
+// Dashboard component can be implemented later or replaced, keeping it for existing route validity
+import { Dashboard } from '@/components/Dashboard';
+import { GuestRoute } from '@/components/GuestRoute';
 
-// 1. Configure Axios globally so it always sends your session and CSRF cookies
+// Configure Axios globally to send session and CSRF cookies
 axios.defaults.withCredentials = true;
 axios.defaults.xsrfCookieName = 'XSRF-TOKEN';
 axios.defaults.xsrfHeaderName = 'X-XSRF-TOKEN';
 
-// Define the shape of our User data
-interface User {
-  authenticated: boolean;
-  name?: string;
-  email?: string;
-  avatar?: string;
-}
-
-const Landing = () => (
-  <div style={{ textAlign: 'center', marginTop: '50px' }}>
-    <h1>Welcome to the LMS</h1>
-    <Link to="/login">
-      <button>Go to Login</button>
-    </Link>
-  </div>
-);
-
-const Login = () => {
-  const handleGoogleLogin = () => {
-    // Rely on the Vite proxy to forward this to Spring Boot
-    window.location.href = '/oauth2/authorization/google';
-  };
-
-  return (
-    <div style={{ textAlign: 'center', marginTop: '50px' }}>
-      <h2>Sign In</h2>
-      <button onClick={handleGoogleLogin}>Log in with Google</button>
-    </div>
-  );
-};
-
-const Dashboard = () => {
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
-  const navigate = useNavigate();
-
-  useEffect(() => {
-    // The moment the Dashboard loads, ask Spring Boot for the user data
-    axios
-      .get('/api/users/me')
-      .then((response) => {
-        if (response.data.authenticated) {
-          // User is logged in! Save their data to state.
-          setUser(response.data);
-        } else {
-          // Not logged in. Kick them back to the login screen.
-          navigate('/login');
-        }
-      })
-      .catch((error) => {
-        console.error('Error fetching user session:', error);
-        navigate('/login');
-      })
-      .finally(() => {
-        setLoading(false);
-      });
-  }, [navigate]);
-
-  // --- NEW LOGOUT FUNCTION ---
-  const handleLogout = async () => {
-    try {
-      // 1. Send the POST request to destroy the session and cookies
-      await axios.post('/api/logout');
-
-      // 2. Clear out any local React state (optional, but good practice)
-      setUser(null);
-
-      // 3. Gracefully route the user back to the login page
-      navigate('/login');
-    } catch (error) {
-      console.error('Failed to log out cleanly', error);
-      // Even if the server errors out, force them back to login locally
-      navigate('/login');
-    }
-  };
-
-  // Show a loading screen while waiting for Spring Boot to reply
-  if (loading) {
-    return <div style={{ textAlign: 'center', marginTop: '50px' }}>Loading...</div>;
-  }
-
-  // If the user is somehow null at this point, render nothing (the navigate will catch them)
-  if (!user) return null;
-
-  return (
-    <div style={{ textAlign: 'center', marginTop: '50px' }}>
-      <h2>Dashboard</h2>
-      {user.avatar && (
-        <img
-          src={user.avatar}
-          alt="Profile Avatar"
-          style={{ width: '100px', borderRadius: '50%', marginBottom: '15px' }}
-        />
-      )}
-      <h3>Welcome, {user.name}!</h3>
-      <p>Logged in as: {user.email}</p>
-
-      {/* A simple logout button that hits Spring Security's default logout endpoint */}
-      <button onClick={handleLogout}>Log Out</button>
-    </div>
-  );
-};
+// Setup Mock Service Worker (Note: this is also loaded in main.tsx before App renders)
+// So anything within App can freely use axios.
 
 function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<Landing />} />
-        <Route path="/login" element={<Login />} />
+        <Route element={<GuestRoute />}>
+          <Route element={<MainLayout />}>
+            <Route path="/" element={<LandingPage />} />
+          </Route>
+          {/* Full-screen auth route */}
+          <Route path="/login" element={<LoginPage />} />
+        </Route>
+        
+        {/* Protected Dashboard Route (for future) */}
         <Route path="/dashboard" element={<Dashboard />} />
+        
+        {/* Dummy route for individual course details to demonstrate Auth Guard redirect */}
+        <Route path="/courses/:courseId" element={<div className="p-20 text-center text-3xl font-bold bg-background min-h-screen text-foreground">Bạn đã đăng nhập thành công và truy cập vào chi tiết khoá học!</div>} />
       </Routes>
     </BrowserRouter>
   );
