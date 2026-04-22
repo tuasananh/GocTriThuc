@@ -38,4 +38,20 @@ public class User {
     this.username = username;
     this.avatarUrl = avatarUrl;
   }
+
+  public String getEmail() {
+    return email;
+  }
+
+  public String getDisplayName() {
+    return displayName;
+  }
+
+  public String getUsername() {
+    return username;
+  }
+
+  public String getAvatarUrl() {
+    return avatarUrl;
+  }
 }
