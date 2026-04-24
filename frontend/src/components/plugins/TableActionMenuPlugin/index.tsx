@@ -1,9 +1,6 @@
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
 import { useLexicalEditable } from '@lexical/react/useLexicalEditable';
-import {
-  $isTableCellNode,
-  $isTableSelection,
-} from '@lexical/table';
+import { $isTableCellNode, $isTableSelection, TableCellNode } from '@lexical/table';
 import {
   $getSelection,
   $isRangeSelection,
@@ -24,7 +21,7 @@ export default function TableActionMenuPlugin({
   const [editor] = useLexicalComposerContext();
   const menuButtonRef = useRef<HTMLDivElement | null>(null);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [tableCellNode, setTableCellNode] = useState<any>(null);
+  const [tableCellNode, setTableCellNode] = useState<TableCellNode | null>(null);
   const [modal, showModal] = useModal();
 
   const updateTableCellActionMenu = useCallback(() => {
@@ -47,7 +44,16 @@ export default function TableActionMenuPlugin({
           }
         } else if ($isTableSelection(selection)) {
           const anchorNode = selection.anchor.getNode();
-          setTableCellNode(anchorNode);
+          if ($isTableCellNode(anchorNode)) {
+            setTableCellNode(anchorNode);
+          } else {
+            const tableCellNodeFromSelection = anchorNode.getParent();
+            if ($isTableCellNode(tableCellNodeFromSelection)) {
+              setTableCellNode(tableCellNodeFromSelection);
+            } else {
+              setTableCellNode(null);
+            }
+          }
         } else {
           setTableCellNode(null);
         }

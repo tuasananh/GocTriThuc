@@ -18,17 +18,7 @@ import {
   formatQuote,
 } from './utils';
 
-export const blockTypeToBlockName = {
-  bullet: 'Bulleted List',
-  check: 'Check List',
-  code: 'Code Block',
-  h1: 'Heading 1',
-  h2: 'Heading 2',
-  h3: 'Heading 3',
-  number: 'Numbered List',
-  paragraph: 'Normal',
-  quote: 'Quote',
-};
+import { blockTypeToBlockName } from './constants';
 
 const blockTypeToIcon = {
   paragraph: (
@@ -200,72 +190,81 @@ export function BlockFormatDropDown({
       buttonAriaLabel="Formatting options for text style"
     >
       <DropDownItem
-        className={`flex items-center gap-2 px-3 py-2 rounded-md hover:bg-zinc-100 dark:hover:bg-zinc-700 transition-colors cursor-pointer ${blockType === 'paragraph' ? 'bg-zinc-50 dark:bg-zinc-800' : ''
-          }`}
+        className={`flex items-center gap-2 px-3 py-2 rounded-md hover:bg-zinc-100 dark:hover:bg-zinc-700 transition-colors cursor-pointer ${
+          blockType === 'paragraph' ? 'bg-zinc-50 dark:bg-zinc-800' : ''
+        }`}
         onClick={() => formatParagraph(editor)}
       >
         <span className="opacity-70">{blockTypeToIcon.paragraph}</span>
         <span className="text-sm font-medium">Normal</span>
       </DropDownItem>
       <DropDownItem
-        className={`flex items-center gap-2 px-3 py-2 rounded-md hover:bg-zinc-100 dark:hover:bg-zinc-700 transition-colors cursor-pointer ${blockType === 'h1' ? 'bg-zinc-50 dark:bg-zinc-800' : ''
-          }`}
+        className={`flex items-center gap-2 px-3 py-2 rounded-md hover:bg-zinc-100 dark:hover:bg-zinc-700 transition-colors cursor-pointer ${
+          blockType === 'h1' ? 'bg-zinc-50 dark:bg-zinc-800' : ''
+        }`}
         onClick={() => formatHeading(editor, blockType, 'h1')}
       >
         <span className="opacity-70">{blockTypeToIcon.h1}</span>
         <span className="text-sm font-medium">Heading 1</span>
       </DropDownItem>
       <DropDownItem
-        className={`flex items-center gap-2 px-3 py-2 rounded-md hover:bg-zinc-100 dark:hover:bg-zinc-700 transition-colors cursor-pointer ${blockType === 'h2' ? 'bg-zinc-50 dark:bg-zinc-800' : ''
-          }`}
+        className={`flex items-center gap-2 px-3 py-2 rounded-md hover:bg-zinc-100 dark:hover:bg-zinc-700 transition-colors cursor-pointer ${
+          blockType === 'h2' ? 'bg-zinc-50 dark:bg-zinc-800' : ''
+        }`}
         onClick={() => formatHeading(editor, blockType, 'h2')}
       >
         <span className="opacity-70">{blockTypeToIcon.h2}</span>
         <span className="text-sm font-medium">Heading 2</span>
       </DropDownItem>
       <DropDownItem
-        className={`flex items-center gap-2 px-3 py-2 rounded-md hover:bg-zinc-100 dark:hover:bg-zinc-700 transition-colors cursor-pointer ${blockType === 'h3' ? 'bg-zinc-50 dark:bg-zinc-800' : ''
-          }`}
+        className={`flex items-center gap-2 px-3 py-2 rounded-md hover:bg-zinc-100 dark:hover:bg-zinc-700 transition-colors cursor-pointer ${
+          blockType === 'h3' ? 'bg-zinc-50 dark:bg-zinc-800' : ''
+        }`}
         onClick={() => formatHeading(editor, blockType, 'h3')}
       >
         <span className="opacity-70">{blockTypeToIcon.h3}</span>
         <span className="text-sm font-medium">Heading 3</span>
       </DropDownItem>
       <DropDownItem
-        className={`flex items-center gap-2 px-3 py-2 rounded-md hover:bg-zinc-100 dark:hover:bg-zinc-700 transition-colors cursor-pointer ${blockType === 'bullet' ? 'bg-zinc-50 dark:bg-zinc-800' : ''
-          }`}
+        className={`flex items-center gap-2 px-3 py-2 rounded-md hover:bg-zinc-100 dark:hover:bg-zinc-700 transition-colors cursor-pointer ${
+          blockType === 'bullet' ? 'bg-zinc-50 dark:bg-zinc-800' : ''
+        }`}
         onClick={() => formatBulletList(editor, blockType)}
       >
         <span className="opacity-70">{blockTypeToIcon.bullet}</span>
         <span className="text-sm font-medium">Bullet List</span>
       </DropDownItem>
       <DropDownItem
-        className={`flex items-center gap-2 px-3 py-2 rounded-md hover:bg-zinc-100 dark:hover:bg-zinc-700 transition-colors cursor-pointer ${blockType === 'number' ? 'bg-zinc-50 dark:bg-zinc-800' : ''
-          }`}
+        className={`flex items-center gap-2 px-3 py-2 rounded-md hover:bg-zinc-100 dark:hover:bg-zinc-700 transition-colors cursor-pointer ${
+          blockType === 'number' ? 'bg-zinc-50 dark:bg-zinc-800' : ''
+        }`}
         onClick={() => formatNumberedList(editor, blockType)}
       >
         <span className="opacity-70">{blockTypeToIcon.number}</span>
         <span className="text-sm font-medium">Numbered List</span>
       </DropDownItem>
       <DropDownItem
-        className={`flex items-center gap-2 px-3 py-2 rounded-md hover:bg-zinc-100 dark:hover:bg-zinc-700 transition-colors cursor-pointer ${blockType === 'check' ? 'bg-zinc-50 dark:bg-zinc-800' : ''
-          }`}
+        className={`flex items-center gap-2 px-3 py-2 rounded-md hover:bg-zinc-100 dark:hover:bg-zinc-700 transition-colors cursor-pointer ${
+          blockType === 'check' ? 'bg-zinc-50 dark:bg-zinc-800' : ''
+        }`}
         onClick={() => formatCheckList(editor, blockType)}
       >
         <span className="opacity-70">{blockTypeToIcon.check}</span>
         <span className="text-sm font-medium">Check List</span>
       </DropDownItem>
       <DropDownItem
-        className={`flex items-center gap-2 px-3 py-2 rounded-md hover:bg-zinc-100 dark:hover:bg-zinc-700 transition-colors cursor-pointer ${blockType === 'quote' ? 'bg-zinc-50 dark:bg-zinc-800' : ''
-          }`}
+        className={`flex items-center gap-2 px-3 py-2 rounded-md hover:bg-zinc-100 dark:hover:bg-zinc-700 transition-colors cursor-pointer ${
+          blockType === 'quote' ? 'bg-zinc-50 dark:bg-zinc-800' : ''
+        }`}
         onClick={() => formatQuote(editor, blockType)}
       >
         <span className="opacity-70">{blockTypeToIcon.quote}</span>
         <span className="text-sm font-medium">Quote</span>
       </DropDownItem>
       <DropDownItem
-        className={`flex items-center gap-2 px-3 py-2 rounded-md hover:bg-zinc-100 dark:hover:bg-zinc-700 transition-colors cursor-pointer ${blockType === 'code' ? 'bg-zinc-50 dark:bg-zinc-800' : ''
-          }`}
+        className={`flex items-center gap-2 px-3 py-2 rounded-md hover:bg-zinc-100 dark:hover:bg-zinc-700 transition-colors cursor-pointer ${
+          blockType === 'code' ? 'bg-zinc-50 dark:bg-zinc-800' : ''
+        }`}
         onClick={() => formatCode(editor, blockType)}
       >
         <span className="opacity-70">{blockTypeToIcon.code}</span>

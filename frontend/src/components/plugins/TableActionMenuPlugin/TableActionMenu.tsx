@@ -86,7 +86,7 @@ export function TableCellActionMenuContainer({
         const isCollapsedTableSelection = selection.anchor.is(selection.focus);
         setCanMergeCells(
           !isCollapsedTableSelection &&
-          (currentSelectionCounts.columns > 1 || currentSelectionCounts.rows > 1),
+            (currentSelectionCounts.columns > 1 || currentSelectionCounts.rows > 1),
         );
       }
       // Unmerge cell
@@ -584,7 +584,7 @@ export function TableCellActionMenuContainer({
       >
         <span className="text">
           {(tableCellNode.__headerState & TableCellHeaderStates.COLUMN) ===
-            TableCellHeaderStates.COLUMN
+          TableCellHeaderStates.COLUMN
             ? 'Remove'
             : 'Add'}{' '}
           column header

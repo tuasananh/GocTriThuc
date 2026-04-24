@@ -409,8 +409,9 @@ function TableCellResizer({ editor }: { editor: LexicalEditor }): JSX.Element {
         const halfZoneWidth = zoneWidth / 2;
         const highlightWidth = 2;
         const highlightStart = halfZoneWidth - highlightWidth / 2;
-        styles.right.backgroundImage = `linear-gradient(90deg, transparent ${highlightStart}px, ${ACTIVE_RESIZER_COLOR} ${highlightStart}px, ${ACTIVE_RESIZER_COLOR} ${highlightStart + highlightWidth
-          }px, transparent ${highlightStart + highlightWidth}px)`;
+        styles.right.backgroundImage = `linear-gradient(90deg, transparent ${highlightStart}px, ${ACTIVE_RESIZER_COLOR} ${highlightStart}px, ${ACTIVE_RESIZER_COLOR} ${
+          highlightStart + highlightWidth
+        }px, transparent ${highlightStart + highlightWidth}px)`;
         styles.right.mixBlendMode = 'unset';
         if (tableRect) {
           styles.right.top = `${window.scrollY + tableRect.top}px`;
