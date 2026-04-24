@@ -12,7 +12,6 @@ import {
   NodeKey,
 } from 'lexical';
 import { useCallback, useEffect, useRef } from 'react';
-import * as React from 'react';
 import ImageResizer from './ImageResizer';
 import ImageToolbar from './ImageToolbar';
 import { $isImageNode } from './ImageNode';

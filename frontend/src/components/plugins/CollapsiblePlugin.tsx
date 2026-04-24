@@ -28,6 +28,8 @@ import {
 import { INSERT_COLLAPSIBLE_COMMAND } from './InsertPluginRegistry';
 import * as React from 'react';
 
+export { INSERT_COLLAPSIBLE_COMMAND } from './InsertPluginRegistry';
+
 export function CollapsiblePlugin(): React.JSX.Element | null {
   const [editor] = useLexicalComposerContext();
 

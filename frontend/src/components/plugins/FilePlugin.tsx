@@ -4,7 +4,7 @@ import { useEffect } from 'react';
 import { $createFileNode } from '../nodes/FileNode';
 
 import { INSERT_FILE_COMMAND, FilePayload } from './InsertPluginRegistry';
-import * as React from 'react';
+export { INSERT_FILE_COMMAND } from './InsertPluginRegistry';
 
 export default function FilePlugin(): React.JSX.Element | null {
   const [editor] = useLexicalComposerContext();

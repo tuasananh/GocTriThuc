@@ -1,4 +1,4 @@
-import * as React from 'react';
+
 
 export default function ImageToolbar({
   onToggleRounded,
@@ -18,11 +18,10 @@ export default function ImageToolbar({
     >
       <button
         onClick={onToggleRounded}
-        className={`flex h-8 w-8 items-center justify-center rounded transition-colors ${
-          isRounded
+        className={`flex h-8 w-8 items-center justify-center rounded transition-colors ${isRounded
             ? 'bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400'
             : 'text-zinc-600 hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-white/5'
-        }`}
+          }`}
         title="Bo góc (Rounded Corners)"
       >
         <svg
@@ -41,11 +40,10 @@ export default function ImageToolbar({
       </button>
       <button
         onClick={onToggleLockRatio}
-        className={`flex h-8 w-8 items-center justify-center rounded transition-colors ${
-          isLockRatio
+        className={`flex h-8 w-8 items-center justify-center rounded transition-colors ${isLockRatio
             ? 'bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400'
             : 'text-zinc-600 hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-white/5'
-        }`}
+          }`}
         title={isLockRatio ? 'Mở khóa tỉ lệ' : 'Khóa tỉ lệ (Lock Aspect Ratio)'}
       >
         {isLockRatio ? (

@@ -17,24 +17,21 @@ export function UniversalLinkPlugin() {
         event.preventDefault();
         event.stopPropagation();
 
-        // Using editor.update instead of read because it's more robust
-        // in setting the internal Lexical "active editor" context
-        // which was causing the "Unable to find an active editor" crash.
         editor.update(() => {
           const lexicalNode = $getNearestNodeFromDOMNode(linkDOM);
-          const node = $findMatchingParent(lexicalNode, $isLinkNode);
+          if (lexicalNode) {
+            const node = $findMatchingParent(lexicalNode, $isLinkNode);
+            if ($isLinkNode(node)) {
+              const nodeKey = node.getKey();
+              const url = node.getURL();
 
-          if ($isLinkNode(node)) {
-            const nodeKey = node.getKey();
-            const url = node.getURL();
-
-            // Dispatching outside any potential lock
-            setTimeout(() => {
-              editor.dispatchCommand(OPEN_LINK_MODAL_COMMAND, {
-                nodeKey,
-                url: url || '',
-              });
-            }, 0);
+              setTimeout(() => {
+                editor.dispatchCommand(OPEN_LINK_MODAL_COMMAND, {
+                  nodeKey,
+                  url: url || '',
+                });
+              }, 0);
+            }
           }
         });
       }
@@ -56,15 +53,17 @@ export function UniversalLinkPlugin() {
           return;
         }
 
-        // Fallback for nodes that might not have href attribute yet
         editor.update(() => {
-          const node = $findMatchingParent($getNearestNodeFromDOMNode(linkDOM), $isLinkNode);
-          if ($isLinkNode(node)) {
-            const url = node.getURL();
-            if (url) {
-              event.preventDefault();
-              event.stopPropagation();
-              window.open(url, '_blank');
+          const lexicalNode = $getNearestNodeFromDOMNode(linkDOM);
+          if (lexicalNode) {
+            const node = $findMatchingParent(lexicalNode, $isLinkNode);
+            if ($isLinkNode(node)) {
+              const url = node.getURL();
+              if (url) {
+                event.preventDefault();
+                event.stopPropagation();
+                window.open(url, '_blank');
+              }
             }
           }
         });
