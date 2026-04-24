@@ -22,11 +22,11 @@ import 'prismjs/components/prism-json';
 import 'prismjs/components/prism-python';
 
 export function CodeHighlightPlugin(): null {
-    const [editor] = useLexicalComposerContext();
+  const [editor] = useLexicalComposerContext();
 
-    useEffect(() => {
-        return registerCodeHighlighting(editor);
-    }, [editor]);
+  useEffect(() => {
+    return registerCodeHighlighting(editor);
+  }, [editor]);
 
-    return null;
+  return null;
 }

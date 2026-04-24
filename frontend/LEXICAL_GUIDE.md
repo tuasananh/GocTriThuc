@@ -27,8 +27,8 @@ export default function MyPage() {
 
   return (
     <div className="editor-container">
-      <Editor 
-        onUpdate={handleUpdate} 
+      <Editor
+        onUpdate={handleUpdate}
         initialContent={null} // Truyền chuỗi JSON nếu muốn tải nội dung cũ
       />
     </div>
@@ -37,12 +37,14 @@ export default function MyPage() {
 ```
 
 ### Các thành phần quan trọng
+
 - **File chính**: `src/components/Editor.tsx`
 - **Theme (Giao diện)**: `src/components/themes/EditorTheme.ts`
 - **Plugins**: Các tiện ích mở rộng nằm trong `src/components/plugins/`.
 - **Nodes**: Các thành phần nội dung tùy chỉnh (Ảnh, YouTube, Table, Equation, File) nằm trong `src/components/nodes/`.
 
 ### Các tính năng nổi bật
+
 - **Table Toolbar**: Thanh công cụ riêng cho bảng (Gộp ô, đổi màu, thêm hàng/cột nhanh).
 - **Equation Editor**: Hỗ trợ công thức toán học KaTeX cả dạng Inline và Block.
 - **Slash Menu**: Gõ `/` để mở menu chèn nhanh nội dung.
@@ -55,6 +57,7 @@ export default function MyPage() {
 Component Poll đã được bóc tách hoàn toàn khỏi editor và có thể sử dụng ở bất cứ đâu trong ứng dụng React.
 
 ### Vị trí file
+
 - `src/components/ui/Poll.tsx`
 
 ### Cách sử dụng cơ bản
@@ -64,41 +67,39 @@ import { Poll, Option } from '@/components/ui/Poll';
 import { useState } from 'react';
 
 const DemoPoll = () => {
-    const [question, setQuestion] = useState("Dự án này có ích không?");
-    const [options, setOptions] = useState([
-        { uid: '1', text: 'Rất ích', votes: ['user-1', 'user-2'] },
-        { uid: '2', text: 'Bình thường', votes: ['user-3'] },
-    ]);
+  const [question, setQuestion] = useState('Dự án này có ích không?');
+  const [options, setOptions] = useState([
+    { uid: '1', text: 'Rất ích', votes: ['user-1', 'user-2'] },
+    { uid: '2', text: 'Bình thường', votes: ['user-3'] },
+  ]);
 
-    const handleVote = (option: Option) => {
-        const clientID = 'id-nguoi-dung-hien-tai'; // Thay bằng user ID thực tế
-        const newOptions = options.map(opt => {
-            if (opt.uid === option.uid) {
-                const hasVoted = opt.votes.includes(clientID);
-                return {
-                    ...opt,
-                    votes: hasVoted 
-                        ? opt.votes.filter(id => id !== clientID) 
-                        : [...opt.votes, clientID]
-                };
-            }
-            return opt;
-        });
-        setOptions(newOptions);
-    };
+  const handleVote = (option: Option) => {
+    const clientID = 'id-nguoi-dung-hien-tai'; // Thay bằng user ID thực tế
+    const newOptions = options.map((opt) => {
+      if (opt.uid === option.uid) {
+        const hasVoted = opt.votes.includes(clientID);
+        return {
+          ...opt,
+          votes: hasVoted ? opt.votes.filter((id) => id !== clientID) : [...opt.votes, clientID],
+        };
+      }
+      return opt;
+    });
+    setOptions(newOptions);
+  };
 
-    return (
-        <Poll 
-            question={question}
-            options={options}
-            isEditable={true} // Cho phép sửa câu hỏi và thêm lựa chọn
-            onVote={handleVote}
-            onQuestionChange={setQuestion}
-            onAddOption={() => {
-                setOptions([...options, { uid: Math.random().toString(), text: '', votes: [] }]);
-            }}
-        />
-    );
+  return (
+    <Poll
+      question={question}
+      options={options}
+      isEditable={true} // Cho phép sửa câu hỏi và thêm lựa chọn
+      onVote={handleVote}
+      onQuestionChange={setQuestion}
+      onAddOption={() => {
+        setOptions([...options, { uid: Math.random().toString(), text: '', votes: [] }]);
+      }}
+    />
+  );
 };
 ```
 
@@ -107,6 +108,7 @@ const DemoPoll = () => {
 ## 3. Hướng dẫn mở rộng
 
 Để thêm một tính năng mới vào Editor:
+
 1. Định nghĩa một **Node** trong `src/components/nodes/` nếu là loại nội dung mới.
 2. Tạo một **Plugin** trong `src/components/plugins/` để xử lý logic/lệnh (Command).
 3. Đăng ký Node và Plugin đó trong file `src/components/Editor.tsx`.

@@ -8,90 +8,83 @@
 
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
 import {
-    $createParagraphNode,
-    $getSelection,
-    $isElementNode,
-    $isRangeSelection,
-    COMMAND_PRIORITY_LOW,
-    createCommand,
-    LexicalCommand,
+  $createParagraphNode,
+  $getSelection,
+  $isElementNode,
+  $isRangeSelection,
+  COMMAND_PRIORITY_LOW,
 } from 'lexical';
 import { useEffect } from 'react';
 
 import {
-    $createCollapsibleContainerNode,
-    $createCollapsibleContentNode,
-    $createCollapsibleTitleNode,
-    CollapsibleContainerNode,
-    CollapsibleContentNode,
-    CollapsibleTitleNode,
+  $createCollapsibleContainerNode,
+  $createCollapsibleContentNode,
+  $createCollapsibleTitleNode,
+  CollapsibleContainerNode,
+  CollapsibleContentNode,
+  CollapsibleTitleNode,
 } from '../nodes/CollapsibleNodes';
 
-export const INSERT_COLLAPSIBLE_COMMAND: LexicalCommand<void> = createCommand();
+import { INSERT_COLLAPSIBLE_COMMAND } from './InsertPluginRegistry';
+import * as React from 'react';
 
-export function CollapsiblePlugin(): null {
-    const [editor] = useLexicalComposerContext();
+export function CollapsiblePlugin(): React.JSX.Element | null {
+  const [editor] = useLexicalComposerContext();
 
-    useEffect(() => {
-        if (
-            !editor.hasNodes([
-                CollapsibleContainerNode,
-                CollapsibleTitleNode,
-                CollapsibleContentNode,
-            ])
-        ) {
-            throw new Error(
-                'CollapsiblePlugin: CollapsibleContainerNode, CollapsibleTitleNode, or CollapsibleContentNode not registered on editor',
+  useEffect(() => {
+    if (
+      !editor.hasNodes([CollapsibleContainerNode, CollapsibleTitleNode, CollapsibleContentNode])
+    ) {
+      throw new Error(
+        'CollapsiblePlugin: CollapsibleContainerNode, CollapsibleTitleNode, or CollapsibleContentNode not registered on editor',
+      );
+    }
+
+    return editor.registerCommand(
+      INSERT_COLLAPSIBLE_COMMAND,
+      () => {
+        editor.update(() => {
+          const selection = $getSelection();
+
+          if ($isRangeSelection(selection)) {
+            const titleNode = $createCollapsibleTitleNode();
+            const contentNode = $createCollapsibleContentNode().append($createParagraphNode());
+            const containerNode = $createCollapsibleContainerNode(true).append(
+              titleNode,
+              contentNode,
             );
-        }
-
-        return editor.registerCommand(
-            INSERT_COLLAPSIBLE_COMMAND,
-            () => {
-                editor.update(() => {
-                    const selection = $getSelection();
-
-                    if ($isRangeSelection(selection)) {
-                        const titleNode = $createCollapsibleTitleNode();
-                        const contentNode = $createCollapsibleContentNode().append(
-                            $createParagraphNode(),
-                        );
-                        const containerNode = $createCollapsibleContainerNode(true).append(
-                            titleNode,
-                            contentNode,
-                        );
-                        selection.insertNodes([containerNode]);
-                    }
-                });
-                return true;
-            },
-            COMMAND_PRIORITY_LOW,
-        );
-    }, [editor]);
-
-    useEffect(() => {
-        return editor.registerUpdateListener(({ editorState }) => {
-            editorState.read(() => {
-                const selection = $getSelection();
-                if ($isRangeSelection(selection) && selection.isCollapsed()) {
-                    const anchorField = selection.anchor;
-                    if (anchorField.type === 'text') {
-                        const anchorNode = anchorField.getNode();
-                        const textContent = anchorNode.getTextContent();
-                        if (textContent.startsWith('> ')) {
-                            editor.update(() => {
-                                const parent = anchorNode.getParentOrThrow();
-                                if ($isElementNode(parent) && parent.getChildrenSize() === 1) {
-                                    anchorNode.setTextContent(textContent.slice(2));
-                                    editor.dispatchCommand(INSERT_COLLAPSIBLE_COMMAND, undefined);
-                                }
-                            });
-                        }
-                    }
-                }
-            });
+            selection.insertNodes([containerNode]);
+          }
         });
-    }, [editor]);
+        return true;
+      },
+      COMMAND_PRIORITY_LOW,
+    );
+  }, [editor]);
 
-    return null;
+  useEffect(() => {
+    return editor.registerUpdateListener(({ editorState }) => {
+      editorState.read(() => {
+        const selection = $getSelection();
+        if ($isRangeSelection(selection) && selection.isCollapsed()) {
+          const anchorField = selection.anchor;
+          if (anchorField.type === 'text') {
+            const anchorNode = anchorField.getNode();
+            const textContent = anchorNode.getTextContent();
+            if (textContent.startsWith('> ')) {
+              editor.update(() => {
+                const parent = anchorNode.getParentOrThrow();
+                if ($isElementNode(parent) && parent.getChildrenSize() === 1) {
+                  anchorNode.setTextContent(textContent.slice(2));
+                  editor.dispatchCommand(INSERT_COLLAPSIBLE_COMMAND, undefined);
+                }
+              });
+            }
+          }
+        }
+      });
+    });
+  }, [editor]);
+
+  return null;
 }

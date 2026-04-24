@@ -21,15 +21,7 @@ let skipAddingToHistoryStack = false;
 
 interface ColorPickerProps {
   color: string;
-  onChange?: (
-    value: string,
-    skipHistoryStack: boolean,
-    skipRefocus: boolean,
-  ) => void;
-}
-
-export function parseAllowedColor(input: string) {
-  return /^rgb\(\d+, \d+, \d+\)$/.test(input) ? input : '';
+  onChange?: (value: string, skipHistoryStack: boolean, skipRefocus: boolean) => void;
 }
 
 const basicColors = [
@@ -53,14 +45,9 @@ const basicColors = [
 const WIDTH = 214;
 const HEIGHT = 150;
 
-export default function ColorPicker({
-  color,
-  onChange,
-}: Readonly<ColorPickerProps>): JSX.Element {
+export default function ColorPicker({ color, onChange }: Readonly<ColorPickerProps>): JSX.Element {
   const [selfColor, setSelfColor] = useState(transformColor('hex', color));
-  const [inputColor, setInputColor] = useState(
-    transformColor('hex', color).hex,
-  );
+  const [inputColor, setInputColor] = useState(transformColor('hex', color).hex);
   const innerDivRef = useRef(null);
 
   const saturationPosition = useMemo(
@@ -124,10 +111,7 @@ export default function ColorPicker({
   };
 
   return (
-    <div
-      className="color-picker-wrapper"
-      style={{ width: WIDTH }}
-      ref={innerDivRef}>
+    <div className="color-picker-wrapper" style={{ width: WIDTH }} ref={innerDivRef}>
       <TextInput label="Hex" onChange={onSetHex} value={inputColor} />
       <div className="color-picker-basic-color">
         {basicColors.map((basicColor) => (
@@ -142,7 +126,8 @@ export default function ColorPicker({
       <MoveWrapper
         className="color-picker-saturation"
         style={{ backgroundColor: `hsl(${selfColor.hsv.h}, 100%, 50%)` }}
-        onChange={onMoveSaturation}>
+        onChange={onMoveSaturation}
+      >
         <div
           className="color-picker-saturation_cursor"
           style={{
@@ -161,15 +146,12 @@ export default function ColorPicker({
           }}
         />
       </MoveWrapper>
-      <div
-        className="color-picker-color"
-        style={{ backgroundColor: selfColor.hex }}
-      />
+      <div className="color-picker-color" style={{ backgroundColor: selfColor.hex }} />
     </div>
   );
 }
 
-export interface Position {
+interface Position {
   x: number;
   y: number;
 }
@@ -227,11 +209,7 @@ function MoveWrapper({ className, style, onChange, children }: MoveWrapperProps)
   };
 
   return (
-    <div
-      ref={divRef}
-      className={className}
-      style={style}
-      onMouseDown={onMouseDown}>
+    <div ref={divRef} className={className} style={style} onMouseDown={onMouseDown}>
       {children}
     </div>
   );
@@ -257,7 +235,7 @@ interface Color {
   rgb: RGB;
 }
 
-export function toHex(value: string): string {
+function toHex(value: string): string {
   if (!value.startsWith('#')) {
     const ctx = document.createElement('canvas').getContext('2d');
 
@@ -285,10 +263,7 @@ export function toHex(value: string): string {
 function hex2rgb(hex: string): RGB {
   const rbgArr = (
     hex
-      .replace(
-        /^#?([a-f\d])([a-f\d])([a-f\d])$/i,
-        (m, r, g, b) => '#' + r + r + g + g + b + b,
-      )
+      .replace(/^#?([a-f\d])([a-f\d])([a-f\d])$/i, (_, r, g, b) => '#' + r + r + g + g + b + b)
       .substring(1)
       .match(/.{2}/g) || []
   ).map((x) => parseInt(x, 16));
@@ -309,11 +284,8 @@ function rgb2hsv({ r, g, b }: RGB): HSV {
   const d = max - Math.min(r, g, b);
 
   const h = d
-    ? (max === r
-      ? (g - b) / d + (g < b ? 6 : 0)
-      : max === g
-        ? 2 + (b - r) / d
-        : 4 + (r - g) / d) * 60
+    ? (max === r ? (g - b) / d + (g < b ? 6 : 0) : max === g ? 2 + (b - r) / d : 4 + (r - g) / d) *
+      60
     : 0;
   const s = max ? (d / max) * 100 : 0;
   const v = max * 100;
@@ -343,10 +315,7 @@ function rgb2hex({ b, g, r }: RGB): string {
   return '#' + [r, g, b].map((x) => x.toString(16).padStart(2, '0')).join('');
 }
 
-function transformColor<M extends keyof Color, C extends Color[M]>(
-  format: M,
-  color: C,
-): Color {
+function transformColor<M extends keyof Color, C extends Color[M]>(format: M, color: C): Color {
   let hex: Color['hex'] = toHex('#121212');
   let rgb: Color['rgb'] = hex2rgb(hex);
   let hsv: Color['hsv'] = rgb2hsv(rgb);

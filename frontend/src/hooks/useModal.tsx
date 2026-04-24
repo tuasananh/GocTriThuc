@@ -33,10 +33,7 @@ export default function useModal(): [
     }
     const { title, content, closeOnClickOutside } = modalContent;
     return (
-      <Modal
-        onClose={onClose}
-        title={title}
-        closeOnClickOutside={closeOnClickOutside}>
+      <Modal onClose={onClose} title={title} closeOnClickOutside={closeOnClickOutside}>
         {content}
       </Modal>
     );
@@ -45,7 +42,7 @@ export default function useModal(): [
   const showModal = useCallback(
     (
       title: string,
-      // eslint-disable-next-line no-shadow
+
       getContent: (onClose: () => void) => JSX.Element,
       closeOnClickOutside = false,
     ) => {

@@ -6,25 +6,18 @@
  *
  */
 
-import type { JSX } from 'react';
-
 import 'katex/dist/katex.css';
 
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
-import {
-  $insertNodeIntoLeaf,
-  $wrapNodeInElement,
-} from '@lexical/utils';
+import { $insertNodeIntoLeaf, $wrapNodeInElement } from '@lexical/utils';
 import {
   $createParagraphNode,
   $isRootOrShadowRoot,
   COMMAND_PRIORITY_EDITOR,
-  createCommand,
   $insertNodes,
-  LexicalCommand,
   LexicalEditor,
 } from 'lexical';
-import * as React from 'react';
+
 import { useCallback, useEffect } from 'react';
 
 import { $createEquationNode, EquationNode } from '../../nodes/EquationNode';
@@ -35,8 +28,7 @@ type CommandPayload = {
   inline: boolean;
 };
 
-export const INSERT_EQUATION_COMMAND: LexicalCommand<CommandPayload> =
-  createCommand('INSERT_EQUATION_COMMAND');
+import { INSERT_EQUATION_COMMAND } from '../InsertPluginRegistry';
 
 export function InsertEquationDialog({
   activeEditor,
@@ -44,7 +36,7 @@ export function InsertEquationDialog({
 }: {
   activeEditor: LexicalEditor;
   onClose: () => void;
-}): JSX.Element {
+}): React.JSX.Element {
   const onEquationConfirm = useCallback(
     (equation: string, inline: boolean) => {
       activeEditor.dispatchCommand(INSERT_EQUATION_COMMAND, { equation, inline });
@@ -56,14 +48,12 @@ export function InsertEquationDialog({
   return <KatexEquationAlterer onConfirm={onEquationConfirm} />;
 }
 
-export default function EquationsPlugin(): JSX.Element | null {
+export default function EquationsPlugin(): React.JSX.Element | null {
   const [editor] = useLexicalComposerContext();
 
   useEffect(() => {
     if (!editor.hasNodes([EquationNode])) {
-      throw new Error(
-        'EquationsPlugins: EquationsNode not registered on editor',
-      );
+      throw new Error('EquationsPlugins: EquationsNode not registered on editor');
     }
 
     return editor.registerCommand<CommandPayload>(

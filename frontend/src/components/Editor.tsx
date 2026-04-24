@@ -177,9 +177,7 @@ export default function Editor() {
           <TableCellResizerPlugin />
           <HorizontalRulePlugin />
           <FilePlugin />
-          {anchorElem && (
-            <TableActionMenuPlugin anchorElem={anchorElem} cellMerge={true} />
-          )}
+          {anchorElem && <TableActionMenuPlugin anchorElem={anchorElem} cellMerge={true} />}
           <EquationsPlugin />
           <EmojiPickerPlugin />
           {anchorElem ? <DragPlugin anchorElem={anchorElem} /> : null}

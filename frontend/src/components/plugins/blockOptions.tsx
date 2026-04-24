@@ -6,13 +6,17 @@
  *
  */
 
-import { INSERT_ORDERED_LIST_COMMAND, INSERT_UNORDERED_LIST_COMMAND, INSERT_CHECK_LIST_COMMAND } from '@lexical/list';
+import {
+  INSERT_ORDERED_LIST_COMMAND,
+  INSERT_UNORDERED_LIST_COMMAND,
+  INSERT_CHECK_LIST_COMMAND,
+} from '@lexical/list';
 import { INSERT_COLLAPSIBLE_COMMAND } from './CollapsiblePlugin';
 import {
   OPEN_INSERT_IMAGE_MODAL_COMMAND,
   OPEN_INSERT_YOUTUBE_MODAL_COMMAND,
   OPEN_INSERT_TABLE_MODAL_COMMAND,
-  OPEN_INSERT_EQUATION_MODAL_COMMAND
+  OPEN_INSERT_EQUATION_MODAL_COMMAND,
 } from './InsertPluginRegistry';
 import { MenuOption } from '@lexical/react/LexicalTypeaheadMenuPlugin';
 import { $createHeadingNode, $createQuoteNode } from '@lexical/rich-text';

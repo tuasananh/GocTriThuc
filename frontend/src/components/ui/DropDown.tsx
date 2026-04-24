@@ -11,14 +11,7 @@ import type { JSX } from 'react';
 import { calculateZoomLevel } from '@lexical/utils';
 import { isDOMNode } from 'lexical';
 import * as React from 'react';
-import {
-  ReactNode,
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from 'react';
+import { ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
 import { focusNearestDescendant, isKeyboardInput } from '../../utils/focusUtils';
@@ -59,12 +52,7 @@ export function DropDownItem({
   }, [ref, registerItem]);
 
   return (
-    <button
-      className={className}
-      onClick={onClick}
-      ref={ref}
-      title={title}
-      type="button">
+    <button className={className} onClick={onClick} ref={ref} title={title} type="button">
       {children}
     </button>
   );
@@ -83,8 +71,7 @@ function DropDownItems({
   onClose: () => void;
   autofocus: boolean;
 }) {
-  const [items, setItems] =
-    useState<React.RefObject<null | HTMLButtonElement>[]>();
+  const [items, setItems] = useState<React.RefObject<null | HTMLButtonElement>[]>();
   const [highlightedItem, setHighlightedItem] =
     useState<React.RefObject<null | HTMLButtonElement>>();
 
@@ -227,8 +214,7 @@ export default function DropDown({
           return;
         }
 
-        const targetIsDropDownItem =
-          dropDownRef.current && dropDownRef.current.contains(target);
+        const targetIsDropDownItem = dropDownRef.current && dropDownRef.current.contains(target);
         if (stopCloseOnClickSelf && targetIsDropDownItem) {
           return;
         }
@@ -262,11 +248,10 @@ export default function DropDown({
         aria-label={buttonAriaLabel || buttonLabel}
         className={buttonClassName}
         onClick={handleOnClick}
-        ref={buttonRef}>
+        ref={buttonRef}
+      >
         {buttonIconClassName && <span className={buttonIconClassName} />}
-        {buttonLabel && (
-          <span className="text dropdown-button-text">{buttonLabel}</span>
-        )}
+        {buttonLabel && <span className="text dropdown-button-text">{buttonLabel}</span>}
         {buttonContent}
         {!hideChevron && <i className="chevron-down" />}
       </button>
@@ -277,7 +262,8 @@ export default function DropDown({
             dropDownRef={dropDownRef}
             buttonRef={buttonRef}
             onClose={handleClose}
-            autofocus={shouldAutofocus}>
+            autofocus={shouldAutofocus}
+          >
             {children}
           </DropDownItems>,
           document.body,

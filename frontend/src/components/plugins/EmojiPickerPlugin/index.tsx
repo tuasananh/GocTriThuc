@@ -12,12 +12,7 @@ import {
   MenuOption,
   useBasicTypeaheadTriggerMatch,
 } from '@lexical/react/LexicalTypeaheadMenuPlugin';
-import {
-  $createTextNode,
-  $getSelection,
-  $isRangeSelection,
-  TextNode,
-} from 'lexical';
+import { $createTextNode, $getSelection, $isRangeSelection, TextNode } from 'lexical';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
 class EmojiOption extends MenuOption {
@@ -64,11 +59,11 @@ export default function EmojiPickerPlugin() {
     () =>
       emojis != null
         ? emojis.map(
-          ({ emoji, aliases, tags }) =>
-            new EmojiOption(`${emoji} ${aliases[0]}`, emoji, {
-              keywords: [...aliases, ...tags],
-            }),
-        )
+            ({ emoji, aliases, tags }) =>
+              new EmojiOption(`${emoji} ${aliases[0]}`, emoji, {
+                keywords: [...aliases, ...tags],
+              }),
+          )
         : [],
     [emojis],
   );
@@ -83,20 +78,14 @@ export default function EmojiPickerPlugin() {
       .filter((option: EmojiOption) => {
         return queryString != null
           ? new RegExp(queryString, 'gi').exec(option.title as string) ||
-          option.keywords.some((keyword: string) =>
-            new RegExp(queryString, 'gi').exec(keyword),
-          )
+              option.keywords.some((keyword: string) => new RegExp(queryString, 'gi').exec(keyword))
           : true;
       })
       .slice(0, MAX_EMOJI_SUGGESTION_COUNT);
   }, [emojiOptions, queryString]);
 
   const onSelectOption = useCallback(
-    (
-      selectedOption: EmojiOption,
-      nodeToRemove: TextNode | null,
-      closeMenu: () => void,
-    ) => {
+    (selectedOption: EmojiOption, nodeToRemove: TextNode | null, closeMenu: () => void) => {
       editor.update(() => {
         const selection = $getSelection();
 

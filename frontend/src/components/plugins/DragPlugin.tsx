@@ -43,16 +43,12 @@ export function DragPlugin({ anchorElem }: DragPluginProps) {
   const targetLineRef = useRef<HTMLDivElement>(null);
   const pickerRef = useRef<HTMLDivElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
-  const [draggableElement, setDraggableElement] = useState<HTMLElement | null>(
-    null,
-  );
+  const [draggableElement, setDraggableElement] = useState<HTMLElement | null>(null);
   const [pickerState, setPickerState] = useState<PickerState | null>(null);
   const [isPickerOpen, setIsPickerOpen] = useState(false);
   const [queryString, setQueryString] = useState('');
   const [highlightedIndex, setHighlightedIndex] = useState(0);
-  const [pickerPosition, setPickerPosition] = useState<PickerPosition | null>(
-    null,
-  );
+  const [pickerPosition, setPickerPosition] = useState<PickerPosition | null>(null);
 
   const options = useMemo(() => {
     const base = getBlockOptions(editor);
@@ -61,7 +57,9 @@ export function DragPlugin({ anchorElem }: DragPluginProps) {
     }
     const regex = new RegExp(queryString, 'i');
     return base.filter(
-      (o) => (typeof o.title === 'string' && regex.test(o.title)) || o.keywords.some((k) => regex.test(k)),
+      (o) =>
+        (typeof o.title === 'string' && regex.test(o.title)) ||
+        o.keywords.some((k) => regex.test(k)),
     );
   }, [editor, queryString]);
 
@@ -129,8 +127,7 @@ export function DragPlugin({ anchorElem }: DragPluginProps) {
     }
     const onClickOutside = (e: MouseEvent) => {
       if (
-        (pickerRef.current !== null &&
-          pickerRef.current.contains(e.target as Node)) ||
+        (pickerRef.current !== null && pickerRef.current.contains(e.target as Node)) ||
         (menuRef.current !== null && menuRef.current.contains(e.target as Node))
       ) {
         return;
@@ -182,16 +179,13 @@ export function DragPlugin({ anchorElem }: DragPluginProps) {
       if (!targetNodeKey) {
         return;
       }
-      const rect =
-        menuRef.current !== null
-          ? menuRef.current.getBoundingClientRect()
-          : null;
+      const rect = menuRef.current !== null ? menuRef.current.getBoundingClientRect() : null;
       setPickerPosition(
         rect
           ? {
-            left: rect.left + rect.width + window.scrollX + 8,
-            top: rect.top + window.scrollY,
-          }
+              left: rect.left + rect.width + window.scrollX + 8,
+              top: rect.top + window.scrollY,
+            }
           : null,
       );
       setPickerState({ insertBefore: e.altKey || e.ctrlKey, targetNodeKey });
@@ -223,44 +217,46 @@ export function DragPlugin({ anchorElem }: DragPluginProps) {
     <>
       {isPickerOpen && pickerPosition
         ? ReactDOM.createPortal(
-          <div
-            ref={pickerRef}
-            className="w-[230px] overflow-hidden rounded-lg border border-solid border-zinc-200 bg-white text-[#1c1e21] shadow-[0_8px_24px_rgba(0,0,0,0.12)] dark:border-zinc-700 dark:bg-[#232325] dark:text-[#e3e3e3] dark:shadow-[0_8px_24px_rgba(0,0,0,0.4)]"
-            style={{
-              left: pickerPosition.left,
-              position: 'absolute',
-              top: pickerPosition.top,
-              zIndex: 30,
-            }}>
-            <input
-              ref={searchInputRef}
-              className="block w-full border-0 border-b [border-bottom-style:solid] border-zinc-200 bg-transparent px-3 py-2 text-[0.85rem] text-inherit outline-none dark:border-zinc-700"
-              placeholder="Filter blocks..."
-              value={queryString}
-              onChange={(e) => setQueryString(e.target.value)}
-            />
-            <ul className="m-0 max-h-[220px] list-none overflow-y-auto p-1">
-              {options.map((option, i) => (
-                <li key={option.key}>
-                  <button
-                    type="button"
-                    className={`flex w-full cursor-pointer items-center gap-2 rounded-md border-0 bg-transparent px-2 py-1.5 text-left text-sm text-inherit ${highlightedIndex === i ? 'bg-zinc-100 dark:bg-[#3a3a3c]' : 'hover:bg-zinc-100 dark:hover:bg-[#3a3a3c]'}`}
-                    onMouseEnter={() => setHighlightedIndex(i)}
-                    onClick={() => selectOption(option)}>
-                    <span
-                      className="inline-block h-4 w-4 shrink-0 [background-size:contain] bg-center bg-no-repeat opacity-70 dark:invert"
-                      style={{
-                        backgroundImage: `url('${ICON_URLS[option.iconKey]}')`,
-                      }}
-                    />
-                    {option.title}
-                  </button>
-                </li>
-              ))}
-            </ul>
-          </div>,
-          document.body,
-        )
+            <div
+              ref={pickerRef}
+              className="w-[230px] overflow-hidden rounded-lg border border-solid border-zinc-200 bg-white text-[#1c1e21] shadow-[0_8px_24px_rgba(0,0,0,0.12)] dark:border-zinc-700 dark:bg-[#232325] dark:text-[#e3e3e3] dark:shadow-[0_8px_24px_rgba(0,0,0,0.4)]"
+              style={{
+                left: pickerPosition.left,
+                position: 'absolute',
+                top: pickerPosition.top,
+                zIndex: 30,
+              }}
+            >
+              <input
+                ref={searchInputRef}
+                className="block w-full border-0 border-b [border-bottom-style:solid] border-zinc-200 bg-transparent px-3 py-2 text-[0.85rem] text-inherit outline-none dark:border-zinc-700"
+                placeholder="Filter blocks..."
+                value={queryString}
+                onChange={(e) => setQueryString(e.target.value)}
+              />
+              <ul className="m-0 max-h-[220px] list-none overflow-y-auto p-1">
+                {options.map((option, i) => (
+                  <li key={option.key}>
+                    <button
+                      type="button"
+                      className={`flex w-full cursor-pointer items-center gap-2 rounded-md border-0 bg-transparent px-2 py-1.5 text-left text-sm text-inherit ${highlightedIndex === i ? 'bg-zinc-100 dark:bg-[#3a3a3c]' : 'hover:bg-zinc-100 dark:hover:bg-[#3a3a3c]'}`}
+                      onMouseEnter={() => setHighlightedIndex(i)}
+                      onClick={() => selectOption(option)}
+                    >
+                      <span
+                        className="inline-block h-4 w-4 shrink-0 [background-size:contain] bg-center bg-no-repeat opacity-70 dark:invert"
+                        style={{
+                          backgroundImage: `url('${ICON_URLS[option.iconKey]}')`,
+                        }}
+                      />
+                      {option.title}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </div>,
+            document.body,
+          )
         : null}
       <DraggableBlockPlugin_EXPERIMENTAL
         anchorElem={anchorElem}
@@ -271,9 +267,9 @@ export function DragPlugin({ anchorElem }: DragPluginProps) {
             ref={menuRef}
             className={`${DRAG_MENU_CLASSNAME} absolute top-0 left-0 z-[1] flex cursor-grab items-center gap-0.5 rounded-sm p-0.5 opacity-0 [will-change:transform,opacity] active:cursor-grabbing`}
             style={{
-              transition:
-                'transform 140ms ease-in-out, opacity 160ms ease-in-out',
-            }}>
+              transition: 'transform 140ms ease-in-out, opacity 160ms ease-in-out',
+            }}
+          >
             <button
               type="button"
               className="flex h-[18px] w-[18px] shrink-0 cursor-pointer items-center justify-center rounded-sm border-none bg-transparent [background-size:14px_14px] bg-center bg-no-repeat opacity-50 hover:bg-zinc-100 hover:opacity-100 dark:invert dark:hover:bg-[#ffffdd]"

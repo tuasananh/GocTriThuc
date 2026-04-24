@@ -6,9 +6,9 @@
  *
  */
 
-import {defineExtension, TextNode} from 'lexical';
+import { defineExtension, TextNode } from 'lexical';
 
-import {$createEmojiNode} from '../../nodes/EmojiNode';
+import { $createEmojiNode } from '../../nodes/EmojiNode';
 
 const emojis: Map<string, [string, string]> = new Map([
   [':)', ['emoji happysmile', '🙂']],
@@ -56,6 +56,5 @@ function $textNodeTransform(node: TextNode): void {
 
 export const EmojisExtension = defineExtension({
   name: '@lexical/playground/Emojis',
-  register: (editor) =>
-    editor.registerNodeTransform(TextNode, $textNodeTransform),
+  register: (editor) => editor.registerNodeTransform(TextNode, $textNodeTransform),
 });
