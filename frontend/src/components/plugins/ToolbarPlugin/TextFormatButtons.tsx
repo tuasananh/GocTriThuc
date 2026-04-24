@@ -12,6 +12,7 @@ interface TextFormatButtonsProps {
     isStrikethrough: boolean;
     isSuperscript: boolean;
     isSubscript: boolean;
+    isCode: boolean;
     isEditable: boolean;
 }
 
@@ -31,6 +32,7 @@ export function TextFormatButtons({
     isStrikethrough,
     isSuperscript,
     isSubscript,
+    isCode,
     isEditable,
 }: TextFormatButtonsProps) {
     const formatButtons: FormatButtonConfig[] = [
@@ -109,6 +111,18 @@ export function TextFormatButtons({
                 </svg>
             ),
         },
+        {
+            format: 'code',
+            label: 'Inline Code',
+            title: 'Inline Code',
+            isActive: isCode,
+            icon: (
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="16 18 22 12 16 6" />
+                    <polyline points="8 6 2 12 8 18" />
+                </svg>
+            ),
+        },
     ];
 
     return (
@@ -123,8 +137,8 @@ export function TextFormatButtons({
                     title={title}
                     type="button"
                     className={`flex h-8 w-8 items-center justify-center rounded disabled:cursor-not-allowed disabled:opacity-30 ${isActive
-                            ? 'bg-zinc-200 text-blue-600 dark:bg-zinc-600 dark:text-blue-400'
-                            : 'text-zinc-600 hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-zinc-700'
+                        ? 'bg-zinc-200 text-blue-600 dark:bg-zinc-600 dark:text-blue-400'
+                        : 'text-zinc-600 hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-zinc-700'
                         }`}
                     aria-label={label}
                     aria-pressed={isActive}

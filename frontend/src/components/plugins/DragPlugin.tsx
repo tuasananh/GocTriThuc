@@ -6,8 +6,8 @@
  *
  */
 
-import {useLexicalComposerContext} from '@lexical/react/LexicalComposerContext';
-import {DraggableBlockPlugin_EXPERIMENTAL} from '@lexical/react/LexicalDraggableBlockPlugin';
+import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
+import { DraggableBlockPlugin_EXPERIMENTAL } from '@lexical/react/LexicalDraggableBlockPlugin';
 import {
   $createParagraphNode,
   $createTextNode,
@@ -16,10 +16,10 @@ import {
   $isParagraphNode,
   $isTextNode,
 } from 'lexical';
-import {useCallback, useEffect, useMemo, useRef, useState} from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import * as ReactDOM from 'react-dom';
 
-import {BlockOption, getBlockOptions, ICON_URLS} from './blockOptions';
+import { BlockOption, getBlockOptions, ICON_URLS } from './blockOptions';
 
 const DRAG_MENU_CLASSNAME = 'nle-drag-menu';
 
@@ -37,7 +37,7 @@ interface DragPluginProps {
   anchorElem: HTMLElement;
 }
 
-export function DragPlugin({anchorElem}: DragPluginProps) {
+export function DragPlugin({ anchorElem }: DragPluginProps) {
   const [editor] = useLexicalComposerContext();
   const menuRef = useRef<HTMLDivElement>(null);
   const targetLineRef = useRef<HTMLDivElement>(null);
@@ -61,7 +61,7 @@ export function DragPlugin({anchorElem}: DragPluginProps) {
     }
     const regex = new RegExp(queryString, 'i');
     return base.filter(
-      (o) => regex.test(o.title) || o.keywords.some((k) => regex.test(k)),
+      (o) => (typeof o.title === 'string' && regex.test(o.title)) || o.keywords.some((k) => regex.test(k)),
     );
   }, [editor, queryString]);
 
@@ -194,13 +194,25 @@ export function DragPlugin({anchorElem}: DragPluginProps) {
           }
           : null,
       );
-      setPickerState({insertBefore: e.altKey || e.ctrlKey, targetNodeKey});
+      setPickerState({ insertBefore: e.altKey || e.ctrlKey, targetNodeKey });
       setQueryString('');
       setHighlightedIndex(0);
       setIsPickerOpen(true);
     },
     [draggableElement, editor],
   );
+
+  const deleteBlock = useCallback(() => {
+    if (!draggableElement) {
+      return;
+    }
+    editor.update(() => {
+      const node = $getNearestNodeFromDOMNode(draggableElement);
+      if (node) {
+        node.remove();
+      }
+    });
+  }, [draggableElement, editor]);
 
   const isOnMenu = useCallback(
     (element: HTMLElement) => !!element.closest(`.${DRAG_MENU_CLASSNAME}`),
@@ -235,12 +247,12 @@ export function DragPlugin({anchorElem}: DragPluginProps) {
                     className={`flex w-full cursor-pointer items-center gap-2 rounded-md border-0 bg-transparent px-2 py-1.5 text-left text-sm text-inherit ${highlightedIndex === i ? 'bg-zinc-100 dark:bg-[#3a3a3c]' : 'hover:bg-zinc-100 dark:hover:bg-[#3a3a3c]'}`}
                     onMouseEnter={() => setHighlightedIndex(i)}
                     onClick={() => selectOption(option)}>
-                      <span
-                        className="inline-block h-4 w-4 shrink-0 [background-size:contain] bg-center bg-no-repeat opacity-70 dark:invert"
-                        style={{
-                          backgroundImage: `url('${ICON_URLS[option.iconKey]}')`,
-                        }}
-                      />
+                    <span
+                      className="inline-block h-4 w-4 shrink-0 [background-size:contain] bg-center bg-no-repeat opacity-70 dark:invert"
+                      style={{
+                        backgroundImage: `url('${ICON_URLS[option.iconKey]}')`,
+                      }}
+                    />
                     {option.title}
                   </button>
                 </li>
@@ -265,7 +277,7 @@ export function DragPlugin({anchorElem}: DragPluginProps) {
             <button
               type="button"
               className="flex h-[18px] w-[18px] shrink-0 cursor-pointer items-center justify-center rounded-sm border-none bg-transparent [background-size:14px_14px] bg-center bg-no-repeat opacity-50 hover:bg-zinc-100 hover:opacity-100 dark:invert dark:hover:bg-[#ffffdd]"
-              style={{backgroundImage: "url('/img/plus.svg')"}}
+              style={{ backgroundImage: "url('/img/plus.svg')" }}
               title="Click to add below (Alt/Option to add above)"
               onMouseDown={(e) => {
                 e.preventDefault();
@@ -275,7 +287,15 @@ export function DragPlugin({anchorElem}: DragPluginProps) {
             />
             <div
               className="h-[18px] w-[18px] cursor-grab [background-size:14px_14px] bg-center bg-no-repeat opacity-50 hover:bg-zinc-100 hover:opacity-100 dark:invert dark:hover:bg-[#ffffdd]"
-              style={{backgroundImage: "url('/img/draggable-block-menu.svg')"}}
+              style={{ backgroundImage: "url('/img/draggable-block-menu.svg')" }}
+              title="Drag to move block"
+            />
+            <button
+              type="button"
+              className="flex h-[18px] w-[18px] shrink-0 cursor-pointer items-center justify-center rounded-sm border-none bg-transparent [background-size:14px_14px] bg-center bg-no-repeat opacity-50 hover:bg-red-50 hover:text-red-600 hover:opacity-100 dark:hover:bg-red-900/30 dark:hover:text-red-400"
+              style={{ backgroundImage: "url('/img/trash.svg')" }}
+              title="Delete block"
+              onClick={deleteBlock}
             />
           </div>
         }
