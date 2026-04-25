@@ -7,7 +7,8 @@ import java.time.ZonedDateTime;
 @Table(name = "users")
 public class User {
   @Id
-  // For Hibernate to not include ID when inserting, we use IDENTITY strategy which relies on
+  // For Hibernate to not include ID when inserting, we use IDENTITY strategy
+  // which relies on
   // the database to auto-generate the ID with a custom Snowflake ID generator.
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
@@ -37,6 +38,10 @@ public class User {
     this.displayName = displayName;
     this.username = username;
     this.avatarUrl = avatarUrl;
+  }
+
+  public Long getId() {
+    return id;
   }
 
   public String getEmail() {
