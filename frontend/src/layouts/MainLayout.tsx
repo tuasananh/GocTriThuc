@@ -14,9 +14,15 @@ export function MainLayout() {
             <span className="font-semibold text-lg tracking-tight">Góc Tri Thức</span>
           </Link>
           <nav className="hidden md:flex gap-6 text-sm font-medium text-muted-foreground">
-            <Link to="/" className="hover:text-foreground transition-colors">Khóa học</Link>
-            <Link to="#" className="hover:text-foreground transition-colors">Giới thiệu</Link>
-            <Link to="#" className="hover:text-foreground transition-colors">Trợ giúp</Link>
+            <Link to="/" className="hover:text-foreground transition-colors">
+              Khóa học
+            </Link>
+            <Link to="#" className="hover:text-foreground transition-colors">
+              Giới thiệu
+            </Link>
+            <Link to="#" className="hover:text-foreground transition-colors">
+              Trợ giúp
+            </Link>
           </nav>
           <div className="flex items-center gap-4">
             <Button asChild variant="ghost" className="hidden sm:inline-flex">

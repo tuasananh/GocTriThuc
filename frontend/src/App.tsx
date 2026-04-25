@@ -26,12 +26,19 @@ function App() {
           {/* Full-screen auth route */}
           <Route path="/login" element={<LoginPage />} />
         </Route>
-        
+
         {/* Protected Dashboard Route (for future) */}
         <Route path="/dashboard" element={<Dashboard />} />
-        
+
         {/* Dummy route for individual course details to demonstrate Auth Guard redirect */}
-        <Route path="/courses/:courseId" element={<div className="p-20 text-center text-3xl font-bold bg-background min-h-screen text-foreground">Bạn đã đăng nhập thành công và truy cập vào chi tiết khoá học!</div>} />
+        <Route
+          path="/courses/:courseId"
+          element={
+            <div className="p-20 text-center text-3xl font-bold bg-background min-h-screen text-foreground">
+              Bạn đã đăng nhập thành công và truy cập vào chi tiết khoá học!
+            </div>
+          }
+        />
       </Routes>
     </BrowserRouter>
   );
