@@ -75,7 +75,12 @@ export const Dashboard = () => {
             className="bg-red-600 hover:bg-red-700 text-white border-0 font-semibold flex items-center gap-2"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
+              />
             </svg>
             Đăng Xuất
           </Button>
@@ -92,12 +97,8 @@ export const Dashboard = () => {
               />
             )}
             <div className="text-center">
-              <h2 className="text-2xl font-bold text-white">
-                Chào mừng, {user.displayName}!
-              </h2>
-              <p className="text-slate-400 mt-1">
-                Email: {user.email}
-              </p>
+              <h2 className="text-2xl font-bold text-white">Chào mừng, {user.displayName}!</h2>
+              <p className="text-slate-400 mt-1">Email: {user.email}</p>
             </div>
           </div>
 
