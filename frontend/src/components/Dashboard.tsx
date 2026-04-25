@@ -5,9 +5,9 @@ import { Button } from '@/components/ui/button';
 
 interface User {
   authenticated: boolean;
-  name?: string;
   email?: string;
-  avatar?: string;
+  avatarUrl?: string;
+  displayName?: string;
 }
 
 export const Dashboard = () => {
@@ -58,6 +58,8 @@ export const Dashboard = () => {
 
   if (!user) return null;
 
+  console.log('Dữ liệu người dùng:', user);
+
   return (
     <div className="min-h-screen w-full bg-linear-to-br from-slate-900 via-slate-800 to-slate-900 px-4 py-8">
       <div className="max-w-2xl mx-auto">
@@ -82,16 +84,16 @@ export const Dashboard = () => {
         {/* User Profile Card */}
         <div className="bg-slate-800 rounded-lg border border-slate-700 p-8 space-y-6">
           <div className="flex flex-col items-center space-y-4">
-            {user.avatar && (
+            {user.avatarUrl && (
               <img
-                src={user.avatar}
+                src={user.avatarUrl}
                 alt="Ảnh hồ sơ"
                 className="w-24 h-24 rounded-full border-4 border-blue-500 object-cover"
               />
             )}
             <div className="text-center">
               <h2 className="text-2xl font-bold text-white">
-                Chào mừng, {user.name}!
+                Chào mừng, {user.displayName}!
               </h2>
               <p className="text-slate-400 mt-1">
                 Email: {user.email}
