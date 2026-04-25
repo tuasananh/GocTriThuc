@@ -144,6 +144,10 @@ const editorExtension = defineExtension({
   theme,
 });
 
+import { MarkdownShortcutPlugin } from '@lexical/react/LexicalMarkdownShortcutPlugin';
+import { TRANSFORMERS } from '@lexical/markdown';
+import { EQUATION } from './plugins/EquationsPlugin/EquationTransformer';
+
 export default function Editor() {
   const [anchorElem, setAnchorElem] = useState<HTMLElement | null>(null);
 
@@ -180,6 +184,7 @@ export default function Editor() {
           {anchorElem && <TableActionMenuPlugin anchorElem={anchorElem} cellMerge={true} />}
           <EquationsPlugin />
           <EmojiPickerPlugin />
+          <MarkdownShortcutPlugin transformers={[...TRANSFORMERS, EQUATION]} />
           {anchorElem ? <DragPlugin anchorElem={anchorElem} /> : null}
         </div>
       </div>
