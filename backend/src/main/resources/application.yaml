@@ -30,6 +30,11 @@ spring:
             client-id: ${GOOGLE_CLIENT_ID} # Get this from Google Cloud Console
             client-secret: ${GOOGLE_CLIENT_SECRET}
             scope: email, profile
+          github:
+            client-id: ${GITHUB_CLIENT_ID} # Get this from GitHub Developer Settings
+            client-secret: ${GITHUB_CLIENT_SECRET}
+            scope: read:user, user:email
+
 
 app:
   frontend:
