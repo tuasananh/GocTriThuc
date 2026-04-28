@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 
 // 1. Định nghĩa Type rõ ràng để linter không bắt bẻ
