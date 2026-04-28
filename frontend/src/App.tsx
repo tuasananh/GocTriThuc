@@ -2,6 +2,11 @@ import { BrowserRouter, Routes, Route, Link, useNavigate } from 'react-router-do
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 
+// Import component CurriculumManager ông vừa tạo
+// Đảm bảo đường dẫn import khớp với nơi ông tạo file nhé
+import CurriculumManager from './pages/studio/course/curriculum';
+import LessonEdit from './pages/studio/course/lesson';
+
 // 1. Configure Axios globally so it always sends your session and CSRF cookies
 axios.defaults.withCredentials = true;
 axios.defaults.xsrfCookieName = 'XSRF-TOKEN';
@@ -117,6 +122,11 @@ function App() {
         <Route path="/" element={<Landing />} />
         <Route path="/login" element={<Login />} />
         <Route path="/dashboard" element={<Dashboard />} />
+
+        {/* Thêm Route mới cho phần Curriculum Manager */}
+        <Route path="/studio/course/:courseId/curriculum" element={<CurriculumManager />} />
+        {/* THÊM ROUTE MỚI CHO TRANG EDIT LESSON Ở ĐÂY */}
+        <Route path="/studio/course/:courseId/lesson/:lessonId" element={<LessonEdit />} />
       </Routes>
     </BrowserRouter>
   );
