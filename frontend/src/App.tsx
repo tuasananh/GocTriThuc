@@ -1,10 +1,10 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import axios from 'axios';
 import { MainLayout } from '@/layouts/MainLayout';
-import { LandingPage } from '@/pages/LandingPage';
-import { LoginPage } from '@/pages/LoginPage';
+import { LandingPage } from '@/pages';
+import { LoginPage } from '@/pages/login';
 // Dashboard component can be implemented later or replaced, keeping it for existing route validity
-import { Dashboard } from '@/components/Dashboard';
+import { Dashboard } from '@/pages/dashboard';
 import { GuestRoute } from '@/components/GuestRoute';
 import { AuthProvider } from './providers/AuthProvider';
 

@@ -1,4 +1,4 @@
-import { OAuthLogin } from '@/features/auth/components/OAuthLogin';
+import { OAuthLogin } from '@/pages/login/_components/OAuthLogin';
 
 export function LoginPage() {
   return (

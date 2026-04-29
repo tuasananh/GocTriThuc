@@ -1,4 +1,4 @@
-import { CourseCatalog } from '@/features/courses/components/CourseCatalog';
+import { CourseCatalog } from '@/pages/_components/CourseCatalog';
 import { Button } from '@/components/ui/button';
 import { ArrowRight, Sparkles } from 'lucide-react';
 import { Link } from 'react-router-dom';
