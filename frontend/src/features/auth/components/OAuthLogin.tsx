@@ -8,37 +8,22 @@ export function OAuthLogin() {
   };
 
   return (
-    <Card className="w-95 shadow-xl border-0 ring-1 ring-black/5 rounded-2xl overflow-hidden backdrop-blur-sm bg-white/70">
-      <CardHeader className="space-y-2 text-center pt-10 pb-6">
+    <Card className="w-100 shadow-xl border-0 ring-1 ring-black/5 rounded-2xl overflow-hidden backdrop-blur-sm bg-white/70">
+      <CardHeader className="space-y-2 text-center py-2">
         <div className="flex justify-center mb-4">
           <div className="bg-primary/10 rounded-full p-4">
             <BookOpen className="h-8 w-8 text-primary" />
           </div>
         </div>
         <CardTitle className="text-2xl font-semibold tracking-tight">
-          Chào mừng đến với Góc Tri Thức
+          Chào mừng đến với <span className="bg-[linear-gradient(90deg,#ef4444,#f59e0b,#eab308,#22c55e,#3b82f6,#a855f7)] bg-clip-text text-transparent">GocTriThuc</span>
         </CardTitle>
         <CardDescription className="text-base">
           Đăng nhập bằng tài khoản liên kết để tiếp tục
         </CardDescription>
       </CardHeader>
 
-      <CardContent className="space-y-4 px-8 pb-10">
-        <Button
-          variant="outline"
-          size="lg"
-          className="w-full h-12 rounded-xl border-border bg-white text-base justify-start px-6 gap-4 hover:bg-gray-50 transition-colors shadow-sm"
-          onClick={() => handleLogin('microsoft')}
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 21 21" className="w-5 h-5">
-            <rect x="1" y="1" width="9" height="9" fill="#f25022" />
-            <rect x="1" y="11" width="9" height="9" fill="#00a4ef" />
-            <rect x="11" y="1" width="9" height="9" fill="#7fba00" />
-            <rect x="11" y="11" width="9" height="9" fill="#ffb900" />
-          </svg>
-          Đăng nhập với Microsoft
-        </Button>
-
+      <CardContent className="space-y-4 px-8 pb-8">
         <Button
           variant="outline"
           size="lg"
