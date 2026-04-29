@@ -1,14 +1,17 @@
 package com.goctrithuc.backend.config;
 
 import com.goctrithuc.backend.services.CustomOAuth2UserService;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.CsrfConfigurer;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.HttpStatusEntryPoint;
 import org.springframework.security.web.authentication.logout.HeaderWriterLogoutHandler;
 import org.springframework.security.web.header.writers.ClearSiteDataHeaderWriter;
 
@@ -45,8 +48,12 @@ public class SecurityConfig {
                         "/icons.svg",
                         "/assets/**")
                     .permitAll()
+                    .requestMatchers(HttpMethod.GET, "/api/users/me")
+                    .permitAll()
                     .anyRequest()
                     .authenticated())
+        .exceptionHandling(
+            e -> e.authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED)))
         .oauth2Login(
             oauth2 ->
                 oauth2
@@ -57,7 +64,15 @@ public class SecurityConfig {
                         )
                     .defaultSuccessUrl(oauth2SuccessUrl, true) // Redirect back to Vite React app
                     .loginPage("/login"))
-        .logout(logout -> logout.logoutUrl("/api/logout").addLogoutHandler(clearSiteData));
+        .logout(
+            logout ->
+                logout
+                    .logoutUrl("/api/logout")
+                    .addLogoutHandler(clearSiteData)
+                    .logoutSuccessHandler(
+                        (request, response, authentication) -> {
+                          response.setStatus(HttpServletResponse.SC_OK);
+                        }));
 
     return http.build();
   }
