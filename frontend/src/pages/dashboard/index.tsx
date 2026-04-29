@@ -22,8 +22,6 @@ export const Dashboard = () => {
 
   const { user } = auth;
 
-  console.log('Dữ liệu người dùng:', user);
-
   return (
     <div className="min-h-screen w-full bg-linear-to-br from-slate-900 via-slate-800 to-slate-900 px-4 py-8">
       <div className="max-w-2xl mx-auto">

@@ -5,8 +5,6 @@ import { useAuth } from '@/contexts/AuthContext';
 export function GuestRoute() {
   const auth = useAuth();
 
-  console.log(auth);
-
   if (auth === null) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">

@@ -27,10 +27,6 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
   public OAuth2User loadUser(OAuth2UserRequest userRequest) throws OAuth2AuthenticationException {
     OAuth2User oAuth2User = super.loadUser(userRequest);
 
-    // Print all attributes for debugging
-    System.out.println("OAuth2User attributes:");
-    oAuth2User.getAttributes().forEach((key, value) -> System.out.println(key + ": " + value));
-
     String providerName = userRequest.getClientRegistration().getRegistrationId();
 
     String providerUserId =
