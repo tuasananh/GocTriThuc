@@ -1,25 +1,13 @@
-import { useEffect, useState } from 'react';
-import { Navigate, Outlet, useLocation } from 'react-router-dom';
-import axios from 'axios';
+import { Navigate, Outlet } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
 
 export function GuestRoute() {
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
-  const location = useLocation();
+  const auth = useAuth();
 
-  useEffect(() => {
-    async function checkAuth() {
-      try {
-        const response = await axios.get<boolean>('/api/auth/is_authenticated');
-        setIsAuthenticated(response.data);
-      } catch {
-        setIsAuthenticated(false);
-      }
-    }
-    checkAuth();
-  }, [location.pathname]);
+  console.log(auth);
 
-  if (isAuthenticated === null) {
+  if (auth === null) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -27,7 +15,7 @@ export function GuestRoute() {
     );
   }
 
-  if (isAuthenticated) {
+  if (auth.isAuthenticated) {
     return <Navigate to="/dashboard" replace />;
   }
 

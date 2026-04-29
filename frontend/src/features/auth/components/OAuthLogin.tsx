@@ -1,6 +1,7 @@
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { BookOpen } from 'lucide-react';
+import { GocTriThuc } from '@/components/GocTriThuc';
 
 export function OAuthLogin() {
   const handleLogin = (provider: string) => {
@@ -16,7 +17,7 @@ export function OAuthLogin() {
           </div>
         </div>
         <CardTitle className="text-2xl font-semibold tracking-tight">
-          Chào mừng đến với <span className="bg-[linear-gradient(90deg,#ef4444,#f59e0b,#eab308,#22c55e,#3b82f6,#a855f7)] bg-clip-text text-transparent">GocTriThuc</span>
+          Chào mừng đến với <GocTriThuc />
         </CardTitle>
         <CardDescription className="text-base">
           Đăng nhập bằng tài khoản liên kết để tiếp tục
