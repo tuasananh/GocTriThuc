@@ -25,9 +25,6 @@ export function MainLayout() {
             </Link>
           </nav>
           <div className="flex items-center gap-4">
-            <Button asChild variant="ghost" className="hidden sm:inline-flex">
-              <Link to="/login">Đăng nhập</Link>
-            </Button>
             <Button asChild className="rounded-full px-6">
               <Link to="/login">Bắt đầu ngay</Link>
             </Button>
