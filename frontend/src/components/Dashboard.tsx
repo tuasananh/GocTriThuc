@@ -1,51 +1,11 @@
-import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
 import { Button } from '@/components/ui/button';
-
-interface User {
-  authenticated: boolean;
-  email?: string;
-  avatarUrl?: string;
-  displayName?: string;
-}
+import { useAuth } from '@/contexts/AuthContext';
+import { Navigate } from 'react-router-dom';
 
 export const Dashboard = () => {
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
-  const navigate = useNavigate();
+  const auth = useAuth();
 
-  useEffect(() => {
-    axios
-      .get('/api/users/me')
-      .then((response) => {
-        if (response.data.authenticated) {
-          setUser(response.data);
-        } else {
-          navigate('/login');
-        }
-      })
-      .catch((error) => {
-        console.error('Lỗi tải dữ liệu người dùng:', error);
-        navigate('/login');
-      })
-      .finally(() => {
-        setLoading(false);
-      });
-  }, [navigate]);
-
-  const handleLogout = async () => {
-    try {
-      await axios.post('/api/logout');
-      setUser(null);
-      navigate('/login');
-    } catch (error) {
-      console.error('Lỗi đăng xuất:', error);
-      navigate('/login');
-    }
-  };
-
-  if (loading) {
+  if (auth === null) {
     return (
       <div className="min-h-screen w-full flex items-center justify-center bg-linear-to-br from-slate-900 via-slate-800 to-slate-900">
         <div className="text-center">
@@ -56,7 +16,11 @@ export const Dashboard = () => {
     );
   }
 
-  if (!user) return null;
+  if (auth.isAuthenticated === false) {
+    return <Navigate to="/login" replace />;
+  }
+
+  const { user } = auth;
 
   console.log('Dữ liệu người dùng:', user);
 
@@ -70,7 +34,7 @@ export const Dashboard = () => {
             <p className="text-sm text-slate-400">Đọc là "Góc Tri Thức"</p>
           </div>
           <Button
-            onClick={handleLogout}
+            onClick={auth.logout}
             variant="outline"
             className="bg-red-600 hover:bg-red-700 text-white border-0 font-semibold flex items-center gap-2"
           >
