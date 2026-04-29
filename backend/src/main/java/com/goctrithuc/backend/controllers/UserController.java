@@ -1,7 +1,13 @@
 package com.goctrithuc.backend.controllers;
 
+import com.goctrithuc.backend.dtos.CurrentUserResponse;
+import com.goctrithuc.backend.entities.UserRole;
 import com.goctrithuc.backend.repositories.UserRepository;
-import java.util.Map;
+import com.goctrithuc.backend.repositories.UserRoleRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -11,24 +17,29 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/api/users")
 public class UserController {
-  UserRepository userRepository;
+  private static final Logger logger = LoggerFactory.getLogger(UserController.class);
+  private final UserRepository userRepository;
+  private final UserRoleRepository userRoleRepository;
 
-  public UserController(UserRepository userRepository) {
+  public UserController(UserRepository userRepository, UserRoleRepository userRoleRepository) {
     this.userRepository = userRepository;
+    this.userRoleRepository = userRoleRepository;
   }
 
-  // Temporary endpoint to return the current user's info to the React frontend
   @GetMapping("/me")
-  public Map<String, Object> getCurrentUser(@AuthenticationPrincipal OAuth2User principal) {
+  public ResponseEntity<CurrentUserResponse> getCurrentUser(
+      @AuthenticationPrincipal OAuth2User principal) {
     if (principal == null) {
-      return Map.of("authenticated", false);
+      return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+          .body(CurrentUserResponse.unauthenticated());
     }
 
     Object emailObj = principal.getAttribute("email");
 
     if (emailObj == null) {
-      System.out.println("Warning: Email attribute is missing for the authenticated user.");
-      return Map.of("authenticated", false, "error", "Email attribute is missing");
+      logger.warn("Email attribute is missing for the authenticated user.");
+      return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+          .body(CurrentUserResponse.error("Email attribute is missing"));
     }
 
     String email = emailObj.toString();
@@ -36,20 +47,22 @@ public class UserController {
     var user = userRepository.findByEmail(email);
 
     if (user.isEmpty()) {
-      System.out.println("Warning: No user found in the database for email: " + email);
-      return Map.of("authenticated", false, "error", "User not found in database");
+      logger.warn("No user found in the database for email: {}", email);
+      return ResponseEntity.status(HttpStatus.NOT_FOUND)
+          .body(CurrentUserResponse.error("User not found in database"));
     }
 
-    return Map.of(
-        "authenticated",
-        true,
-        "displayName",
-        user.get().getDisplayName(),
-        "email",
-        user.get().getEmail(),
-        "avatarUrl",
-        user.get().getAvatarUrl(),
-        "username",
-        user.get().getUsername());
+    Long userId = user.get().getId();
+    var userRoles = userRoleRepository.findAllByUserIdWithRole(userId);
+
+    var roleNames = userRoles.stream().map(UserRole::getRole).map(role -> role.getName()).toList();
+    Long permissions =
+        userRoles.stream()
+            .map(UserRole::getRole)
+            .map(role -> role.getPermissions() == null ? 0L : role.getPermissions())
+            .reduce(
+                0L, (currentPermissions, rolePermissions) -> currentPermissions | rolePermissions);
+
+    return ResponseEntity.ok(CurrentUserResponse.authenticated(user.get(), roleNames, permissions));
   }
 }
