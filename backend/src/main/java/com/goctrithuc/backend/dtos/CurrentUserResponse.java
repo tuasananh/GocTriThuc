@@ -2,7 +2,9 @@ package com.goctrithuc.backend.dtos;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.goctrithuc.backend.entities.Role;
 import com.goctrithuc.backend.entities.User;
+import com.goctrithuc.backend.entities.UserRole;
 import java.util.List;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -23,14 +25,22 @@ public record CurrentUserResponse(
     return new CurrentUserResponse(false, null, null, null, null, null, null, error);
   }
 
-  public static CurrentUserResponse authenticated(User user, List<String> roles, Long permissions) {
+  public static CurrentUserResponse authenticated(User user) {
+    var roles = user.getUserRoles().stream().map(UserRole::getRole).toList();
+
+    Long permissions =
+        roles.stream()
+            .map(role -> role.getPermissions() == null ? 0L : role.getPermissions())
+            .reduce(
+                0L, (currentPermissions, rolePermissions) -> currentPermissions | rolePermissions);
+
     return new CurrentUserResponse(
         true,
         user.getDisplayName(),
         user.getEmail(),
         user.getAvatarUrl(),
         user.getUsername(),
-        roles,
+        roles.stream().map(Role::getName).toList(),
         permissions,
         null);
   }

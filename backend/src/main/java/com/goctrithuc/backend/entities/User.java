@@ -2,6 +2,7 @@ package com.goctrithuc.backend.entities;
 
 import jakarta.persistence.*;
 import java.time.ZonedDateTime;
+import java.util.Set;
 
 @Entity
 @Table(name = "users")
@@ -31,6 +32,9 @@ public class User {
   @Column(name = "updated_at", nullable = false, insertable = false)
   private ZonedDateTime updatedAt;
 
+  @OneToMany(mappedBy = "user")
+  private Set<UserRole> userRoles;
+
   protected User() {}
 
   public User(String email, String displayName, String username, String avatarUrl) {
@@ -58,5 +62,9 @@ public class User {
 
   public String getAvatarUrl() {
     return avatarUrl;
+  }
+
+  public Set<UserRole> getUserRoles() {
+    return userRoles;
   }
 }

@@ -1,7 +1,7 @@
 package com.goctrithuc.backend.controllers;
 
 import com.goctrithuc.backend.dtos.CurrentUserResponse;
-import com.goctrithuc.backend.entities.UserRole;
+import com.goctrithuc.backend.entities.User;
 import com.goctrithuc.backend.repositories.UserRepository;
 import com.goctrithuc.backend.repositories.UserRoleRepository;
 import org.slf4j.Logger;
@@ -44,25 +44,13 @@ public class UserController {
 
     String email = emailObj.toString();
 
-    var user = userRepository.findByEmail(email);
+    var user = userRepository.findByEmailWithRoles(email);
 
     if (user.isEmpty()) {
       logger.warn("No user found in the database for email: {}", email);
       return ResponseEntity.status(HttpStatus.NOT_FOUND)
           .body(CurrentUserResponse.error("User not found in database"));
     }
-
-    Long userId = user.get().getId();
-    var userRoles = userRoleRepository.findAllByUserIdWithRole(userId);
-
-    var roleNames = userRoles.stream().map(UserRole::getRole).map(role -> role.getName()).toList();
-    Long permissions =
-        userRoles.stream()
-            .map(UserRole::getRole)
-            .map(role -> role.getPermissions() == null ? 0L : role.getPermissions())
-            .reduce(
-                0L, (currentPermissions, rolePermissions) -> currentPermissions | rolePermissions);
-
-    return ResponseEntity.ok(CurrentUserResponse.authenticated(user.get(), roleNames, permissions));
+    return ResponseEntity.ok(CurrentUserResponse.authenticated(user.get()));
   }
 }
