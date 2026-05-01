@@ -1,0 +1,2092 @@
+# Agent Prompts (P1–P10): Implement Notion-like Lexical Editor
+
+<aside>
+📜
+
+**How to use this page.** Each section below (P1 → P10) is a complete, standalone prompt. Feed ONE prompt at a time to the coding agent. Each prompt repeats the persistent rules and contains every command and file source it needs — the agent never has to read another page or another prompt.
+
+**Order is mandatory.** Do not skip; do not run two prompts in parallel. Each prompt's prereq verifies the previous one passed.
+
+</aside>
+
+# Architecture overview (read once before starting)
+
+## What we're building
+
+A Notion-like rich-text editor (block-based, slash menu, drag handle, floating toolbar, markdown shortcuts, code highlight) packaged as a **Web Component** `<notion-editor>`. The editor lives in its own pnpm workspace package and never depends on host business code. The host frontend uses it via **one workspace dep + one ~30-line wrapper component** — nothing else changes in the host.
+
+## Strategy: fork-vendor from `lexical-playground`
+
+[Lexical Playground](https://github.com/facebook/lexical/tree/main/packages/lexical-playground) already implements every feature we need. We **copy its source verbatim** into `src/playground-vendor/` and **never modify** those files. All custom code lives in sibling folders (`src/ui/`, `src/plugins/`, `src/element/`, `src/serializer/`). Lexical upgrades become a folder-replace, not a merge.
+
+## Folder layout (final state after P10)
+
+```
+frontend/
+├── package.json                       ← +1 line: "@app/lexical-editor": "workspace:*"
+├── pnpm-workspace.yaml                ← created in P1
+├── .eslintrc.cjs                      ← P10: bans direct lexical imports outside the package
+├── src/
+│   └── components/
+│       └── NotionEditor.tsx           ← P10: ~30-line React wrapper, ONLY new file in frontend/src
+└── packages/
+    └── lexical-editor/                ← entire editor lives here, isolated
+        ├── package.json               ← P1
+        ├── tsconfig.json              ← P1
+        ├── vite.config.ts             ← P1
+        ├── vitest.config.ts           ← P7
+        ├── playwright.config.ts       ← P8
+        ├── .eslintrc.cjs              ← P9: bans business-code imports inside the package
+        ├── .gitignore                 ← P1
+        ├── README.md                  ← P1
+        ├── HANDOFF.md                 ← P10
+        ├── .agent-state.json          ← P1, updated each prompt (gitignored)
+        ├── index.html                 ← P3, P6: standalone demo entry
+        ├── dev/
+        │   └── main.tsx               ← P3, P6
+        ├── src/
+        │   ├── index.ts               ← P1 placeholder, P3 real
+        │   ├── types.ts               ← P3
+        │   ├── playground-vendor/     ← P2: copied verbatim, NEVER MODIFIED
+        │   ├── ui/
+        │   │   ├── EditorRoot.tsx     ← P3, replaced in P4/P5/P6
+        │   │   └── theme.css          ← P3
+        │   ├── plugins/
+        │   │   └── SerializationPlugin.tsx  ← P6 (also: any vendor-plugin wrappers as needed)
+        │   ├── element/
+        │   │   └── NotionEditorElement.ts   ← P3, replaced in P6
+        │   └── serializer/
+        │       ├── ids.ts             ← P6
+        │       ├── toDocument.ts      ← P6
+        │       └── fromDocument.ts    ← P6
+        └── tests/
+            ├── serializer.test.ts     ← P7
+            ├── smoke.spec.ts          ← P8
+            └── __screenshots__/       ← P8
+.github/
+└── workflows/
+    └── lexical-editor.yml             ← P9: CI for the editor package
+backend/                                   ← NEVER touched
+```
+
+## Isolation contract (every prompt must respect this)
+
+1. The editor package never imports from `frontend/src/**` or `backend/**`. Guarded by ESLint in P9.
+2. The host `frontend/src/**` never imports `lexical` or `@lexical/*` directly. Guarded by ESLint in P10. The only entry point is `import { NotionEditor } from "@/components/NotionEditor"`, which itself imports `"@app/lexical-editor"`.
+3. `src/playground-vendor/**` is read-only. Adaptations go in `src/plugins/` or `src/ui/`.
+4. The Web Component `<notion-editor>` exchanges only `SerializedDocument` JSON — Lexical types do not leak across the shadow boundary.
+
+## Prompt index
+
+1. **P1** — Scaffold workspace + folder layout + skeleton package
+2. **P2** — Vendor `lexical-playground` source
+3. **P3** — Minimal Web Component editor (rich-text + history only)
+4. **P4** — Add slash menu, drag handle, floating toolbar
+5. **P5** — Add lists, markdown shortcuts, code highlight
+6. **P6** — Serializer (Lexical ⇄ JSON) + initial-doc loading + change events
+7. **P7** — Unit tests (Vitest, headless Lexical)
+8. **P8** — Browser E2E (Playwright + screenshot)
+9. **P9** — Editor-package ESLint guard + GitHub Actions CI
+10. **P10** — Frontend integration (workspace dep + wrapper + host ESLint) + final hand-off
+
+---
+
+# P1 — Scaffold workspace + folder layout + skeleton package
+
+<aside>
+🔒
+
+**Persistent rules (repeat in every prompt P1–P9; P10 has an expanded allowlist).**
+
+- Branch: `feat/lexical-editor`. One commit per prompt.
+- ALLOWED paths: `frontend/packages/lexical-editor/**`, `frontend/pnpm-workspace.yaml`, `.github/workflows/lexical-editor.yml`.
+- DENIED: `backend/**`, `frontend/src/**`, `frontend/package.json`, `frontend/.eslintrc.cjs`, all other frontend configs, all other workflow files.
+- Never edit anything inside `src/playground-vendor/**` once it is copied. Adaptations live in `src/plugins/` or `src/ui/`.
+- Run scope audit after every commit:
+    
+    ```bash
+    git status --porcelain | awk '{print $2}' | grep -vE '^(frontend/packages/lexical-editor/|frontend/pnpm-workspace\.yaml$|frontend/pnpm-lock\.yaml$|\.github/workflows/lexical-editor\.yml$)$' && echo "❌ violation" || echo "✅ scope OK"
+    ```
+    
+- Language: English. No `test.skip`, no `--no-verify`, no force-push.
+</aside>
+
+## Goal
+
+Bootstrap the package: branch, workspace yaml, full folder skeleton, package manifest, base configs. After P1: `pnpm install` and `pnpm typecheck` succeed; the directory tree under `frontend/packages/lexical-editor/` matches the layout in the architecture overview, with empty placeholder files where future prompts will add content.
+
+## Prereq
+
+- `frontend/` exists with `frontend/src/`.
+- `node --version` ≥ 20, `pnpm --version` ≥ 8 (`npm i -g pnpm@9` if missing).
+- `gh auth status` shows logged in.
+
+## Steps
+
+### 1. Create the working branch
+
+```bash
+git checkout -b feat/lexical-editor 2>/dev/null || git checkout feat/lexical-editor
+```
+
+### 2. `frontend/pnpm-workspace.yaml`
+
+If it already exists and contains `"packages/*"`, leave it. Otherwise create:
+
+```yaml
+packages:
+  - "packages/*"
+```
+
+### 3. Bootstrap the folder skeleton
+
+```bash
+ROOT=frontend/packages/lexical-editor
+mkdir -p $ROOT/src/{ui,plugins,element,serializer}
+mkdir -p $ROOT/dev
+mkdir -p $ROOT/tests/__screenshots__
+```
+
+(`src/playground-vendor/` is created by P2. `tests/` is filled by P7/P8. `dev/` and `index.html` are filled by P3.)
+
+### 4. `frontend/packages/lexical-editor/package.json`
+
+```json
+{
+  "name": "@app/lexical-editor",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": { ".": { "types": "./dist/index.d.ts", "import": "./dist/index.js" } },
+  "files": ["dist"],
+  "scripts": {
+    "dev": "vite --port 5183",
+    "build": "vite build",
+    "build:watch": "vite build --watch",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint . --ext .ts,.tsx --ignore-pattern src/playground-vendor",
+    "test": "vitest run",
+    "test:e2e": "playwright test"
+  },
+  "dependencies": {
+    "lexical": "0.21.0",
+    "@lexical/react": "0.21.0",
+    "@lexical/rich-text": "0.21.0",
+    "@lexical/list": "0.21.0",
+    "@lexical/code": "0.21.0",
+    "@lexical/markdown": "0.21.0",
+    "@lexical/utils": "0.21.0",
+    "@lexical/selection": "0.21.0",
+    "@lexical/link": "0.21.0",
+    "@lexical/table": "0.21.0",
+    "@lexical/clipboard": "0.21.0",
+    "@lexical/file": "0.21.0",
+    "@lexical/hashtag": "0.21.0",
+    "@lexical/history": "0.21.0",
+    "@lexical/mark": "0.21.0",
+    "@lexical/overflow": "0.21.0",
+    "@lexical/plain-text": "0.21.0",
+    "@lexical/text": "0.21.0",
+    "@lexical/yjs": "0.21.0",
+    "@lexical/dragon": "0.21.0",
+    "@lexical/headless": "0.21.0",
+    "@lexical/offset": "0.21.0",
+    "react": "18.3.1",
+    "react-dom": "18.3.1",
+    "prismjs": "1.29.0"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.48.2",
+    "@types/node": "22.7.5",
+    "@types/prismjs": "1.26.4",
+    "@types/react": "18.3.11",
+    "@types/react-dom": "18.3.0",
+    "@typescript-eslint/eslint-plugin": "7.18.0",
+    "@typescript-eslint/parser": "7.18.0",
+    "@vitejs/plugin-react": "4.3.3",
+    "eslint": "8.57.1",
+    "jsdom": "25.0.1",
+    "typescript": "5.6.3",
+    "vite": "5.4.10",
+    "vitest": "2.1.4"
+  }
+}
+```
+
+If `pnpm install` fails because some `@lexical/*` sub-package does not exist at 0.21.0, REMOVE only that line and record it in `.agent-state.json` notes. Do not change other versions.
+
+### 5. `frontend/packages/lexical-editor/tsconfig.json`
+
+```json
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "useDefineForClassFields": true,
+    "lib": ["ES2020", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "jsx": "react-jsx",
+    "strict": true,
+    "noUnusedLocals": false,
+    "noUnusedParameters": false,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "declaration": true,
+    "outDir": "dist",
+    "types": ["vite/client", "node"]
+  },
+  "include": ["src", "dev", "tests"],
+  "exclude": ["node_modules", "dist", "src/playground-vendor/**"]
+}
+```
+
+### 6. `frontend/packages/lexical-editor/vite.config.ts`
+
+```tsx
+import { defineConfig } from "vite"
+import react from "@vitejs/plugin-react"
+import { resolve } from "path"
+
+export default defineConfig(({ command }) => ({
+	plugins: [react()],
+	server: { port: 5183, strictPort: true },
+	build: command === "build"
+		? {
+				lib: { entry: resolve(__dirname, "src/index.ts"), formats: ["es"], fileName: "index" },
+				rollupOptions: { external: [] },
+				sourcemap: true,
+			}
+		: undefined,
+}))
+```
+
+### 7. `frontend/packages/lexical-editor/.gitignore`
+
+```
+node_modules
+dist
+.agent-state.json
+test-results
+playwright-report
+.vite
+```
+
+### 8. `frontend/packages/lexical-editor/README.md`
+
+```markdown
+# @app/lexical-editor
+
+Notion-like rich-text editor packaged as a Web Component (`<notion-editor>`).
+Vendored from `facebook/lexical` `lexical-playground`. Isolated from host business code
+by a pnpm workspace boundary plus ESLint guards in both directions.
+
+    pnpm dev        # http://localhost:5183/  (standalone demo)
+    pnpm typecheck
+    pnpm build      # emits dist/ for the host frontend
+    pnpm test       # vitest unit
+    pnpm test:e2e   # playwright smoke
+```
+
+### 9. `frontend/packages/lexical-editor/src/index.ts`
+
+Placeholder, replaced in P3:
+
+```tsx
+export {} // placeholder — replaced in P3
+```
+
+### 10. `frontend/packages/lexical-editor/.agent-state.json`
+
+```json
+{ "currentPrompt": 1, "completedPrompts": [1], "lexicalVersion": "0.21.0", "notes": "" }
+```
+
+### 11. Install
+
+```bash
+cd frontend
+pnpm install
+```
+
+## Verification gate (P1)
+
+```bash
+ROOT=frontend/packages/lexical-editor
+[ -d $ROOT/src/ui ] && [ -d $ROOT/src/plugins ] && [ -d $ROOT/src/element ] && [ -d $ROOT/src/serializer ] && [ -d $ROOT/dev ] || { echo "❌ folder skeleton incomplete"; exit 1; }
+cd $ROOT
+pnpm typecheck && echo "✅ P1 done" || { echo "❌ P1 typecheck failed"; exit 1; }
+```
+
+Then scope audit (top of this prompt). Then commit and push:
+
+```bash
+git add -A
+git commit -m "chore(editor): P1 scaffold package + folder layout"
+git push -u origin feat/lexical-editor
+```
+
+## Next
+
+When `✅ P1 done` AND `✅ scope OK`, hand the user prompt **P2**.
+
+---
+
+# P2 — Vendor `lexical-playground` source
+
+<aside>
+🔒
+
+**Persistent rules.** Branch `feat/lexical-editor`. ALLOWED: `frontend/packages/lexical-editor/**`, `frontend/pnpm-workspace.yaml`, `.github/workflows/lexical-editor.yml`. DENIED: `backend/**`, `frontend/src/**`, `frontend/package.json`, `frontend/.eslintrc.cjs`, all other configs/workflows. NEVER edit `src/playground-vendor/**` after copying. Patch via wrappers in `src/plugins/`. Run scope audit after every commit.
+
+</aside>
+
+## Goal
+
+Clone `facebook/lexical` and copy `lexical-playground/src/*` verbatim into `frontend/packages/lexical-editor/src/playground-vendor/`. After P2 the vendor folder is frozen.
+
+## Prereq
+
+- P1 done (`jq -r '.completedPrompts | contains([1])' frontend/packages/lexical-editor/.agent-state.json` prints `true`).
+- `pnpm typecheck` from P1 still passes.
+- `git`, `jq`, `curl` installed.
+
+## Steps
+
+### 1. Vendor the source
+
+```bash
+LEXICAL_VERSION=$(jq -r .lexicalVersion frontend/packages/lexical-editor/.agent-state.json)
+WORKDIR=$(pwd)
+
+cd /tmp
+rm -rf lexical-clone
+git clone --depth 1 -b v$LEXICAL_VERSION https://github.com/facebook/lexical lexical-clone \
+  || git clone --depth 1 https://github.com/facebook/lexical lexical-clone
+
+DEST="$WORKDIR/frontend/packages/lexical-editor/src/playground-vendor"
+rm -rf "$DEST"
+mkdir -p "$DEST"
+cp -R lexical-clone/packages/lexical-playground/src/. "$DEST/"
+
+# Drop vendor's own tsconfig/eslint so they don't leak
+find "$DEST" -maxdepth 2 -name "tsconfig*.json" -delete
+find "$DEST" -maxdepth 2 -name ".eslint*" -delete
+
+cat > "$DEST/.vendor-meta.json" <<JSON
+{ "lexicalVersion": "$LEXICAL_VERSION", "copiedAt": "$(date -Iseconds)", "source": "github.com/facebook/lexical" }
+JSON
+
+cd "$WORKDIR"
+```
+
+### 2. Update `.agent-state.json`
+
+```bash
+jq '.currentPrompt=2 | .completedPrompts=[1,2] | .notes="P2 vendor copied"' \
+  frontend/packages/lexical-editor/.agent-state.json > /tmp/s.json && \
+  mv /tmp/s.json frontend/packages/lexical-editor/.agent-state.json
+```
+
+## Verification gate (P2)
+
+```bash
+DEST=frontend/packages/lexical-editor/src/playground-vendor
+ls $DEST/plugins/ComponentPickerPlugin*       >/dev/null 2>&1 \
+  && ls $DEST/plugins/DraggableBlockPlugin*    >/dev/null 2>&1 \
+  && ls $DEST/plugins/FloatingTextFormatToolbarPlugin* >/dev/null 2>&1 \
+  && ls $DEST/plugins/MarkdownShortcutPlugin*  >/dev/null 2>&1 \
+  && ls $DEST/plugins/CodeHighlightPlugin*     >/dev/null 2>&1 \
+  && ls $DEST/plugins/ToolbarPlugin*           >/dev/null 2>&1 \
+  && ls $DEST/nodes/PlaygroundNodes*           >/dev/null 2>&1 \
+  && ls $DEST/themes/PlaygroundEditorTheme*.css >/dev/null 2>&1 \
+  && echo "✅ P2 done" \
+  || { echo "❌ vendor incomplete — inspect $DEST"; exit 1; }
+```
+
+If any check fails, the upstream layout has changed. Run e.g. `find $DEST -name 'ComponentPicker*'` to find the actual path and store it in `.agent-state.json` under a new `vendorPaths` key. P3 will use those paths.
+
+```bash
+git add -A
+git commit -m "feat(editor): P2 vendor lexical-playground"
+git push
+```
+
+## Next
+
+Feed prompt **P3**.
+
+---
+
+# P3 — Minimal Web Component editor
+
+<aside>
+🔒
+
+**Persistent rules.** Branch `feat/lexical-editor`. ALLOWED: `frontend/packages/lexical-editor/**`, `frontend/pnpm-workspace.yaml`, `.github/workflows/lexical-editor.yml`. DENIED: `backend/**`, `frontend/src/**`, `frontend/package.json`, `frontend/.eslintrc.cjs`. NEVER edit `src/playground-vendor/**`. Run scope audit after commit.
+
+</aside>
+
+## Goal
+
+Produce a working `<notion-editor>` Web Component with rich-text editing and undo/redo only. Standalone demo at `http://localhost:5183/` accepts typing. **No slash menu, no drag handle, no toolbar yet** — those come in P4.
+
+## Prereq
+
+- P1, P2 done.
+- `ls frontend/packages/lexical-editor/src/playground-vendor/themes/PlaygroundEditorTheme.css` succeeds.
+
+## Files to create
+
+### `frontend/packages/lexical-editor/src/types.ts`
+
+```tsx
+export type BlockType =
+	| "paragraph"
+	| "heading-1"
+	| "heading-2"
+	| "heading-3"
+	| "bulleted-list"
+	| "numbered-list"
+	| "check-list"
+	| "quote"
+	| "code"
+	| "divider"
+
+export type RichSpan = {
+	text: string
+	bold?: boolean
+	italic?: boolean
+	underline?: boolean
+	strikethrough?: boolean
+	code?: boolean
+}
+
+export type SerializedBlock = {
+	id: string
+	type: BlockType
+	text: string
+	rich?: RichSpan[]
+	checked?: boolean
+	language?: string
+}
+
+export type SerializedDocument = {
+	version: 1
+	blocks: SerializedBlock[]
+}
+```
+
+### `frontend/packages/lexical-editor/src/ui/theme.css`
+
+```css
+:host { display: block; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; color: #1f2328; }
+.editor-shell { position: relative; padding: 12px 16px; min-height: 220px; background: #fff; border: 1px solid #e5e7eb; border-radius: 8px; }
+.editor-input { outline: none; min-height: 200px; line-height: 1.55; font-size: 15px; }
+.editor-input p { margin: 4px 0; }
+.editor-input h1 { font-size: 1.6em; margin: 12px 0 6px; }
+.editor-input h2 { font-size: 1.35em; margin: 10px 0 6px; }
+.editor-input h3 { font-size: 1.15em; margin: 8px 0 4px; }
+.editor-input code { background: #f3f4f6; padding: 1px 4px; border-radius: 3px; font-size: 0.92em; }
+.editor-placeholder { position: absolute; top: 18px; left: 22px; color: #9ca3af; pointer-events: none; user-select: none; }
+```
+
+### `frontend/packages/lexical-editor/src/ui/EditorRoot.tsx`
+
+```tsx
+import { LexicalComposer } from "@lexical/react/LexicalComposer"
+import { RichTextPlugin } from "@lexical/react/LexicalRichTextPlugin"
+import { ContentEditable } from "@lexical/react/LexicalContentEditable"
+import { LexicalErrorBoundary } from "@lexical/react/LexicalErrorBoundary"
+import { HistoryPlugin } from "@lexical/react/LexicalHistoryPlugin"
+import PlaygroundNodes from "../playground-vendor/nodes/PlaygroundNodes"
+import PlaygroundEditorTheme from "../playground-vendor/themes/PlaygroundEditorTheme"
+
+export function EditorRoot() {
+	const initialConfig = {
+		namespace: "NotionEditor",
+		theme: PlaygroundEditorTheme,
+		nodes: [...PlaygroundNodes],
+		onError: (e: Error) => console.error("[lexical-editor]", e),
+	}
+	return (
+		<LexicalComposer initialConfig={initialConfig}>
+			<div className="editor-shell">
+				<RichTextPlugin
+					contentEditable={<ContentEditable className="editor-input" />}
+					placeholder={<div className="editor-placeholder">Start typing...</div>}
+					ErrorBoundary={LexicalErrorBoundary}
+				/>
+				<HistoryPlugin />
+			</div>
+		</LexicalComposer>
+	)
+}
+```
+
+### `frontend/packages/lexical-editor/src/element/NotionEditorElement.ts`
+
+```tsx
+import { createRoot, type Root } from "react-dom/client"
+import { createElement } from "react"
+import { EditorRoot } from "../ui/EditorRoot"
+import themeCss from "../ui/theme.css?inline"
+import playgroundCss from "../playground-vendor/themes/PlaygroundEditorTheme.css?inline"
+
+export class NotionEditorElement extends HTMLElement {
+	private root: Root | null = null
+
+	connectedCallback() {
+		const shadow = this.attachShadow({ mode: "open" })
+		const style = document.createElement("style")
+		style.textContent = playgroundCss + "\n" + themeCss
+		shadow.appendChild(style)
+		const mount = document.createElement("div")
+		shadow.appendChild(mount)
+		this.root = createRoot(mount)
+		this.root.render(createElement(EditorRoot))
+		queueMicrotask(() => this.dispatchEvent(new CustomEvent("editor-ready")))
+	}
+
+	disconnectedCallback() {
+		this.root?.unmount()
+		this.root = null
+	}
+}
+```
+
+### `frontend/packages/lexical-editor/src/index.ts` (replace placeholder from P1)
+
+```tsx
+import { NotionEditorElement } from "./element/NotionEditorElement"
+
+export function defineNotionEditor(tagName = "notion-editor") {
+	if (typeof customElements !== "undefined" && !customElements.get(tagName)) {
+		customElements.define(tagName, NotionEditorElement)
+	}
+}
+
+defineNotionEditor()
+
+// Export TYPES ONLY — do not leak Lexical out of the package
+export type { SerializedDocument, SerializedBlock, BlockType, RichSpan } from "./types"
+```
+
+### `frontend/packages/lexical-editor/index.html`
+
+```html
+<!doctype html>
+<html>
+	<head>
+		<meta charset="utf-8" />
+		<title>Notion Editor — Dev</title>
+		<style>
+			body { font-family: system-ui; padding: 24px; max-width: 820px; margin: auto; }
+			notion-editor { display: block; margin-bottom: 16px; }
+		</style>
+	</head>
+	<body>
+		<h1>Notion Editor demo</h1>
+		<notion-editor id="e"></notion-editor>
+		<script type="module" src="/dev/main.tsx"></script>
+	</body>
+</html>
+```
+
+### `frontend/packages/lexical-editor/dev/main.tsx`
+
+```tsx
+import "../src/index" // side-effect: registers <notion-editor>
+```
+
+## Update `.agent-state.json`
+
+```bash
+jq '.currentPrompt=3 | .completedPrompts=[1,2,3] | .notes="P3 minimal editor"' \
+  frontend/packages/lexical-editor/.agent-state.json > /tmp/s.json && \
+  mv /tmp/s.json frontend/packages/lexical-editor/.agent-state.json
+```
+
+## Verification gate (P3)
+
+```bash
+cd frontend/packages/lexical-editor
+pnpm typecheck && pnpm build && [ -f dist/index.js ] && echo "✅ P3 build OK" || { echo "❌ P3 build failed"; exit 1; }
+
+pnpm dev &
+DEV_PID=$!
+sleep 6
+code=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:5183/)
+kill $DEV_PID 2>/dev/null; wait $DEV_PID 2>/dev/null
+[ "$code" = "200" ] && echo "✅ P3 done" || { echo "❌ P3 dev HTTP $code"; exit 1; }
+```
+
+## Manual sanity check (recommended)
+
+Open `http://localhost:5183/`. Click into the editor, type a few words — they should appear without console errors. Press Cmd/Ctrl+Z to undo — the text disappears.
+
+```bash
+git add -A
+git commit -m "feat(editor): P3 minimal web component"
+git push
+```
+
+## Next
+
+Feed prompt **P4**.
+
+---
+
+# P4 — Slash menu + drag handle + floating toolbar
+
+<aside>
+🔒
+
+**Persistent rules.** Branch `feat/lexical-editor`. ALLOWED: `frontend/packages/lexical-editor/**`, `frontend/pnpm-workspace.yaml`, `.github/workflows/lexical-editor.yml`. DENIED: `backend/**`, `frontend/src/**`, `frontend/package.json`, `frontend/.eslintrc.cjs`. NEVER edit `src/playground-vendor/**`. If a vendor plugin needs adaptation, copy it into `src/plugins/` and edit the copy. Run scope audit after commit.
+
+</aside>
+
+## Plugins to KEEP (compose in EditorRoot.tsx)
+
+- `ToolbarPlugin` (top toolbar)
+- `ComponentPickerPlugin` (slash menu)
+- `DraggableBlockPlugin` (drag handle)
+- `FloatingTextFormatToolbarPlugin` (inline format toolbar)
+
+## Plugins to DROP (kept in vendor folder, NOT composed)
+
+- Images / InlineImage / Excalidraw
+- YouTube / Twitter / Figma / AutoEmbed
+- Mentions, Poll
+- Table / TableOfContents
+- Collaboration
+- Emojis / EmojiPicker
+- AI plugins (if any)
+
+*Never delete vendor files; just don't import them.*
+
+## Goal
+
+Wire the four KEEP plugins above. Floating plugins must use an `anchorElem` that lives **inside the shadow root**, otherwise tooltips/menus render in the light DOM and lose styles.
+
+## Prereq
+
+- P3 done. `pnpm dev` shows a working editor.
+- `ls src/playground-vendor/plugins/{ComponentPickerPlugin,DraggableBlockPlugin,FloatingTextFormatToolbarPlugin,ToolbarPlugin}*` succeeds.
+
+## File to REPLACE: `frontend/packages/lexical-editor/src/ui/EditorRoot.tsx`
+
+```tsx
+import { LexicalComposer } from "@lexical/react/LexicalComposer"
+import { RichTextPlugin } from "@lexical/react/LexicalRichTextPlugin"
+import { ContentEditable } from "@lexical/react/LexicalContentEditable"
+import { LexicalErrorBoundary } from "@lexical/react/LexicalErrorBoundary"
+import { HistoryPlugin } from "@lexical/react/LexicalHistoryPlugin"
+import { useState } from "react"
+
+import ToolbarPlugin from "../playground-vendor/plugins/ToolbarPlugin"
+import ComponentPickerPlugin from "../playground-vendor/plugins/ComponentPickerPlugin"
+import DraggableBlockPlugin from "../playground-vendor/plugins/DraggableBlockPlugin"
+import FloatingTextFormatToolbarPlugin from "../playground-vendor/plugins/FloatingTextFormatToolbarPlugin"
+import PlaygroundNodes from "../playground-vendor/nodes/PlaygroundNodes"
+import PlaygroundEditorTheme from "../playground-vendor/themes/PlaygroundEditorTheme"
+
+export function EditorRoot() {
+	const [floatingAnchor, setFloatingAnchor] = useState<HTMLDivElement | null>(null)
+
+	const initialConfig = {
+		namespace: "NotionEditor",
+		theme: PlaygroundEditorTheme,
+		nodes: [...PlaygroundNodes],
+		onError: (e: Error) => console.error("[lexical-editor]", e),
+	}
+
+	return (
+		<LexicalComposer initialConfig={initialConfig}>
+			<ToolbarPlugin />
+			<div className="editor-shell" ref={(el) => setFloatingAnchor(el)}>
+				<RichTextPlugin
+					contentEditable={<ContentEditable className="editor-input" />}
+					placeholder={<div className="editor-placeholder">Type "/" to open the menu...</div>}
+					ErrorBoundary={LexicalErrorBoundary}
+				/>
+				<HistoryPlugin />
+				<ComponentPickerPlugin />
+				{floatingAnchor && (
+					<>
+						<DraggableBlockPlugin anchorElem={floatingAnchor} />
+						<FloatingTextFormatToolbarPlugin anchorElem={floatingAnchor} />
+					</>
+				)}
+			</div>
+		</LexicalComposer>
+	)
+}
+```
+
+## If a vendor plugin breaks at typecheck or runtime
+
+Do NOT modify the vendor file. Choose ONE escape hatch, in order:
+
+1. Add `// @ts-expect-error vendor any` ONLY at the import or call site in `EditorRoot.tsx`.
+2. If a plugin portals into `document.body` and breaks visually: copy the vendor file to `src/plugins/<Name>.tsx`, change its import path in `EditorRoot.tsx`, and patch the copy to use `anchorElem` for portals.
+3. If a required prop's signature differs from this prompt, look at `lexical-clone/packages/lexical-playground/src/Editor.tsx` for how it's wired and copy that wiring here.
+
+## Update `.agent-state.json`
+
+```bash
+jq '.currentPrompt=4 | .completedPrompts=[1,2,3,4] | .notes="P4 ux plugins"' \
+  frontend/packages/lexical-editor/.agent-state.json > /tmp/s.json && \
+  mv /tmp/s.json frontend/packages/lexical-editor/.agent-state.json
+```
+
+## Verification gate (P4)
+
+```bash
+cd frontend/packages/lexical-editor
+pnpm typecheck && pnpm build && echo "✅ P4 build OK" || { echo "❌ P4 build failed"; exit 1; }
+pnpm dev &
+DEV_PID=$!; sleep 6
+curl -s -o /dev/null -w "%{http_code}" http://localhost:5183/ | grep -q 200 && echo "✅ P4 dev OK" || { echo "❌ P4 dev failed"; kill $DEV_PID 2>/dev/null; exit 1; }
+kill $DEV_PID 2>/dev/null; wait $DEV_PID 2>/dev/null
+```
+
+## Manual sanity check (required)
+
+- Type `/` — a slash menu must appear.
+- Hover a block — a `⋮⋮` drag handle must appear on the left.
+- Select text — a floating B/I/U toolbar must appear.
+
+If any fail, fix per "If a vendor plugin breaks" above. Do NOT proceed.
+
+```bash
+git add -A
+git commit -m "feat(editor): P4 slash menu + drag handle + floating toolbar"
+git push
+```
+
+## Next
+
+Feed prompt **P5**.
+
+---
+
+# P5 — Lists, markdown shortcuts, code highlight
+
+<aside>
+🔒
+
+**Persistent rules.** Branch `feat/lexical-editor`. ALLOWED: `frontend/packages/lexical-editor/**`, `frontend/pnpm-workspace.yaml`, `.github/workflows/lexical-editor.yml`. DENIED: `backend/**`, `frontend/src/**`, `frontend/package.json`, `frontend/.eslintrc.cjs`. NEVER edit `src/playground-vendor/**`. Run scope audit after commit.
+
+</aside>
+
+## Goal
+
+Add content-format plugins: lists, check lists, tab indent, markdown shortcuts (`#`  → H1, `-`  → bullet, etc.), code highlight, auto-focus.
+
+## Prereq
+
+- P4 done. Slash menu, drag handle, floating toolbar all work in browser.
+
+## File to REPLACE: `frontend/packages/lexical-editor/src/ui/EditorRoot.tsx`
+
+```tsx
+import { LexicalComposer } from "@lexical/react/LexicalComposer"
+import { RichTextPlugin } from "@lexical/react/LexicalRichTextPlugin"
+import { ContentEditable } from "@lexical/react/LexicalContentEditable"
+import { LexicalErrorBoundary } from "@lexical/react/LexicalErrorBoundary"
+import { HistoryPlugin } from "@lexical/react/LexicalHistoryPlugin"
+import { ListPlugin } from "@lexical/react/LexicalListPlugin"
+import { CheckListPlugin } from "@lexical/react/LexicalCheckListPlugin"
+import { TabIndentationPlugin } from "@lexical/react/LexicalTabIndentationPlugin"
+import { AutoFocusPlugin } from "@lexical/react/LexicalAutoFocusPlugin"
+import { useState } from "react"
+
+import ToolbarPlugin from "../playground-vendor/plugins/ToolbarPlugin"
+import ComponentPickerPlugin from "../playground-vendor/plugins/ComponentPickerPlugin"
+import DraggableBlockPlugin from "../playground-vendor/plugins/DraggableBlockPlugin"
+import FloatingTextFormatToolbarPlugin from "../playground-vendor/plugins/FloatingTextFormatToolbarPlugin"
+import CodeHighlightPlugin from "../playground-vendor/plugins/CodeHighlightPlugin"
+import MarkdownShortcutPlugin from "../playground-vendor/plugins/MarkdownShortcutPlugin"
+import PlaygroundNodes from "../playground-vendor/nodes/PlaygroundNodes"
+import PlaygroundEditorTheme from "../playground-vendor/themes/PlaygroundEditorTheme"
+
+export function EditorRoot() {
+	const [floatingAnchor, setFloatingAnchor] = useState<HTMLDivElement | null>(null)
+
+	const initialConfig = {
+		namespace: "NotionEditor",
+		theme: PlaygroundEditorTheme,
+		nodes: [...PlaygroundNodes],
+		onError: (e: Error) => console.error("[lexical-editor]", e),
+	}
+
+	return (
+		<LexicalComposer initialConfig={initialConfig}>
+			<ToolbarPlugin />
+			<div className="editor-shell" ref={(el) => setFloatingAnchor(el)}>
+				<RichTextPlugin
+					contentEditable={<ContentEditable className="editor-input" />}
+					placeholder={<div className="editor-placeholder">Type "/" to open the menu...</div>}
+					ErrorBoundary={LexicalErrorBoundary}
+				/>
+				<AutoFocusPlugin />
+				<HistoryPlugin />
+				<ListPlugin />
+				<CheckListPlugin />
+				<TabIndentationPlugin />
+				<MarkdownShortcutPlugin />
+				<CodeHighlightPlugin />
+				<ComponentPickerPlugin />
+				{floatingAnchor && (
+					<>
+						<DraggableBlockPlugin anchorElem={floatingAnchor} />
+						<FloatingTextFormatToolbarPlugin anchorElem={floatingAnchor} />
+					</>
+				)}
+			</div>
+		</LexicalComposer>
+	)
+}
+```
+
+If the vendor `MarkdownShortcutPlugin` errors at runtime saying it needs `transformers`, copy it to `src/plugins/MarkdownShortcutPlugin.tsx`, change the import in `EditorRoot.tsx`, and pass `transformers={TRANSFORMERS}` from `@lexical/markdown` to the underlying `LexicalMarkdownShortcutPlugin`.
+
+## Update `.agent-state.json`
+
+```bash
+jq '.currentPrompt=5 | .completedPrompts=[1,2,3,4,5] | .notes="P5 content plugins"' \
+  frontend/packages/lexical-editor/.agent-state.json > /tmp/s.json && \
+  mv /tmp/s.json frontend/packages/lexical-editor/.agent-state.json
+```
+
+## Verification gate (P5)
+
+```bash
+cd frontend/packages/lexical-editor
+pnpm typecheck && pnpm build && echo "✅ P5 build OK" || { echo "❌ P5 build failed"; exit 1; }
+pnpm dev &
+DEV_PID=$!; sleep 6
+curl -s -o /dev/null -w "%{http_code}" http://localhost:5183/ | grep -q 200 && echo "✅ P5 dev OK" || { echo "❌ P5 dev failed"; kill $DEV_PID 2>/dev/null; exit 1; }
+kill $DEV_PID 2>/dev/null; wait $DEV_PID 2>/dev/null
+```
+
+## Manual sanity check (required)
+
+- `#`  → H1.
+- `-`  → bullet.
+- `` ` Enter → code block with syntax highlighting.
+
+```bash
+git add -A
+git commit -m "feat(editor): P5 lists + markdown + code highlight"
+git push
+```
+
+## Next
+
+Feed prompt **P6**.
+
+---
+
+# P6 — Serializer (Lexical ⇄ JSON) + initial-doc loading + change events
+
+<aside>
+🔒
+
+**Persistent rules.** Branch `feat/lexical-editor`. ALLOWED: `frontend/packages/lexical-editor/**`, `frontend/pnpm-workspace.yaml`, `.github/workflows/lexical-editor.yml`. DENIED: `backend/**`, `frontend/src/**`, `frontend/package.json`, `frontend/.eslintrc.cjs`. NEVER edit `src/playground-vendor/**`. Run scope audit after commit.
+
+</aside>
+
+## Goal
+
+Add a JSON serializer (Lexical state ⇄ `SerializedDocument`), wire it as a plugin, expose `value` setter and `editor-ready` / `editor-input` / `editor-change` (debounced 400ms) events on the Web Component, update the demo to seed an initial value and render the live JSON. The serializer is the **only** place that knows about both Lexical and `SerializedDocument`.
+
+## Prereq
+
+- P5 done. All UX features work.
+
+## Files to CREATE
+
+### `frontend/packages/lexical-editor/src/serializer/ids.ts`
+
+```tsx
+export function newId(): string {
+	if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
+		return crypto.randomUUID()
+	}
+	return "b_" + Math.random().toString(36).slice(2, 10) + Date.now().toString(36)
+}
+```
+
+### `frontend/packages/lexical-editor/src/serializer/toDocument.ts`
+
+```tsx
+import { $getRoot, $isParagraphNode, $isTextNode, type ElementNode, type LexicalNode, type TextNode } from "lexical"
+import { $isHeadingNode, $isQuoteNode, type HeadingNode } from "@lexical/rich-text"
+import { $isListNode, $isListItemNode, type ListNode, type ListItemNode } from "@lexical/list"
+import { $isCodeNode, type CodeNode } from "@lexical/code"
+import type { BlockType, RichSpan, SerializedBlock, SerializedDocument } from "../types"
+import { newId } from "./ids"
+
+function richFromTextNode(n: TextNode): RichSpan {
+	const f = n.getFormat()
+	return {
+		text: n.getTextContent(),
+		bold: (f & 1) !== 0,
+		italic: (f & 2) !== 0,
+		strikethrough: (f & 4) !== 0,
+		underline: (f & 8) !== 0,
+		code: (f & 16) !== 0,
+	}
+}
+
+function richFromElement(node: ElementNode): RichSpan[] {
+	const out: RichSpan[] = []
+	for (const child of node.getChildren()) {
+		if ($isTextNode(child)) out.push(richFromTextNode(child))
+		else if ("getTextContent" in child) out.push({ text: (child as LexicalNode).getTextContent() })
+	}
+	return out
+}
+
+function headingType(n: HeadingNode): BlockType {
+	const tag = n.getTag()
+	if (tag === "h1") return "heading-1"
+	if (tag === "h2") return "heading-2"
+	return "heading-3"
+}
+
+function listType(n: ListNode): BlockType {
+	switch (n.getListType()) {
+		case "bullet": return "bulleted-list"
+		case "number": return "numbered-list"
+		case "check":  return "check-list"
+		default:       return "bulleted-list"
+	}
+}
+
+function listItemToBlock(item: ListItemNode, type: BlockType): SerializedBlock {
+	return {
+		id: newId(),
+		type,
+		text: item.getTextContent(),
+		rich: richFromElement(item),
+		checked: type === "check-list" ? item.getChecked() ?? false : undefined,
+	}
+}
+
+function nodeToBlocks(node: LexicalNode): SerializedBlock[] {
+	if ($isHeadingNode(node)) return [{ id: newId(), type: headingType(node), text: node.getTextContent(), rich: richFromElement(node) }]
+	if ($isQuoteNode(node))   return [{ id: newId(), type: "quote", text: node.getTextContent(), rich: richFromElement(node) }]
+	if ($isCodeNode(node)) {
+		const c = node as CodeNode
+		return [{ id: newId(), type: "code", text: c.getTextContent(), language: c.getLanguage() ?? undefined }]
+	}
+	if ($isListNode(node)) {
+		const t = listType(node)
+		const out: SerializedBlock[] = []
+		for (const child of node.getChildren()) {
+			if ($isListItemNode(child)) out.push(listItemToBlock(child, t))
+		}
+		return out
+	}
+	if ($isParagraphNode(node)) return [{ id: newId(), type: "paragraph", text: node.getTextContent(), rich: richFromElement(node) }]
+	if ("getTextContent" in node) return [{ id: newId(), type: "paragraph", text: (node as LexicalNode).getTextContent() }]
+	return []
+}
+
+export function toDocument(): SerializedDocument {
+	const blocks: SerializedBlock[] = []
+	for (const node of $getRoot().getChildren()) blocks.push(...nodeToBlocks(node))
+	return { version: 1, blocks }
+}
+```
+
+### `frontend/packages/lexical-editor/src/serializer/fromDocument.ts`
+
+```tsx
+import { $getRoot, $createParagraphNode, $createTextNode } from "lexical"
+import { $createHeadingNode, $createQuoteNode, type HeadingTagType } from "@lexical/rich-text"
+import { $createListNode, $createListItemNode } from "@lexical/list"
+import { $createCodeNode } from "@lexical/code"
+import type { RichSpan, SerializedBlock, SerializedDocument } from "../types"
+
+function applyRich(target: { append: (n: any) => void }, rich?: RichSpan[], fallback?: string) {
+	if (rich && rich.length > 0) {
+		for (const span of rich) {
+			const t = $createTextNode(span.text)
+			let f = 0
+			if (span.bold) f |= 1
+			if (span.italic) f |= 2
+			if (span.strikethrough) f |= 4
+			if (span.underline) f |= 8
+			if (span.code) f |= 16
+			if (f) t.setFormat(f as any)
+			target.append(t)
+		}
+	} else if (fallback) {
+		target.append($createTextNode(fallback))
+	}
+}
+
+function createBlock(b: SerializedBlock) {
+	switch (b.type) {
+		case "heading-1":
+		case "heading-2":
+		case "heading-3": {
+			const tag = ("h" + b.type.slice(-1)) as HeadingTagType
+			const h = $createHeadingNode(tag)
+			applyRich(h, b.rich, b.text)
+			return h
+		}
+		case "quote": {
+			const q = $createQuoteNode()
+			applyRich(q, b.rich, b.text)
+			return q
+		}
+		case "code": {
+			const c = $createCodeNode(b.language)
+			if (b.text) c.append($createTextNode(b.text))
+			return c
+		}
+		case "bulleted-list":
+		case "numbered-list":
+		case "check-list": {
+			const type = b.type === "bulleted-list" ? "bullet" : b.type === "numbered-list" ? "number" : "check"
+			const list = $createListNode(type)
+			const item = $createListItemNode(b.type === "check-list" ? !!b.checked : undefined)
+			applyRich(item, b.rich, b.text)
+			list.append(item)
+			return list
+		}
+		case "divider":
+		case "paragraph":
+		default: {
+			const p = $createParagraphNode()
+			applyRich(p, b.rich, b.text)
+			return p
+		}
+	}
+}
+
+export function fromDocument(doc: SerializedDocument) {
+	const root = $getRoot()
+	root.clear()
+	for (const b of doc.blocks) root.append(createBlock(b))
+}
+```
+
+### `frontend/packages/lexical-editor/src/plugins/SerializationPlugin.tsx`
+
+```tsx
+import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext"
+import { useEffect, useRef } from "react"
+import { toDocument } from "../serializer/toDocument"
+import { fromDocument } from "../serializer/fromDocument"
+import type { SerializedDocument } from "../types"
+
+type Props = { initialDoc?: SerializedDocument; onInput: (doc: SerializedDocument) => void }
+
+export function SerializationPlugin({ initialDoc, onInput }: Props) {
+	const [editor] = useLexicalComposerContext()
+	const seededRef = useRef(false)
+
+	useEffect(() => {
+		if (seededRef.current || !initialDoc) return
+		seededRef.current = true
+		editor.update(() => fromDocument(initialDoc))
+	}, [editor, initialDoc])
+
+	useEffect(() => {
+		return editor.registerUpdateListener(({ editorState }) => {
+			editorState.read(() => onInput(toDocument()))
+		})
+	}, [editor, onInput])
+
+	return null
+}
+```
+
+## Files to REPLACE
+
+### `frontend/packages/lexical-editor/src/ui/EditorRoot.tsx`
+
+```tsx
+import { LexicalComposer } from "@lexical/react/LexicalComposer"
+import { RichTextPlugin } from "@lexical/react/LexicalRichTextPlugin"
+import { ContentEditable } from "@lexical/react/LexicalContentEditable"
+import { LexicalErrorBoundary } from "@lexical/react/LexicalErrorBoundary"
+import { HistoryPlugin } from "@lexical/react/LexicalHistoryPlugin"
+import { ListPlugin } from "@lexical/react/LexicalListPlugin"
+import { CheckListPlugin } from "@lexical/react/LexicalCheckListPlugin"
+import { TabIndentationPlugin } from "@lexical/react/LexicalTabIndentationPlugin"
+import { AutoFocusPlugin } from "@lexical/react/LexicalAutoFocusPlugin"
+import { useState } from "react"
+
+import ToolbarPlugin from "../playground-vendor/plugins/ToolbarPlugin"
+import ComponentPickerPlugin from "../playground-vendor/plugins/ComponentPickerPlugin"
+import DraggableBlockPlugin from "../playground-vendor/plugins/DraggableBlockPlugin"
+import FloatingTextFormatToolbarPlugin from "../playground-vendor/plugins/FloatingTextFormatToolbarPlugin"
+import CodeHighlightPlugin from "../playground-vendor/plugins/CodeHighlightPlugin"
+import MarkdownShortcutPlugin from "../playground-vendor/plugins/MarkdownShortcutPlugin"
+import PlaygroundNodes from "../playground-vendor/nodes/PlaygroundNodes"
+import PlaygroundEditorTheme from "../playground-vendor/themes/PlaygroundEditorTheme"
+
+import { SerializationPlugin } from "../plugins/SerializationPlugin"
+import type { SerializedDocument } from "../types"
+
+type Props = { initialDoc?: SerializedDocument; onInput: (doc: SerializedDocument) => void }
+
+export function EditorRoot({ initialDoc, onInput }: Props) {
+	const [floatingAnchor, setFloatingAnchor] = useState<HTMLDivElement | null>(null)
+
+	const initialConfig = {
+		namespace: "NotionEditor",
+		theme: PlaygroundEditorTheme,
+		nodes: [...PlaygroundNodes],
+		onError: (e: Error) => console.error("[lexical-editor]", e),
+	}
+
+	return (
+		<LexicalComposer initialConfig={initialConfig}>
+			<ToolbarPlugin />
+			<div className="editor-shell" ref={(el) => setFloatingAnchor(el)}>
+				<RichTextPlugin
+					contentEditable={<ContentEditable className="editor-input" />}
+					placeholder={<div className="editor-placeholder">Type "/" to open the menu...</div>}
+					ErrorBoundary={LexicalErrorBoundary}
+				/>
+				<AutoFocusPlugin />
+				<HistoryPlugin />
+				<ListPlugin />
+				<CheckListPlugin />
+				<TabIndentationPlugin />
+				<MarkdownShortcutPlugin />
+				<CodeHighlightPlugin />
+				<ComponentPickerPlugin />
+				{floatingAnchor && (
+					<>
+						<DraggableBlockPlugin anchorElem={floatingAnchor} />
+						<FloatingTextFormatToolbarPlugin anchorElem={floatingAnchor} />
+					</>
+				)}
+				<SerializationPlugin initialDoc={initialDoc} onInput={onInput} />
+			</div>
+		</LexicalComposer>
+	)
+}
+```
+
+### `frontend/packages/lexical-editor/src/element/NotionEditorElement.ts`
+
+```tsx
+import { createRoot, type Root } from "react-dom/client"
+import { createElement } from "react"
+import { EditorRoot } from "../ui/EditorRoot"
+import themeCss from "../ui/theme.css?inline"
+import playgroundCss from "../playground-vendor/themes/PlaygroundEditorTheme.css?inline"
+import type { SerializedDocument } from "../types"
+
+export class NotionEditorElement extends HTMLElement {
+	private root: Root | null = null
+	private currentDoc: SerializedDocument | null = null
+	private debounceTimer: number | null = null
+
+	get value(): SerializedDocument | null { return this.currentDoc }
+	set value(doc: SerializedDocument | null) {
+		this.currentDoc = doc
+		this.render()
+	}
+
+	connectedCallback() {
+		const shadow = this.attachShadow({ mode: "open" })
+		const style = document.createElement("style")
+		style.textContent = playgroundCss + "\n" + themeCss
+		shadow.appendChild(style)
+		const mount = document.createElement("div")
+		shadow.appendChild(mount)
+		this.root = createRoot(mount)
+		this.render()
+		queueMicrotask(() => this.dispatchEvent(new CustomEvent("editor-ready")))
+	}
+
+	disconnectedCallback() {
+		if (this.debounceTimer) clearTimeout(this.debounceTimer)
+		this.root?.unmount()
+		this.root = null
+	}
+
+	private render() {
+		if (!this.root) return
+		this.root.render(
+			createElement(EditorRoot, {
+				initialDoc: this.currentDoc ?? undefined,
+				onInput: (doc) => {
+					this.currentDoc = doc
+					this.dispatchEvent(new CustomEvent("editor-input", { detail: { doc } }))
+					if (this.debounceTimer) clearTimeout(this.debounceTimer)
+					this.debounceTimer = window.setTimeout(() => {
+						this.dispatchEvent(new CustomEvent("editor-change", { detail: { doc } }))
+					}, 400)
+				},
+			}),
+		)
+	}
+}
+```
+
+### `frontend/packages/lexical-editor/index.html`
+
+```html
+<!doctype html>
+<html>
+	<head>
+		<meta charset="utf-8" />
+		<title>Notion Editor — Dev</title>
+		<style>
+			body { font-family: system-ui; padding: 24px; max-width: 820px; margin: auto; }
+			notion-editor { display: block; margin-bottom: 16px; }
+			pre { background: #f5f5f5; padding: 12px; border-radius: 6px; max-height: 280px; overflow: auto; }
+		</style>
+	</head>
+	<body>
+		<h1>Notion Editor demo</h1>
+		<notion-editor id="e"></notion-editor>
+		<h2>Live JSON</h2>
+		<pre id="out"></pre>
+		<script type="module" src="/dev/main.tsx"></script>
+	</body>
+</html>
+```
+
+### `frontend/packages/lexical-editor/dev/main.tsx`
+
+```tsx
+import "../src/index"
+import type { SerializedDocument } from "../src/types"
+
+const el = document.getElementById("e") as HTMLElement & { value: SerializedDocument | null }
+const out = document.getElementById("out")!
+
+function render(doc: SerializedDocument) { out.textContent = JSON.stringify(doc, null, 2) }
+
+el.addEventListener("editor-input", (e) => render((e as CustomEvent).detail.doc))
+el.addEventListener("editor-change", (e) => render((e as CustomEvent).detail.doc))
+
+el.value = {
+	version: 1,
+	blocks: [
+		{ id: "1", type: "heading-1", text: "Hello Notion-like editor" },
+		{ id: "2", type: "paragraph", text: "Type \"/\" to open the slash menu." },
+	],
+}
+```
+
+## Update `.agent-state.json`
+
+```bash
+jq '.currentPrompt=6 | .completedPrompts=[1,2,3,4,5,6] | .notes="P6 serializer"' \
+  frontend/packages/lexical-editor/.agent-state.json > /tmp/s.json && \
+  mv /tmp/s.json frontend/packages/lexical-editor/.agent-state.json
+```
+
+## Verification gate (P6)
+
+```bash
+cd frontend/packages/lexical-editor
+pnpm typecheck && pnpm build && echo "✅ P6 build OK" || { echo "❌ P6 build failed"; exit 1; }
+pnpm dev &
+DEV_PID=$!; sleep 6
+curl -s -o /dev/null -w "%{http_code}" http://localhost:5183/ | grep -q 200 && echo "✅ P6 dev OK" || { echo "❌ P6 dev failed"; kill $DEV_PID 2>/dev/null; exit 1; }
+kill $DEV_PID 2>/dev/null; wait $DEV_PID 2>/dev/null
+```
+
+## Manual sanity check (required)
+
+- The editor boots showing "Hello Notion-like editor" as H1 then a paragraph.
+- Typing updates the JSON in `<pre id="out">` in real time.
+
+```bash
+git add -A
+git commit -m "feat(editor): P6 serializer + initial-doc + change events"
+git push
+```
+
+## Next
+
+Feed prompt **P7**.
+
+---
+
+# P7 — Unit tests (Vitest, headless Lexical)
+
+<aside>
+🔒
+
+**Persistent rules.** Branch `feat/lexical-editor`. ALLOWED: `frontend/packages/lexical-editor/**`, `frontend/pnpm-workspace.yaml`, `.github/workflows/lexical-editor.yml`. DENIED: `backend/**`, `frontend/src/**`, `frontend/package.json`, `frontend/.eslintrc.cjs`. NEVER edit `src/playground-vendor/**`. No `test.skip`, no `--passWithNoTests`.
+
+</aside>
+
+## Goal
+
+Prove the serializer round-trips correctly with Vitest tests on a headless Lexical editor (no DOM).
+
+## Prereq
+
+- P6 done.
+
+## Files to CREATE
+
+### `frontend/packages/lexical-editor/vitest.config.ts`
+
+```tsx
+import { defineConfig } from "vitest/config"
+import react from "@vitejs/plugin-react"
+export default defineConfig({
+	plugins: [react()],
+	test: {
+		environment: "jsdom",
+		include: ["tests/**/*.test.ts", "tests/**/*.test.tsx"],
+		globals: false,
+	},
+})
+```
+
+### `frontend/packages/lexical-editor/tests/serializer.test.ts`
+
+```tsx
+import { describe, it, expect } from "vitest"
+import { createHeadlessEditor } from "@lexical/headless"
+import { fromDocument } from "../src/serializer/fromDocument"
+import { toDocument } from "../src/serializer/toDocument"
+import type { SerializedDocument } from "../src/types"
+import PlaygroundNodes from "../src/playground-vendor/nodes/PlaygroundNodes"
+
+function roundTrip(input: SerializedDocument): SerializedDocument {
+	const editor = createHeadlessEditor({
+		namespace: "test",
+		nodes: [...PlaygroundNodes],
+		onError: (e) => { throw e },
+	})
+	editor.update(() => fromDocument(input), { discrete: true })
+	let out: SerializedDocument = { version: 1, blocks: [] }
+	editor.getEditorState().read(() => { out = toDocument() })
+	return out
+}
+
+function stripIds(d: SerializedDocument) { return d.blocks.map((b) => ({ type: b.type, text: b.text })) }
+
+describe("serializer round-trip", () => {
+	it("keeps paragraph text", () => {
+		const out = roundTrip({ version: 1, blocks: [{ id: "a", type: "paragraph", text: "hello" }] })
+		expect(stripIds(out)).toEqual([{ type: "paragraph", text: "hello" }])
+	})
+	it("keeps heading-1", () => {
+		const out = roundTrip({ version: 1, blocks: [{ id: "a", type: "heading-1", text: "Title" }] })
+		expect(stripIds(out)).toEqual([{ type: "heading-1", text: "Title" }])
+	})
+	it("keeps a bulleted list of two items", () => {
+		const out = roundTrip({
+			version: 1,
+			blocks: [
+				{ id: "a", type: "bulleted-list", text: "one" },
+				{ id: "b", type: "bulleted-list", text: "two" },
+			],
+		})
+		expect(stripIds(out)).toEqual([
+			{ type: "bulleted-list", text: "one" },
+			{ type: "bulleted-list", text: "two" },
+		])
+	})
+	it("keeps a code block", () => {
+		const out = roundTrip({ version: 1, blocks: [{ id: "a", type: "code", text: "const x = 1", language: "ts" }] })
+		expect(out.blocks[0].type).toBe("code")
+		expect(out.blocks[0].text).toContain("const x = 1")
+	})
+})
+```
+
+## Update `.agent-state.json`
+
+```bash
+jq '.currentPrompt=7 | .completedPrompts=[1,2,3,4,5,6,7] | .notes="P7 unit tests"' \
+  frontend/packages/lexical-editor/.agent-state.json > /tmp/s.json && \
+  mv /tmp/s.json frontend/packages/lexical-editor/.agent-state.json
+```
+
+## Verification gate (P7)
+
+```bash
+cd frontend/packages/lexical-editor
+pnpm test 2>&1 | tee /tmp/vitest.log
+grep -qE "(failed|FAIL )" /tmp/vitest.log && { echo "❌ P7 some tests failed"; exit 1; } || echo "✅ P7 done"
+```
+
+If a test fails, fix the serializer in `src/serializer/`. Do NOT relax the assertion.
+
+```bash
+git add -A
+git commit -m "test(editor): P7 serializer unit tests"
+git push
+```
+
+## Next
+
+Feed prompt **P8**.
+
+---
+
+# P8 — Browser E2E (Playwright)
+
+<aside>
+🔒
+
+**Persistent rules.** Branch `feat/lexical-editor`. ALLOWED: `frontend/packages/lexical-editor/**`, `frontend/pnpm-workspace.yaml`, `.github/workflows/lexical-editor.yml`. DENIED: `backend/**`, `frontend/src/**`, `frontend/package.json`, `frontend/.eslintrc.cjs`. NEVER edit `src/playground-vendor/**`. No `test.skip`, no `test.fail`, no raised timeouts to mask bugs.
+
+</aside>
+
+## Goal
+
+A Playwright smoke test that boots the dev server, types into the editor, opens the slash menu, and saves a screenshot to `tests/__screenshots__/smoke.png`.
+
+## Prereq
+
+- P7 done.
+
+## Files to CREATE
+
+### `frontend/packages/lexical-editor/playwright.config.ts`
+
+```tsx
+import { defineConfig } from "@playwright/test"
+export default defineConfig({
+	testDir: "./tests",
+	testMatch: /.*\.spec\.ts$/,
+	timeout: 30_000,
+	expect: { timeout: 5_000 },
+	retries: process.env.CI ? 1 : 0,
+	workers: 1,
+	reporter: process.env.CI ? [["github"], ["list"]] : "list",
+	webServer: {
+		command: "pnpm dev",
+		url: "http://localhost:5183/",
+		reuseExistingServer: !process.env.CI,
+		timeout: 60_000,
+	},
+	use: { baseURL: "http://localhost:5183", headless: true, trace: "retain-on-failure" },
+})
+```
+
+### `frontend/packages/lexical-editor/tests/smoke.spec.ts`
+
+```tsx
+import { test, expect } from "@playwright/test"
+
+test("editor loads, accepts input, slash menu opens", async ({ page }) => {
+	const consoleErrors: string[] = []
+	page.on("console", (m) => { if (m.type() === "error") consoleErrors.push(m.text()) })
+
+	await page.goto("/")
+	const host = page.locator("notion-editor")
+	await expect(host).toBeVisible()
+
+	// Playwright pierces shadow DOM by default for locators
+	const editable = host.locator("div[contenteditable='true']").first()
+	await editable.click()
+	await editable.pressSequentially("Hello editor", { delay: 20 })
+	await expect(page.locator("#out")).toContainText("Hello editor")
+
+	await editable.press("Enter")
+	await editable.pressSequentially("/", { delay: 20 })
+	await expect(page.getByText("Heading 1").first()).toBeVisible({ timeout: 5_000 })
+
+	await page.screenshot({ path: "tests/__screenshots__/smoke.png", fullPage: true })
+	expect(consoleErrors, `console errors: ${consoleErrors.join("\n")}`).toEqual([])
+})
+```
+
+## Setup
+
+```bash
+cd frontend/packages/lexical-editor
+mkdir -p tests/__screenshots__
+pnpm exec playwright install --with-deps chromium
+```
+
+## Update `.agent-state.json`
+
+```bash
+jq '.currentPrompt=8 | .completedPrompts=[1,2,3,4,5,6,7,8] | .notes="P8 e2e"' \
+  frontend/packages/lexical-editor/.agent-state.json > /tmp/s.json && \
+  mv /tmp/s.json frontend/packages/lexical-editor/.agent-state.json
+```
+
+## Verification gate (P8)
+
+```bash
+cd frontend/packages/lexical-editor
+pnpm test:e2e
+[ -f tests/__screenshots__/smoke.png ] && echo "✅ P8 done" || { echo "❌ smoke screenshot missing"; exit 1; }
+```
+
+If the slash menu fails to appear, debug systematically (do NOT skip the test):
+
+1. Run headed: `pnpm exec playwright test --headed`. Watch what happens.
+2. Capture browser console: `page.on("console", m => console.log(m.text()))`.
+3. Most common cause: `ComponentPickerPlugin` portals into `document.body` and is hidden by the shadow root. Fix: copy the vendor file to `src/plugins/ComponentPickerPlugin.tsx`, change the import, pass an `anchorElem` from the shadow root.
+4. Second most common: `MarkdownShortcutPlugin` requires `transformers` — wrap it the same way.
+
+```bash
+git add -A
+git commit -m "test(editor): P8 playwright smoke"
+git push
+```
+
+## Next
+
+Feed prompt **P9**.
+
+---
+
+# P9 — Editor-package ESLint guard + GitHub Actions CI
+
+<aside>
+🔒
+
+**Persistent rules.** Branch `feat/lexical-editor`. ALLOWED: `frontend/packages/lexical-editor/**`, `frontend/pnpm-workspace.yaml`, `.github/workflows/lexical-editor.yml`. DENIED: `backend/**`, `frontend/src/**`, `frontend/package.json`, `frontend/.eslintrc.cjs` (host file is in P10). **Never** modify any other workflow file.
+
+</aside>
+
+## Goal
+
+1. Add an inward-facing ESLint guard so the editor package can never accidentally import host business code.
+2. Add a GitHub Actions workflow that runs typecheck + lint + build + unit + e2e on push/PR.
+3. Push and watch CI until green.
+
+## Prereq
+
+- P1–P8 all done. `pnpm test`, `pnpm test:e2e`, `pnpm build` all pass locally.
+
+## File to CREATE: `frontend/packages/lexical-editor/.eslintrc.cjs`
+
+```jsx
+/* Editor-package guard: this package must NOT import from the host frontend. */
+module.exports = {
+	root: false,
+	parser: "@typescript-eslint/parser",
+	parserOptions: { ecmaVersion: "latest", sourceType: "module", ecmaFeatures: { jsx: true } },
+	plugins: ["@typescript-eslint"],
+	rules: {
+		"no-restricted-imports": ["error", {
+			patterns: [
+				{ group: ["@/*", "../../src/*", "../../../src/*", "frontend/src/*"], message: "Editor must not import host business code." },
+				{ group: ["backend/*", "../../../backend/*"], message: "Editor must not import backend code." },
+			],
+		}],
+	},
+	overrides: [
+		{
+			// Vendor folder is read-only and exempt from lint
+			files: ["src/playground-vendor/**/*"],
+			rules: {
+				"@typescript-eslint/no-explicit-any": "off",
+				"no-restricted-imports": "off",
+			},
+		},
+	],
+	ignorePatterns: ["dist", "node_modules", "playwright-report", "test-results"],
+}
+```
+
+Verify locally:
+
+```bash
+cd frontend/packages/lexical-editor
+pnpm lint && echo "✅ editor lint OK" || { echo "❌ editor lint failed"; exit 1; }
+```
+
+## File to CREATE: `.github/workflows/lexical-editor.yml`
+
+Check it does not already exist; if it does, STOP (do NOT overwrite).
+
+```bash
+ls .github/workflows/lexical-editor.yml 2>/dev/null && { echo "❌ workflow already exists — stopping"; exit 1; }
+```
+
+Then create:
+
+```yaml
+name: lexical-editor
+
+on:
+  push:
+    branches: [main, feat/lexical-editor]
+    paths:
+      - "frontend/packages/lexical-editor/**"
+      - "frontend/pnpm-workspace.yaml"
+      - "frontend/src/components/NotionEditor.tsx"
+      - ".github/workflows/lexical-editor.yml"
+  pull_request:
+    paths:
+      - "frontend/packages/lexical-editor/**"
+      - "frontend/pnpm-workspace.yaml"
+      - "frontend/src/components/NotionEditor.tsx"
+      - ".github/workflows/lexical-editor.yml"
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with: { version: 9 }
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+          cache-dependency-path: frontend/pnpm-lock.yaml
+      - name: Install
+        run: pnpm install --frozen-lockfile
+      - name: Lint editor package
+        run: pnpm --filter @app/lexical-editor lint
+      - name: Typecheck editor package
+        run: pnpm --filter @app/lexical-editor typecheck
+      - name: Build editor package
+        run: pnpm --filter @app/lexical-editor build
+      - name: Unit tests
+        run: pnpm --filter @app/lexical-editor test
+      - name: Install Playwright browsers
+        run: pnpm --filter @app/lexical-editor exec playwright install --with-deps chromium
+      - name: E2E tests
+        run: pnpm --filter @app/lexical-editor test:e2e
+      - name: Upload Playwright artifacts on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: |
+            frontend/packages/lexical-editor/playwright-report
+            frontend/packages/lexical-editor/test-results
+          if-no-files-found: ignore
+```
+
+## Update `.agent-state.json`
+
+```bash
+jq '.currentPrompt=9 | .completedPrompts=[1,2,3,4,5,6,7,8,9] | .notes="P9 lint+ci"' \
+  frontend/packages/lexical-editor/.agent-state.json > /tmp/s.json && \
+  mv /tmp/s.json frontend/packages/lexical-editor/.agent-state.json
+```
+
+## Verification gate (P9) — push & watch CI
+
+```bash
+git add -A
+git commit -m "ci(editor): P9 eslint guard + github actions"
+git push
+
+SHA=$(git rev-parse HEAD)
+echo "watching CI for $SHA ..."
+for i in $(seq 1 60); do
+  STATUS=$(gh run list --commit "$SHA" --workflow lexical-editor --limit 1 --json status,conclusion --jq '.[0]')
+  echo "$STATUS"
+  CONCL=$(echo "$STATUS" | jq -r .conclusion)
+  ST=$(echo "$STATUS" | jq -r .status)
+  if [ "$ST" = "completed" ]; then
+    [ "$CONCL" = "success" ] && echo "✅ P9 CI green" && break
+    echo "❌ P9 CI conclusion=$CONCL"; gh run view --log-failed; exit 1
+  fi
+  sleep 20
+done
+```
+
+If CI fails: read the failed step's log, fix locally (re-run the same command from the failed step), commit, push again. Do NOT skip steps; do NOT relax the workflow.
+
+## Next
+
+Feed prompt **P10**.
+
+---
+
+# P10 — Frontend integration + host ESLint guard + final hand-off
+
+<aside>
+🔓
+
+**Persistent rules — P10 has an EXPANDED allowlist.**
+
+- Branch: `feat/lexical-editor`.
+- ALLOWED in P10 (in addition to everything previously allowed):
+    - `frontend/package.json` — ONLY a single dependency line addition.
+    - `frontend/src/components/NotionEditor.tsx` — NEW file, this is the only new file under `frontend/src/**`.
+    - `frontend/.eslintrc.cjs` — NEW file or single rules-block addition (see Step 3).
+- DENIED: every other file in `frontend/src/**`, `frontend/tsconfig*.json`, `frontend/vite.config.*`, all backend, all other workflows.
+- Never edit `src/playground-vendor/**`. Run scope audit:
+    
+    ```bash
+    git status --porcelain | awk '{print $2}' | grep -vE '^(frontend/packages/lexical-editor/|frontend/pnpm-workspace\.yaml$|frontend/pnpm-lock\.yaml$|frontend/package\.json$|frontend/\.eslintrc\.cjs$|frontend/src/components/NotionEditor\.tsx$|\.github/workflows/lexical-editor\.yml$)$' && echo "❌ violation" || echo "✅ scope OK"
+    ```
+    
+- No `--no-verify`, no force-push.
+</aside>
+
+## Goal
+
+1. Add `"@app/lexical-editor": "workspace:*"` to `frontend/package.json` (single 1-line edit).
+2. Create the host wrapper `frontend/src/components/NotionEditor.tsx` (~30 lines).
+3. Create the host ESLint guard `frontend/.eslintrc.cjs` that bans direct `lexical` / `@lexical/*` imports anywhere in `frontend/src/**`.
+4. Verify the host frontend still builds/typechecks.
+5. Write `HANDOFF.md` and run the final acceptance script.
+6. Send the final reply to the user.
+
+## Prereq
+
+- P9 done; CI green on `feat/lexical-editor`.
+- `frontend/package.json` exists.
+
+## Step 1 — Add the workspace dep
+
+```bash
+node -e "const fs=require('fs'); const p='frontend/package.json'; const j=JSON.parse(fs.readFileSync(p,'utf8')); j.dependencies=j.dependencies||{}; if(j.dependencies['@app/lexical-editor']){console.log('already present'); process.exit(0)} j.dependencies['@app/lexical-editor']='workspace:*'; fs.writeFileSync(p, JSON.stringify(j,null,2)+'\n'); console.log('added');"
+
+git --no-pager diff -- frontend/package.json
+```
+
+The diff MUST show exactly one added line: `"@app/lexical-editor": "workspace:*"`. If anything else changed, `git checkout -- frontend/package.json` and stop.
+
+```bash
+cd frontend && pnpm install && cd ..
+```
+
+## Step 2 — Create the host wrapper
+
+### `frontend/src/components/NotionEditor.tsx`
+
+```tsx
+import "@app/lexical-editor" // side-effect: registers <notion-editor>
+import type { SerializedDocument } from "@app/lexical-editor"
+import { useEffect, useRef } from "react"
+
+declare global {
+	namespace JSX {
+		interface IntrinsicElements {
+			"notion-editor": React.DetailedHTMLProps<React.HTMLAttributes<HTMLElement>, HTMLElement>
+		}
+	}
+}
+
+export type { SerializedDocument } from "@app/lexical-editor"
+
+type Props = {
+	value?: SerializedDocument
+	onChange?: (doc: SerializedDocument) => void
+}
+
+export function NotionEditor({ value, onChange }: Props) {
+	const ref = useRef<HTMLElement & { value: SerializedDocument | null }>(null)
+
+	useEffect(() => {
+		if (ref.current && value !== undefined) ref.current.value = value ?? null
+	}, [value])
+
+	useEffect(() => {
+		const el = ref.current
+		if (!el || !onChange) return
+		const h = (e: Event) => onChange((e as CustomEvent<{ doc: SerializedDocument }>).detail.doc)
+		el.addEventListener("editor-change", h)
+		return () => el.removeEventListener("editor-change", h)
+	}, [onChange])
+
+	return <notion-editor ref={ref as any} />
+}
+```
+
+## Step 3 — Create the host ESLint guard
+
+First check whether `frontend/.eslintrc.cjs` (or `.eslintrc.js` / `.json` / `eslint.config.js`) already exists:
+
+```bash
+ls frontend/.eslintrc.cjs frontend/.eslintrc.js frontend/.eslintrc.json frontend/eslint.config.js frontend/eslint.config.cjs frontend/eslint.config.mjs 2>/dev/null
+```
+
+### Case A — No host ESLint config exists
+
+Create `frontend/.eslintrc.cjs`:
+
+```jsx
+/* Host frontend guard: business code must NOT import lexical directly.
+ * The only entry point to the editor is @app/lexical-editor (via src/components/NotionEditor.tsx). */
+module.exports = {
+	root: true,
+	parser: "@typescript-eslint/parser",
+	parserOptions: { ecmaVersion: "latest", sourceType: "module", ecmaFeatures: { jsx: true } },
+	plugins: ["@typescript-eslint"],
+	rules: {
+		"no-restricted-imports": ["error", {
+			patterns: [
+				{ group: ["lexical", "@lexical/*"], message: "Do not import lexical directly. Use @app/lexical-editor via src/components/NotionEditor." },
+				{ group: ["@app/lexical-editor/src/*", "@app/lexical-editor/dist/*"], message: "Import only from the public entry point." },
+			],
+		}],
+	},
+	ignorePatterns: ["dist", "node_modules", "packages/**"],
+}
+```
+
+### Case B — An ESLint config already exists
+
+Do NOT overwrite. Instead, append a `no-restricted-imports` rule to its existing rules block. The minimum-viable patch:
+
+- If `.eslintrc.cjs` / `.js` / `.json`: add to `rules`:
+    
+    ```jsx
+    "no-restricted-imports": ["error", {
+    	patterns: [
+    		{ group: ["lexical", "@lexical/*"], message: "Use @app/lexical-editor." },
+    		{ group: ["@app/lexical-editor/src/*", "@app/lexical-editor/dist/*"], message: "Import only from the public entry point." },
+    	],
+    }],
+    ```
+    
+- If `eslint.config.{js,cjs,mjs}` (flat config): add a config object with the same rule. Detect format and adapt.
+
+In EITHER case, if the existing config touches more than the rules block in your edit, revert and ask the user. Do NOT modify other rules, plugins, or extends arrays.
+
+## Step 4 — Verify host typecheck still passes
+
+Detect host scripts and run the safe ones:
+
+```bash
+cd frontend
+node -e "const s=require('./package.json').scripts||{}; for(const k of ['typecheck','lint','build']){ if(s[k]) console.log(k); }" > /tmp/host-scripts.txt
+cat /tmp/host-scripts.txt
+
+for cmd in $(cat /tmp/host-scripts.txt); do
+  if [ "$cmd" = "build" ]; then continue; fi  # skip build to avoid long host build
+  echo "→ pnpm $cmd"
+  pnpm $cmd || { echo "❌ host $cmd failed"; exit 1; }
+done
+echo "✅ host scripts OK"
+cd ..
+```
+
+If the host has neither `typecheck` nor `lint` script, run `pnpm exec tsc --noEmit -p frontend/tsconfig.json` if a `tsconfig.json` exists at the host root — otherwise log "no host typecheck script available" and continue.
+
+If the host typecheck fails because of a pre-existing issue UNRELATED to the editor wrapper, revert ONLY the `frontend/.eslintrc.cjs` and `NotionEditor.tsx` changes if needed to confirm — then restore them. Only the editor wrapper and ESLint file are P10's responsibility.
+
+## Step 5 — Write `HANDOFF.md`
+
+### `frontend/packages/lexical-editor/HANDOFF.md`
+
+```markdown
+# @app/lexical-editor — hand-off
+
+Notion-like rich-text editor as a Web Component (`<notion-editor>`).
+Isolated from host business code by a pnpm workspace boundary plus ESLint guards in both directions.
+
+## How to use in any feature
+
+```
+
+import { NotionEditor, type SerializedDocument } from "@/components/NotionEditor"
+
+function NoteEditor({ note, save }: { note: { content?: SerializedDocument }; save: (c: SerializedDocument) => void }) {
+
+return <NotionEditor value={note.content} onChange={save} />
+
+}
+
+```
+
+## Public API
+
+- Custom element: `<notion-editor>`
+- Property: `value: SerializedDocument | null`
+- Events: `editor-ready`, `editor-input`, `editor-change` (debounced 400ms)
+- `SerializedDocument`, `SerializedBlock`, `BlockType`, `RichSpan` types are exported from `@app/lexical-editor` (re-exported by the host wrapper).
+
+## Local development
+
+    pnpm --filter @app/lexical-editor dev      # http://localhost:5183/
+    pnpm --filter @app/lexical-editor test     # vitest
+    pnpm --filter @app/lexical-editor test:e2e # playwright
+    pnpm --filter @app/lexical-editor build    # produces dist/
+
+## Architecture
+
+- `src/playground-vendor/` — verbatim copy of `facebook/lexical` `lexical-playground/src`. **Never modified.** Upgrade by replacing the folder.
+- `src/ui/EditorRoot.tsx` — composes the vendor plugins we use.
+- `src/element/NotionEditorElement.ts` — Web Component wrapper, owns the shadow root.
+- `src/serializer/{toDocument,fromDocument}.ts` — the only place that knows about both Lexical and `SerializedDocument`.
+- `src/plugins/` — our own plugins and any wrapper that adapts a vendor plugin.
+
+## Isolation contract
+
+1. The editor never imports from `frontend/src/**` or `backend/**` (enforced by `frontend/packages/lexical-editor/.eslintrc.cjs`).
+2. The host `frontend/src/**` never imports `lexical` / `@lexical/*` directly (enforced by `frontend/.eslintrc.cjs`). Only entry: `@/components/NotionEditor`.
+3. Lexical types do not cross the shadow boundary. The Web Component speaks `SerializedDocument` JSON.
+
+## Upgrading Lexical
+
+1. `git clone --depth 1 -b vX.Y.Z https://github.com/facebook/lexical /tmp/lexical-clone`
+2. `rm -rf frontend/packages/lexical-editor/src/playground-vendor`
+3. `cp -R /tmp/lexical-clone/packages/lexical-playground/src/. frontend/packages/lexical-editor/src/playground-vendor/`
+4. Bump `lexical` and `@lexical/*` versions in `frontend/packages/lexical-editor/package.json` to match.
+5. `pnpm install && pnpm --filter @app/lexical-editor dev` — verify slash/drag/toolbar.
+6. Fix breakages in `EditorRoot.tsx` or by adding wrappers in `src/plugins/`. **Never modify `playground-vendor/`.**
+```
+
+## Step 6 — Update `.agent-state.json`
+
+```bash
+jq '.currentPrompt=10 | .completedPrompts=[1,2,3,4,5,6,7,8,9,10] | .notes="P10 frontend integration + handoff"' \
+  frontend/packages/lexical-editor/.agent-state.json > /tmp/s.json && \
+  mv /tmp/s.json frontend/packages/lexical-editor/.agent-state.json
+```
+
+## Step 7 — Final acceptance script
+
+```bash
+set -e
+echo "— final acceptance —"
+
+# 1. Editor package: typecheck + lint + build + unit + e2e (re-prove locally)
+cd frontend/packages/lexical-editor
+pnpm typecheck
+pnpm lint
+pnpm build && [ -f dist/index.js ]
+pnpm test
+pnpm test:e2e
+[ -f tests/__screenshots__/smoke.png ]
+cd ../../..
+
+# 2. Host frontend: typecheck/lint if scripts exist
+cd frontend
+for cmd in typecheck lint; do
+  if node -e "process.exit((require('./package.json').scripts||{}).$cmd?0:1)"; then pnpm $cmd; fi
+done
+cd ..
+
+# 3. Host wrapper exists, host eslint guard exists
+[ -f frontend/src/components/NotionEditor.tsx ]
+ls frontend/.eslintrc.cjs frontend/.eslintrc.js frontend/.eslintrc.json frontend/eslint.config.js frontend/eslint.config.cjs frontend/eslint.config.mjs 2>/dev/null | head -1 | grep -q . || { echo "❌ host eslint config missing"; exit 1; }
+
+# 4. Workspace dep is wired
+node -e "const j=require('./frontend/package.json'); if(!j.dependencies||j.dependencies['@app/lexical-editor']!=='workspace:*'){process.exit(1)}"
+
+# 5. Vendor folder pristine (no .ts modifications since P2)
+DEST=frontend/packages/lexical-editor/src/playground-vendor
+[ -f $DEST/.vendor-meta.json ] || { echo "❌ vendor meta missing"; exit 1; }
+
+# 6. Handoff exists
+[ -f frontend/packages/lexical-editor/HANDOFF.md ]
+
+# 7. Final scope audit (P10 expanded allowlist)
+git fetch origin main 2>/dev/null || true
+BASE=$(git merge-base origin/main HEAD 2>/dev/null || git rev-list --max-parents=0 HEAD | tail -1)
+git diff --name-only $BASE..HEAD | grep -vE '^(frontend/packages/lexical-editor/|frontend/pnpm-workspace\.yaml$|frontend/pnpm-lock\.yaml$|frontend/package\.json$|frontend/\.eslintrc\.cjs$|frontend/src/components/NotionEditor\.tsx$|\.github/workflows/lexical-editor\.yml$)' && { echo "❌ out-of-scope files changed"; exit 1; } || true
+
+# 8. Latest CI run for HEAD must be success
+SHA=$(git rev-parse HEAD)
+gh run list --commit "$SHA" --workflow lexical-editor --limit 1 --json conclusion --jq '.[0].conclusion' | grep -q '^success$' || { echo "❌ CI not green"; exit 1; }
+
+echo "✅ ALL ACCEPTANCE CHECKS PASSED"
+```
+
+Commit and push this final phase, then re-watch CI:
+
+```bash
+git add -A
+git commit -m "feat(editor): P10 frontend integration + handoff"
+git push
+
+SHA=$(git rev-parse HEAD)
+for i in $(seq 1 60); do
+  STATUS=$(gh run list --commit "$SHA" --workflow lexical-editor --limit 1 --json status,conclusion --jq '.[0]')
+  ST=$(echo "$STATUS" | jq -r .status); CONCL=$(echo "$STATUS" | jq -r .conclusion)
+  echo "$STATUS"
+  if [ "$ST" = "completed" ]; then
+    [ "$CONCL" = "success" ] && echo "✅ final CI green" && break
+    echo "❌ CI conclusion=$CONCL"; gh run view --log-failed; exit 1
+  fi
+  sleep 20
+done
+
+# Re-run final acceptance one more time after CI is green
+bash -c "$(sed -n '/^# 1. Editor package/,/^echo .ALL ACCEPTANCE/p' <<'\\BLOCK\\'
+set -e
+# (re-paste the acceptance block above)
+\\BLOCK\\
+)" || true
+```
+
+If any acceptance check fails, fix the specific failure (do NOT relax the script), then retry from `git push`.
+
+## Step 8 — Open the PR
+
+```bash
+gh pr create --base main --head feat/lexical-editor \
+  --title "feat(editor): @app/lexical-editor + host integration" \
+  --body "Adds the isolated Notion-like editor package and the single host wrapper. See frontend/packages/lexical-editor/HANDOFF.md."
+```
+
+## Step 9 — Final reply to the user (template)
+
+Reply ONLY after every step above succeeds:
+
+> **Done.** `@app/lexical-editor` is on branch `feat/lexical-editor` and CI is green.
+> 
+
+> 
+> 
+
+> - Editor package: `frontend/packages/lexical-editor/` — standalone demo at `pnpm --filter @app/lexical-editor dev` (port 5183), full vitest + playwright suites, GitHub Actions workflow `lexical-editor` passing on the branch.
+> 
+
+> - Host integration: `frontend/package.json` got `"@app/lexical-editor": "workspace:*"`; `frontend/src/components/NotionEditor.tsx` is the only new file in `frontend/src/**`; `frontend/.eslintrc.cjs` blocks any direct `lexical` / `@lexical/*` import outside the package.
+> 
+
+> - Vendor: `src/playground-vendor/` was copied verbatim from `facebook/lexical` v0.21.0 and never modified — upgrades are a folder replace per `HANDOFF.md`.
+> 
+
+> - PR: <url from `gh pr create`>.
+> 
+
+> 
+> 
+
+> To use it from any feature:
+> 
+
+> `tsx
+> 
+
+> import { NotionEditor } from "@/components/NotionEditor"
+> 
+
+> <NotionEditor value={doc} onChange={setDoc} />
+> 
+
+> `
+> 
+
+---
+
+<aside>
+🧯
+
+**Recovery from context loss.** If the agent loses context mid-run:
+
+1. Read `frontend/packages/lexical-editor/.agent-state.json` to find `currentPrompt` and `completedPrompts`.
+2. Run `git log --oneline -n 12` to confirm which P-commits exist on the branch.
+3. Resume by feeding the next un-completed prompt (P1 → P2 → ... → P10) in order. Do NOT skip; each prompt's prereq depends on the previous one.
+4. Never overwrite an already-completed phase's commit. If a phase needs rework, make a follow-up commit on the same branch.
+</aside>
