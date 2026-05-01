@@ -21,6 +21,7 @@ spring:
 
   flyway:
     enabled: true
+    schemas: public
 
   security:
     oauth2:
