@@ -2,12 +2,14 @@ package com.goctrithuc.backend.entities;
 
 import jakarta.persistence.*;
 import java.time.ZonedDateTime;
+import java.util.Set;
 
 @Entity
 @Table(name = "users")
 public class User {
   @Id
-  // For Hibernate to not include ID when inserting, we use IDENTITY strategy which relies on
+  // For Hibernate to not include ID when inserting, we use IDENTITY strategy
+  // which relies on
   // the database to auto-generate the ID with a custom Snowflake ID generator.
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
@@ -30,6 +32,9 @@ public class User {
   @Column(name = "updated_at", nullable = false, insertable = false)
   private ZonedDateTime updatedAt;
 
+  @OneToMany(mappedBy = "user")
+  private Set<UserRole> userRoles;
+
   protected User() {}
 
   public User(String email, String displayName, String username, String avatarUrl) {
@@ -37,5 +42,29 @@ public class User {
     this.displayName = displayName;
     this.username = username;
     this.avatarUrl = avatarUrl;
+  }
+
+  public Long getId() {
+    return id;
+  }
+
+  public String getEmail() {
+    return email;
+  }
+
+  public String getDisplayName() {
+    return displayName;
+  }
+
+  public String getUsername() {
+    return username;
+  }
+
+  public String getAvatarUrl() {
+    return avatarUrl;
+  }
+
+  public Set<UserRole> getUserRoles() {
+    return userRoles;
   }
 }
