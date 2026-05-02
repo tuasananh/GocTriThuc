@@ -1,7 +1,6 @@
 package com.goctrithuc.backend.controllers;
 
 import com.goctrithuc.backend.dtos.CurrentUserResponse;
-import com.goctrithuc.backend.entities.User;
 import com.goctrithuc.backend.repositories.UserRepository;
 import com.goctrithuc.backend.repositories.UserRoleRepository;
 import org.slf4j.Logger;
