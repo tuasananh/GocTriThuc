@@ -1,74 +1,92 @@
 package com.goctrithuc.backend.services;
 
-import com.goctrithuc.backend.common.util.StringUtil;
-import com.goctrithuc.backend.entities.User;
-import com.goctrithuc.backend.entities.UserProvider;
-import com.goctrithuc.backend.repositories.UserProviderRepository;
-import com.goctrithuc.backend.repositories.UserRepository;
-import jakarta.transaction.Transactional;
-import java.util.Optional;
+import java.util.HashMap;
+import java.util.Map;
 import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
+import org.springframework.security.oauth2.core.user.DefaultOAuth2User;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
 
 @Service
 public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 
-  private final UserRepository userRepository;
-  private final UserProviderRepository userProviderRepository;
+  private final UserPersistenceService userPersistenceService;
+
+  private final GithubEmailFetcherService githubEmailFetcherService;
 
   public CustomOAuth2UserService(
-      UserRepository userRepository, UserProviderRepository userProviderRepository) {
-    this.userRepository = userRepository;
-    this.userProviderRepository = userProviderRepository;
+      UserPersistenceService userPersistenceService,
+      GithubEmailFetcherService githubEmailFetcherService) {
+    this.userPersistenceService = userPersistenceService;
+    this.githubEmailFetcherService = githubEmailFetcherService;
   }
 
   @Override
-  @Transactional
   public OAuth2User loadUser(OAuth2UserRequest userRequest) throws OAuth2AuthenticationException {
-    // Load user info from the provider (e.g., Google)
     OAuth2User oAuth2User = super.loadUser(userRequest);
 
-    String providerName = userRequest.getClientRegistration().getRegistrationId(); // e.g., "google"
-    String providerUserId = oAuth2User.getAttribute("sub"); // Google's unique ID for the user
-    String email = oAuth2User.getAttribute("email");
-    String name = oAuth2User.getAttribute("name");
-    String avatar = oAuth2User.getAttribute("picture");
+    String providerName = userRequest.getClientRegistration().getRegistrationId();
 
-    // Check if this specific account is already in our DB
-    Optional<UserProvider> existingProvider =
-        userProviderRepository.findByProviderNameAndProviderUserId(providerName, providerUserId);
+    String providerUserId =
+        switch (providerName) {
+          case "google" -> oAuth2User.getAttribute("sub");
+          case "github" -> {
+            Object idObj = oAuth2User.getAttribute("id");
+            if (idObj == null) {
+              yield null;
+            }
+            yield idObj.toString();
+          }
+          default -> throw new IllegalArgumentException("Unsupported provider: " + providerName);
+        };
 
-    if (existingProvider.isEmpty()) {
-      // Brand new login! Check if the email exists from another provider
-      User user =
-          userRepository
-              .findByEmail(email)
-              .orElseGet(() -> createUserWithUniqueUsername(email, name, avatar));
-
-      // 4. Link this Google account to the User
-      UserProvider newProvider = new UserProvider(user, providerName, providerUserId);
-      userProviderRepository.save(newProvider);
+    if (providerUserId == null) {
+      throw new OAuth2AuthenticationException(
+          "Missing provider user ID for provider: " + providerName);
     }
 
-    return oAuth2User;
+    String email = getEmail(providerName, oAuth2User, userRequest.getAccessToken().getTokenValue());
+
+    if (email == null || email.isBlank()) {
+      throw new OAuth2AuthenticationException(
+          "Unable to retrieve email for provider: " + providerName);
+    }
+
+    String name = oAuth2User.getAttribute("name"); // this works for both Google and GitHub
+
+    if (name == null || name.isBlank()) {
+      name = email.split("@")[0]; // Fallback to using the email prefix as the name
+    }
+
+    String avatar =
+        switch (providerName) {
+          case "google" -> oAuth2User.getAttribute("picture");
+          case "github" -> oAuth2User.getAttribute("avatar_url");
+          default -> throw new IllegalArgumentException("Unsupported provider: " + providerName);
+        };
+
+    userPersistenceService.syncUser(providerName, providerUserId, email, name, avatar);
+
+    Map<String, Object> attributes = new HashMap<>(oAuth2User.getAttributes());
+    attributes.put("sub", providerUserId);
+    attributes.put("email", email);
+    attributes.put("name", name);
+    attributes.put("avatar", avatar);
+    return new DefaultOAuth2User(oAuth2User.getAuthorities(), attributes, "sub");
   }
 
-  private User createUserWithUniqueUsername(String email, String name, String avatar) {
-    int maxAttempts = 5;
+  private String getEmail(String providerName, OAuth2User oauth2User, String token) {
+    // Should work for Google
+    String primaryEmailAddress = oauth2User.getAttribute("email");
 
-    for (int i = 0; i < maxAttempts; i++) {
-      String autogeneratedUsername = StringUtil.generateBaseSuffixUsername(name);
-
-      if (!userRepository.existsByUsername(autogeneratedUsername)) {
-        User newUser = new User(email, name, autogeneratedUsername, avatar);
-        return userRepository.save(newUser);
+    if (primaryEmailAddress == null || primaryEmailAddress.isBlank()) {
+      if (providerName.equals("github")) {
+        primaryEmailAddress = githubEmailFetcherService.fetchPrimaryEmailAddress(token);
       }
     }
 
-    throw new RuntimeException(
-        "Could not generate a unique username after " + maxAttempts + " attempts");
+    return primaryEmailAddress;
   }
 }

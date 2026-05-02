@@ -1,6 +1,12 @@
 package com.goctrithuc.backend.controllers;
 
-import java.util.Map;
+import com.goctrithuc.backend.dtos.CurrentUserResponse;
+import com.goctrithuc.backend.repositories.UserRepository;
+import com.goctrithuc.backend.repositories.UserRoleRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -10,30 +16,40 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/api/users")
 public class UserController {
+  private static final Logger logger = LoggerFactory.getLogger(UserController.class);
+  private final UserRepository userRepository;
+  private final UserRoleRepository userRoleRepository;
 
-  // Temporary endpoint to return the current user's info to the React frontend
+  public UserController(UserRepository userRepository, UserRoleRepository userRoleRepository) {
+    this.userRepository = userRepository;
+    this.userRoleRepository = userRoleRepository;
+  }
+
   @GetMapping("/me")
-  public Map<String, Object> getCurrentUser(@AuthenticationPrincipal OAuth2User principal) {
+  public ResponseEntity<CurrentUserResponse> getCurrentUser(
+      @AuthenticationPrincipal OAuth2User principal) {
     if (principal == null) {
-      return Map.of("authenticated", false);
+      return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+          .body(CurrentUserResponse.unauthenticated());
     }
 
-    // 1. Extract the attributes safely into variables
-    Object nameObj = principal.getAttribute("name");
     Object emailObj = principal.getAttribute("email");
-    Object avatarObj =
-        principal.getAttribute("picture"); // Note: GitHub uses "avatar_url" instead of "picture"
 
-    // 2. Convert to Strings with safe fallbacks (using the ternary operator)
-    // Format: condition ? valueIfTrue : valueIfFalse
-    String name = nameObj != null ? nameObj.toString() : "Anonymous User";
-    String email = emailObj != null ? emailObj.toString() : "";
-    String avatar = avatarObj != null ? avatarObj.toString() : "";
+    if (emailObj == null) {
+      logger.warn("Email attribute is missing for the authenticated user.");
+      return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+          .body(CurrentUserResponse.error("Email attribute is missing"));
+    }
 
-    return Map.of(
-        "authenticated", true,
-        "name", name,
-        "email", email,
-        "avatar", avatar);
+    String email = emailObj.toString();
+
+    var user = userRepository.findByEmailWithRoles(email);
+
+    if (user.isEmpty()) {
+      logger.warn("No user found in the database for email: {}", email);
+      return ResponseEntity.status(HttpStatus.NOT_FOUND)
+          .body(CurrentUserResponse.error("User not found in database"));
+    }
+    return ResponseEntity.ok(CurrentUserResponse.authenticated(user.get()));
   }
 }
