@@ -28,17 +28,30 @@ export const InlineMath = createReactInlineContentSpec(
 
         const handleMoveOut = (e: Event) => {
           const customEvent = e as CustomEvent<{ direction: 'forward' | 'backward' }>;
-          const pos = editor._tiptapEditor.view?.posAtDOM(mathField as Node, 0);
-          if (pos === null || pos === undefined) {
-            console.log('No pos found');
-            return;
-          }
-          if (customEvent.detail.direction === 'forward') {
+          // Encapsulate internal tiptap access to prevent crashes on update
+          const internalEditor = editor as unknown as Record<string, unknown>;
+          const tiptap = internalEditor._tiptapEditor as
+            | {
+                view?: { posAtDOM: (node: Node, pos: number) => number | null | undefined };
+                commands?: { focus: (pos: number) => void };
+              }
+            | undefined;
+
+          if (
+            tiptap &&
+            typeof tiptap.view?.posAtDOM === 'function' &&
+            typeof tiptap.commands?.focus === 'function'
+          ) {
+            const pos = tiptap.view.posAtDOM(mathField as Node, 0);
+            if (pos === null || pos === undefined) {
+              return;
+            }
             mathField.blur();
-            editor._tiptapEditor.commands.focus(pos + 1);
-          } else if (customEvent.detail.direction === 'backward') {
-            mathField.blur();
-            editor._tiptapEditor.commands.focus(pos);
+            if (customEvent.detail.direction === 'forward') {
+              tiptap.commands.focus(pos + 1);
+            } else if (customEvent.detail.direction === 'backward') {
+              tiptap.commands.focus(pos);
+            }
           }
         };
 
