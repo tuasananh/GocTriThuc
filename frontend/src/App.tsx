@@ -7,6 +7,7 @@ import { LoginPage } from '@/pages/login';
 import { Dashboard } from '@/pages/dashboard';
 import { GuestRoute } from '@/components/GuestRoute';
 import { AuthProvider } from './providers/AuthProvider';
+import { EditorTestPage } from '@/pages/editor-test';
 
 // Configure Axios globally to send session and CSRF cookies
 axios.defaults.withCredentials = true;
@@ -38,6 +39,9 @@ function App() {
               </div>
             }
           />
+          
+          {/* Test route for BlockNote Editor */}
+          <Route path="/editor-test" element={<EditorTestPage />} />
         </Routes>
       </AuthProvider>
     </BrowserRouter>
