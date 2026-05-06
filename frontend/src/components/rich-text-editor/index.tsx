@@ -13,7 +13,7 @@ import { BlockNoteView } from '@blocknote/shadcn';
 import { InlineMath } from './extensions/InlineMath';
 import { MathBlock } from './extensions/MathBlock';
 import { Calculator, Download, Loader2 } from 'lucide-react';
-import { useState, useCallback, useRef, useEffect } from 'react';
+import { useState, useCallback, useRef, useEffect, useMemo } from 'react';
 
 import '@blocknote/core/fonts/inter.css';
 import '@blocknote/shadcn/style.css';
@@ -48,8 +48,7 @@ const insertMathBlockItem = (editor: typeof schema.BlockNoteEditor) => ({
         {
           type: 'mathBlock',
           props: { latex: '' },
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        } as any,
+        },
       ],
       editor.getTextCursorPosition().block,
       'after',
@@ -68,13 +67,18 @@ interface RichTextEditorProps {
 export function RichTextEditor({ storageKey, onExport }: RichTextEditorProps) {
   const [isSaving, setIsSaving] = useState(false);
   const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const isSavingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastSaveTimeRef = useRef<number>(0);
 
   useEffect(() => {
     lastSaveTimeRef.current = Date.now();
+    return () => {
+      if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
+      if (isSavingTimeoutRef.current) clearTimeout(isSavingTimeoutRef.current);
+    };
   }, []);
 
-  const getInitialContent = () => {
+  const initialContent = useMemo(() => {
     if (storageKey) {
       const saved = localStorage.getItem(storageKey);
       if (saved) {
@@ -86,11 +90,11 @@ export function RichTextEditor({ storageKey, onExport }: RichTextEditorProps) {
       }
     }
     return undefined;
-  };
+  }, [storageKey]);
 
   const editor = useCreateBlockNote({
     schema,
-    initialContent: getInitialContent(),
+    initialContent,
   });
 
   const saveToStorage = useCallback(() => {
@@ -100,7 +104,10 @@ export function RichTextEditor({ storageKey, onExport }: RichTextEditorProps) {
     localStorage.setItem(storageKey, content);
     lastSaveTimeRef.current = Date.now();
 
-    setTimeout(() => {
+    if (isSavingTimeoutRef.current) {
+      clearTimeout(isSavingTimeoutRef.current);
+    }
+    isSavingTimeoutRef.current = setTimeout(() => {
       setIsSaving(false);
     }, 500);
   }, [editor, storageKey]);
