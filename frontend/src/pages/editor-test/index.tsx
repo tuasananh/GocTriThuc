@@ -17,7 +17,8 @@ export function EditorTestPage() {
           <div>
             <h1 className="text-3xl font-bold mb-2 text-foreground">BlockNote Editor Test</h1>
             <p className="text-muted-foreground">
-              Type <kbd className="px-2 py-1 bg-muted rounded">/inlinemath</kbd> to insert inline math or <kbd className="px-2 py-1 bg-muted rounded">/math</kbd> for a math block.
+              Type <kbd className="px-2 py-1 bg-muted rounded">/inlinemath</kbd> to insert inline
+              math or <kbd className="px-2 py-1 bg-muted rounded">/math</kbd> for a math block.
             </p>
           </div>
           <button
@@ -27,11 +28,8 @@ export function EditorTestPage() {
             Clear Local Storage & Reload
           </button>
         </div>
-        
-        <RichTextEditor 
-          storageKey={storageKey} 
-          onExport={(html) => setExportedHtml(html)} 
-        />
+
+        <RichTextEditor storageKey={storageKey} onExport={(html) => setExportedHtml(html)} />
 
         {exportedHtml && (
           <div className="mt-8 p-4 bg-muted/20 border border-border rounded-xl">
@@ -41,7 +39,7 @@ export function EditorTestPage() {
             </div>
             <div className="mt-4">
               <h3 className="text-sm font-medium text-foreground mb-2">Rendered Preview:</h3>
-              <div 
+              <div
                 className="bg-background border border-border rounded-lg p-4 text-foreground"
                 dangerouslySetInnerHTML={{ __html: exportedHtml }}
               />

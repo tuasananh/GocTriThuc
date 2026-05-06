@@ -1,24 +1,23 @@
-
 import {
   BlockNoteSchema,
   defaultInlineContentSpecs,
   defaultBlockSpecs,
   filterSuggestionItems,
-} from "@blocknote/core";
+} from '@blocknote/core';
 import {
   useCreateBlockNote,
   SuggestionMenuController,
   getDefaultReactSlashMenuItems,
-} from "@blocknote/react";
-import { BlockNoteView } from "@blocknote/shadcn";
-import { InlineMath } from "./extensions/InlineMath";
-import { MathBlock } from "./extensions/MathBlock";
-import { Calculator, Download, Loader2 } from "lucide-react";
-import { useState, useCallback, useRef } from "react";
+} from '@blocknote/react';
+import { BlockNoteView } from '@blocknote/shadcn';
+import { InlineMath } from './extensions/InlineMath';
+import { MathBlock } from './extensions/MathBlock';
+import { Calculator, Download, Loader2 } from 'lucide-react';
+import { useState, useCallback, useRef } from 'react';
 
-import "@blocknote/core/fonts/inter.css";
-import "@blocknote/shadcn/style.css";
-import "mathlive";
+import '@blocknote/core/fonts/inter.css';
+import '@blocknote/shadcn/style.css';
+import 'mathlive';
 
 const schema = BlockNoteSchema.create({
   inlineContentSpecs: {
@@ -32,35 +31,32 @@ const schema = BlockNoteSchema.create({
 });
 
 const insertInlineMathItem = (editor: typeof schema.BlockNoteEditor) => ({
-  title: "Inline Math",
+  title: 'Inline Math',
   onItemClick: () => {
-    editor.insertInlineContent([
-      { type: "inlineMath", props: { latex: "" } },
-      " ",
-    ]);
+    editor.insertInlineContent([{ type: 'inlineMath', props: { latex: '' } }, ' ']);
   },
-  aliases: ["inlinemath", "math"],
-  group: "Math",
+  aliases: ['inlinemath', 'math'],
+  group: 'Math',
   icon: <Calculator size={18} />,
 });
 
 const insertMathBlockItem = (editor: typeof schema.BlockNoteEditor) => ({
-  title: "Math Block",
+  title: 'Math Block',
   onItemClick: () => {
     editor.insertBlocks(
       [
         {
-          type: "mathBlock",
-          props: { latex: "" },
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          type: 'mathBlock',
+          props: { latex: '' },
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } as any,
       ],
       editor.getTextCursorPosition().block,
-      "after"
+      'after',
     );
   },
-  aliases: ["math", "mathblock"],
-  group: "Math",
+  aliases: ['math', 'mathblock'],
+  group: 'Math',
   icon: <Calculator size={18} />,
 });
 
@@ -81,7 +77,7 @@ export function RichTextEditor({ storageKey, onExport }: RichTextEditorProps) {
         try {
           return JSON.parse(saved);
         } catch (e) {
-          console.error("Failed to parse saved editor content", e);
+          console.error('Failed to parse saved editor content', e);
         }
       }
     }
@@ -99,7 +95,7 @@ export function RichTextEditor({ storageKey, onExport }: RichTextEditorProps) {
     const content = JSON.stringify(editor.document);
     localStorage.setItem(storageKey, content);
     lastSaveTimeRef.current = Date.now();
-    
+
     setTimeout(() => {
       setIsSaving(false);
     }, 500);
@@ -134,9 +130,11 @@ export function RichTextEditor({ storageKey, onExport }: RichTextEditorProps) {
       <div className="flex justify-between items-center px-4 py-3 bg-muted/20 border-b border-border">
         <div className="text-xs text-muted-foreground flex items-center gap-2">
           {isSaving ? (
-            <><Loader2 size={12} className="animate-spin" /> Saving...</>
+            <>
+              <Loader2 size={12} className="animate-spin" /> Saving...
+            </>
           ) : storageKey ? (
-            "All changes saved locally"
+            'All changes saved locally'
           ) : null}
         </div>
         <button
@@ -151,7 +149,7 @@ export function RichTextEditor({ storageKey, onExport }: RichTextEditorProps) {
       <div className="p-4 flex-1">
         <BlockNoteView editor={editor} slashMenu={false} theme="dark" onChange={handleEditorChange}>
           <SuggestionMenuController
-            triggerCharacter={"/"}
+            triggerCharacter={'/'}
             getItems={async (query) =>
               filterSuggestionItems(
                 [
@@ -159,7 +157,7 @@ export function RichTextEditor({ storageKey, onExport }: RichTextEditorProps) {
                   insertInlineMathItem(editor),
                   insertMathBlockItem(editor),
                 ],
-                query
+                query,
               )
             }
           />
