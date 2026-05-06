@@ -39,7 +39,7 @@ function App() {
               </div>
             }
           />
-          
+
           {/* Test route for BlockNote Editor */}
           <Route path="/editor-test" element={<EditorTestPage />} />
         </Routes>

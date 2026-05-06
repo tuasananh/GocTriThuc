@@ -196,7 +196,7 @@ math-field {
   outline: none !important;
 }
 
-div[data-math-block="true"] math-field::part(container),
+div[data-math-block='true'] math-field::part(container),
 math-field.math-block-preview::part(container) {
   justify-content: center;
 }
