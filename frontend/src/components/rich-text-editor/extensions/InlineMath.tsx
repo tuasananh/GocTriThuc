@@ -46,7 +46,7 @@ export const InlineMath = createReactInlineContentSpec(
         return () => {
           mathField.removeEventListener('move-out', handleMoveOut);
         };
-      }, [editor]);
+      }, [editor, inlineContent.props.latex]);
 
       return (
         <span

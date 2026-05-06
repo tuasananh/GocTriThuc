@@ -44,7 +44,7 @@ export const MathBlock = createReactBlockSpec(
         return () => {
           mathField.removeEventListener('move-out', handleMoveOut);
         };
-      }, [props.editor]);
+      }, [props.editor, props.block.props.latex]);
 
       return (
         <div

@@ -13,7 +13,7 @@ import { BlockNoteView } from '@blocknote/shadcn';
 import { InlineMath } from './extensions/InlineMath';
 import { MathBlock } from './extensions/MathBlock';
 import { Calculator, Download, Loader2 } from 'lucide-react';
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 
 import '@blocknote/core/fonts/inter.css';
 import '@blocknote/shadcn/style.css';
@@ -68,7 +68,11 @@ interface RichTextEditorProps {
 export function RichTextEditor({ storageKey, onExport }: RichTextEditorProps) {
   const [isSaving, setIsSaving] = useState(false);
   const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const lastSaveTimeRef = useRef<number>(Date.now());
+  const lastSaveTimeRef = useRef<number>(0);
+
+  useEffect(() => {
+    lastSaveTimeRef.current = Date.now();
+  }, []);
 
   const getInitialContent = () => {
     if (storageKey) {
