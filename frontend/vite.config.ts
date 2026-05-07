@@ -25,5 +25,8 @@ export default defineConfig(({ mode }) => {
         '/oauth2': `http://localhost:${backendPort}`,
       },
     },
+    optimizeDeps: {
+      exclude: ['mathlive'],
+    },
   };
 });
