@@ -1,7 +1,70 @@
-/* eslint-disable react-hooks/rules-of-hooks */
 import { createReactInlineContentSpec } from '@blocknote/react';
 import type { MathfieldElement } from 'mathlive';
-import { useLayoutEffect, useRef, createElement } from 'react';
+import { useEffect, useRef, createElement } from 'react';
+
+// eslint-disable-next-line react-refresh/only-export-components
+const InlineMathRenderer = ({
+  inlineContent,
+  updateInlineContent,
+  editor,
+  contentRef,
+}: {
+  inlineContent: { props: { latex?: string } };
+  updateInlineContent: (content: { type: 'inlineMath'; props: { latex: string } }) => void;
+  editor: { focus: () => void };
+  contentRef: React.Ref<HTMLSpanElement>;
+}) => {
+  const latex = inlineContent.props.latex ?? '';
+  const ref = useRef<MathfieldElement>(null);
+
+  useEffect(() => {
+    const mathField = ref.current;
+    if (!mathField) return;
+
+    if (!inlineContent.props.latex) {
+      setTimeout(() => mathField.focus(), 50);
+    }
+
+    const handleMoveOut = () => {
+      mathField.blur();
+      editor.focus();
+    };
+
+    mathField.addEventListener('move-out', handleMoveOut);
+    return () => {
+      mathField.removeEventListener('move-out', handleMoveOut);
+    };
+  }, [editor, inlineContent.props.latex]);
+
+  return (
+    <span ref={contentRef} className="inline-block rounded-sm">
+      {createElement(
+        'math-field',
+        {
+          ref,
+          onInput: (evt: Event) => {
+            const target = evt.target as HTMLInputElement | null;
+            const value = target && 'value' in target ? (target.value as string) : '';
+            updateInlineContent({
+              type: 'inlineMath',
+              props: {
+                latex: value || '',
+              },
+            });
+          },
+          style: {
+            minWidth: '20px',
+            color: 'inherit',
+            background: 'transparent',
+            outline: 'none',
+            border: 'none',
+          },
+        },
+        latex,
+      )}
+    </span>
+  );
+};
 
 export const InlineMath = createReactInlineContentSpec(
   {
@@ -14,85 +77,7 @@ export const InlineMath = createReactInlineContentSpec(
     content: 'none',
   } as const,
   {
-    render: ({ inlineContent, updateInlineContent, editor, contentRef }) => {
-      const latex = inlineContent.props.latex ?? '';
-      const ref = useRef<MathfieldElement>(null);
-
-      useLayoutEffect(() => {
-        const mathField = ref.current;
-        if (!mathField) return;
-
-        if (!inlineContent.props.latex) {
-          setTimeout(() => mathField.focus(), 50);
-        }
-
-        const handleMoveOut = (e: Event) => {
-          const customEvent = e as CustomEvent<{ direction: 'forward' | 'backward' }>;
-          // Encapsulate internal tiptap access to prevent crashes on update
-          const internalEditor = editor as unknown as Record<string, unknown>;
-          const tiptap = internalEditor._tiptapEditor as
-            | {
-                view?: { posAtDOM: (node: Node, pos: number) => number | null | undefined };
-                commands?: { focus: (pos: number) => void };
-              }
-            | undefined;
-
-          if (
-            tiptap &&
-            typeof tiptap.view?.posAtDOM === 'function' &&
-            typeof tiptap.commands?.focus === 'function'
-          ) {
-            const pos = tiptap.view.posAtDOM(mathField as Node, 0);
-            if (pos === null || pos === undefined) {
-              return;
-            }
-            mathField.blur();
-            if (customEvent.detail.direction === 'forward') {
-              tiptap.commands.focus(pos + 1);
-            } else if (customEvent.detail.direction === 'backward') {
-              tiptap.commands.focus(pos);
-            }
-          }
-        };
-
-        mathField.addEventListener('move-out', handleMoveOut);
-        return () => {
-          mathField.removeEventListener('move-out', handleMoveOut);
-        };
-      }, [editor, inlineContent.props.latex]);
-
-      return (
-        <span
-          ref={contentRef}
-          className="inline-block rounded-sm ring-offset-background focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2 transition-all"
-        >
-          {createElement(
-            'math-field',
-            {
-              ref,
-              onInput: (evt: Event) => {
-                const target = evt.target as HTMLInputElement | null;
-                const value = target && 'value' in target ? (target.value as string) : '';
-                updateInlineContent({
-                  type: 'inlineMath',
-                  props: {
-                    latex: value || '',
-                  },
-                });
-              },
-              style: {
-                minWidth: '20px',
-                color: 'inherit',
-                background: 'transparent',
-                outline: 'none',
-                border: 'none',
-              },
-            },
-            latex,
-          )}
-        </span>
-      );
-    },
+    render: InlineMathRenderer,
     toExternalHTML: (props) => {
       return createElement(
         'math-field',

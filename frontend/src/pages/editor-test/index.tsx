@@ -11,7 +11,7 @@ export function EditorTestPage() {
   };
 
   return (
-    <div className="dark min-h-screen bg-background p-8 flex justify-center">
+    <div className="min-h-screen bg-background p-8 flex justify-center">
       <div className="max-w-5xl w-full">
         <div className="flex justify-between items-end mb-6">
           <div>
@@ -29,7 +29,13 @@ export function EditorTestPage() {
           </button>
         </div>
 
-        <RichTextEditor storageKey={storageKey} onExport={(html) => setExportedHtml(html)} />
+        <RichTextEditor
+          storageKey={storageKey}
+          onChange={async (editor) => {
+            const html = await editor.blocksToHTMLLossy(editor.document);
+            setExportedHtml(html);
+          }}
+        />
 
         {exportedHtml && (
           <div className="mt-8 p-4 bg-muted/20 border border-border rounded-xl">
