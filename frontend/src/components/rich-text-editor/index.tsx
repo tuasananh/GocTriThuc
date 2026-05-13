@@ -12,8 +12,8 @@ import {
 import { BlockNoteView } from '@blocknote/shadcn';
 import { InlineMath } from './extensions/InlineMath';
 import { MathBlock } from './extensions/MathBlock';
-import { Calculator, Download, Loader2 } from 'lucide-react';
-import { useState, useCallback, useRef, useEffect, useMemo } from 'react';
+import { Calculator } from 'lucide-react';
+import { useCallback, useRef, useEffect, useMemo } from 'react';
 
 import '@blocknote/core/fonts/inter.css';
 import '@blocknote/shadcn/style.css';
@@ -61,20 +61,17 @@ const insertMathBlockItem = (editor: typeof schema.BlockNoteEditor) => ({
 
 interface RichTextEditorProps {
   storageKey?: string;
-  onExport?: (html: string) => void;
+  onChange?: (editor: typeof schema.BlockNoteEditor) => void;
 }
 
-export function RichTextEditor({ storageKey, onExport }: RichTextEditorProps) {
-  const [isSaving, setIsSaving] = useState(false);
+export function RichTextEditor({ storageKey, onChange }: RichTextEditorProps) {
   const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const isSavingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastSaveTimeRef = useRef<number>(0);
 
   useEffect(() => {
     lastSaveTimeRef.current = Date.now();
     return () => {
       if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
-      if (isSavingTimeoutRef.current) clearTimeout(isSavingTimeoutRef.current);
     };
   }, []);
 
@@ -99,20 +96,14 @@ export function RichTextEditor({ storageKey, onExport }: RichTextEditorProps) {
 
   const saveToStorage = useCallback(() => {
     if (!storageKey) return;
-    setIsSaving(true);
     const content = JSON.stringify(editor.document);
     localStorage.setItem(storageKey, content);
     lastSaveTimeRef.current = Date.now();
-
-    if (isSavingTimeoutRef.current) {
-      clearTimeout(isSavingTimeoutRef.current);
-    }
-    isSavingTimeoutRef.current = setTimeout(() => {
-      setIsSaving(false);
-    }, 500);
   }, [editor, storageKey]);
 
   const handleEditorChange = useCallback(() => {
+    onChange?.(editor);
+
     if (!storageKey) return;
 
     if (saveTimeoutRef.current) {
@@ -129,36 +120,27 @@ export function RichTextEditor({ storageKey, onExport }: RichTextEditorProps) {
         saveToStorage();
       }, 5000);
     }
-  }, [storageKey, saveToStorage]);
-
-  const handleExport = async () => {
-    const html = await editor.blocksToHTMLLossy(editor.document);
-    onExport?.(html);
-  };
+  }, [storageKey, saveToStorage, onChange, editor]);
 
   return (
     <div className="w-full h-full min-h-[500px] border border-border rounded-xl shadow-sm bg-background flex flex-col overflow-hidden">
-      <div className="flex justify-between items-center px-4 py-3 bg-muted/20 border-b border-border">
-        <div className="text-xs text-muted-foreground flex items-center gap-2">
-          {isSaving ? (
-            <>
-              <Loader2 size={12} className="animate-spin" /> Saving...
-            </>
-          ) : storageKey ? (
-            'All changes saved locally'
-          ) : null}
-        </div>
-        <button
-          onClick={handleExport}
-          className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors"
-        >
-          <Download size={16} />
-          Export HTML
-        </button>
-      </div>
-
+      <style>{`
+        @media not (pointer: coarse) {
+          math-field::part(virtual-keyboard-toggle) {
+            display: none;
+          }
+          math-field::part(menu-toggle) {
+            display: none;
+          }
+        }
+      `}</style>
       <div className="p-4 flex-1">
-        <BlockNoteView editor={editor} slashMenu={false} theme="dark" onChange={handleEditorChange}>
+        <BlockNoteView
+          editor={editor}
+          slashMenu={false}
+          theme="light"
+          onChange={handleEditorChange}
+        >
           <SuggestionMenuController
             triggerCharacter={'/'}
             getItems={async (query) =>

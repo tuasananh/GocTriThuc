@@ -7,7 +7,11 @@ import { LoginPage } from '@/pages/login';
 import { Dashboard } from '@/pages/dashboard';
 import { GuestRoute } from '@/components/GuestRoute';
 import { AuthProvider } from './providers/AuthProvider';
-import { EditorTestPage } from '@/pages/editor-test';
+import { lazy, Suspense } from 'react';
+
+const EditorTestPage = lazy(() =>
+  import('@/pages/editor-test').then((m) => ({ default: m.EditorTestPage })),
+);
 
 // Configure Axios globally to send session and CSRF cookies
 axios.defaults.withCredentials = true;
@@ -41,7 +45,14 @@ function App() {
           />
 
           {/* Test route for BlockNote Editor */}
-          <Route path="/editor-test" element={<EditorTestPage />} />
+          <Route
+            path="/editor-test"
+            element={
+              <Suspense fallback={<div>Loading...</div>}>
+                <EditorTestPage />
+              </Suspense>
+            }
+          />
         </Routes>
       </AuthProvider>
     </BrowserRouter>
