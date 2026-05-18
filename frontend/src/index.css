@@ -2,6 +2,7 @@
 @import 'tw-animate-css';
 @import 'shadcn/tailwind.css';
 @import '@fontsource-variable/inter';
+@source "../node_modules/@blocknote/shadcn";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -177,10 +178,35 @@
   * {
     @apply border-border outline-ring/50;
   }
+
   body {
     @apply bg-background text-foreground;
   }
+
   html {
     @apply font-sans;
   }
+}
+
+/* Ensure all math-fields are transparent and inherit text color natively */
+math-field {
+  background: transparent !important;
+  color: inherit !important;
+  border: none !important;
+  outline: none !important;
+}
+
+div[data-math-block='true'] math-field::part(container),
+math-field.math-block-preview::part(container) {
+  justify-content: center;
+}
+
+/* Hide interaction elements on read-only preview fields */
+math-field[read-only]::part(virtual-keyboard-toggle),
+math-field[read-only]::part(menu-toggle) {
+  display: none !important;
+}
+
+math-field[read-only] {
+  pointer-events: none !important;
 }

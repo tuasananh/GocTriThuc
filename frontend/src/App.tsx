@@ -7,6 +7,11 @@ import { LoginPage } from '@/pages/login';
 import { Dashboard } from '@/pages/dashboard';
 import { GuestRoute } from '@/components/GuestRoute';
 import { AuthProvider } from './providers/AuthProvider';
+import { lazy, Suspense } from 'react';
+
+const EditorTestPage = lazy(() =>
+  import('@/pages/editor-test').then((m) => ({ default: m.EditorTestPage })),
+);
 
 // Configure Axios globally to send session and CSRF cookies
 axios.defaults.withCredentials = true;
@@ -36,6 +41,16 @@ function App() {
               <div className="p-20 text-center text-3xl font-bold bg-background min-h-screen text-foreground">
                 Bạn đã đăng nhập thành công và truy cập vào chi tiết khoá học!
               </div>
+            }
+          />
+
+          {/* Test route for BlockNote Editor */}
+          <Route
+            path="/editor-test"
+            element={
+              <Suspense fallback={<div>Loading...</div>}>
+                <EditorTestPage />
+              </Suspense>
             }
           />
         </Routes>
