@@ -3,15 +3,26 @@ name: Frontend CI
 on:
   push:
     branches: ["main"]
-    paths:
-      - "frontend/**"
   pull_request:
     branches: ["main"]
-    paths:
-      - "frontend/**"
 
 jobs:
+  check-changes:
+    runs-on: ubuntu-latest
+    outputs:
+      frontend: ${{ steps.filter.outputs.frontend }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            frontend:
+              - 'frontend/**'
+
   build-and-lint:
+    needs: check-changes
+    if: needs.check-changes.outputs.frontend == 'true'
     runs-on: ubuntu-latest
     defaults:
       run:
