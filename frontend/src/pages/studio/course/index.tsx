@@ -27,6 +27,15 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { ArrowLeft, Save, Trash2, Loader2, CheckCircle2 } from 'lucide-react';
 import { GocTriThuc } from '@/components/GocTriThuc';
 
+function isSafeUrl(url: string): boolean {
+  try {
+    const parsed = new URL(url);
+    return parsed.protocol === 'http:' || parsed.protocol === 'https:';
+  } catch {
+    return false;
+  }
+}
+
 export function StudioCourseEditorPage() {
   const { courseId } = useParams<{ courseId: string }>();
   const navigate = useNavigate();
@@ -241,7 +250,7 @@ export function StudioCourseEditorPage() {
                   placeholder="https://example.com/image.jpg"
                   className="h-11 rounded-xl"
                 />
-                {thumbnailUrl && (
+                {thumbnailUrl && isSafeUrl(thumbnailUrl) && (
                   <div className="mt-3 rounded-xl overflow-hidden border border-border/50 aspect-video max-w-sm">
                     <img
                       src={thumbnailUrl}
