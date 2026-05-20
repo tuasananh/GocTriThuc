@@ -124,11 +124,7 @@ export function StudioCoursesPage() {
             disabled={creating}
             className="rounded-full h-11 px-6 text-sm shadow-md hover:shadow-lg transition-all gap-2"
           >
-            {creating ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : (
-              <Plus className="h-4 w-4" />
-            )}
+            {creating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
             Tạo khóa học mới
           </Button>
         </div>
@@ -155,9 +151,7 @@ export function StudioCoursesPage() {
               </div>
               <div className="text-center space-y-1">
                 <p className="text-lg font-medium text-foreground">Chưa có khóa học nào</p>
-                <p className="text-muted-foreground">
-                  Tạo khóa học đầu tiên của bạn để bắt đầu.
-                </p>
+                <p className="text-muted-foreground">Tạo khóa học đầu tiên của bạn để bắt đầu.</p>
               </div>
               <Button
                 onClick={handleCreate}

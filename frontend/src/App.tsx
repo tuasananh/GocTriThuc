@@ -34,9 +34,7 @@ function App() {
           <Route path="/dashboard" element={<Dashboard />} />
 
           {/* Studio: Course Management (requires Manage Own Courses permission) */}
-          <Route
-            element={<ProtectedRoute requiredPermission={Permissions.MANAGE_OWN_COURSES} />}
-          >
+          <Route element={<ProtectedRoute requiredPermission={Permissions.MANAGE_OWN_COURSES} />}>
             <Route path="/studio/courses" element={<StudioCoursesPage />} />
             <Route path="/studio/course/:courseId" element={<StudioCourseEditorPage />} />
           </Route>

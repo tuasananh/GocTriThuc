@@ -68,11 +68,13 @@ export function MainLayout() {
             <Link to="/" className="hover:text-foreground transition-colors">
               Khóa học
             </Link>
-            {auth && auth.isAuthenticated && hasPermission(auth.user.permissions, Permissions.MANAGE_OWN_COURSES) && (
-              <Link to="/studio/courses" className="hover:text-foreground transition-colors">
-                Studio
-              </Link>
-            )}
+            {auth &&
+              auth.isAuthenticated &&
+              hasPermission(auth.user.permissions, Permissions.MANAGE_OWN_COURSES) && (
+                <Link to="/studio/courses" className="hover:text-foreground transition-colors">
+                  Studio
+                </Link>
+              )}
             <Link to="#" className="hover:text-foreground transition-colors">
               Giới thiệu
             </Link>
