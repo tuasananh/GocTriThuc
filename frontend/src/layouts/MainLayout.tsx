@@ -13,6 +13,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { GocTriThuc } from '@/components/GocTriThuc';
+import { hasPermission, Permissions } from '@/lib/permissions';
 
 const UserButtonDropdown = ({
   user,
@@ -67,6 +68,11 @@ export function MainLayout() {
             <Link to="/" className="hover:text-foreground transition-colors">
               Khóa học
             </Link>
+            {auth && auth.isAuthenticated && hasPermission(auth.user.permissions, Permissions.MANAGE_OWN_COURSES) && (
+              <Link to="/studio/courses" className="hover:text-foreground transition-colors">
+                Studio
+              </Link>
+            )}
             <Link to="#" className="hover:text-foreground transition-colors">
               Giới thiệu
             </Link>

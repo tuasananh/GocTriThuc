@@ -6,7 +6,11 @@ import { LoginPage } from '@/pages/login';
 // Dashboard component can be implemented later or replaced, keeping it for existing route validity
 import { Dashboard } from '@/pages/dashboard';
 import { GuestRoute } from '@/components/GuestRoute';
+import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { AuthProvider } from './providers/AuthProvider';
+import { StudioCoursesPage } from '@/pages/studio/courses';
+import { StudioCourseEditorPage } from '@/pages/studio/course';
+import { Permissions } from '@/lib/permissions';
 
 // Configure Axios globally to send session and CSRF cookies
 axios.defaults.withCredentials = true;
@@ -28,6 +32,14 @@ function App() {
 
           {/* Protected Dashboard Route (for future) */}
           <Route path="/dashboard" element={<Dashboard />} />
+
+          {/* Studio: Course Management (requires Manage Own Courses permission) */}
+          <Route
+            element={<ProtectedRoute requiredPermission={Permissions.MANAGE_OWN_COURSES} />}
+          >
+            <Route path="/studio/courses" element={<StudioCoursesPage />} />
+            <Route path="/studio/course/:courseId" element={<StudioCourseEditorPage />} />
+          </Route>
 
           {/* Dummy route for individual course details to demonstrate Auth Guard redirect */}
           <Route
