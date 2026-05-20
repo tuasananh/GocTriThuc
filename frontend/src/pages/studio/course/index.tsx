@@ -208,9 +208,7 @@ export function StudioCourseEditorPage() {
           <h2 className="text-2xl md:text-3xl font-bold tracking-tight text-foreground">
             Chỉnh sửa khóa học
           </h2>
-          <p className="text-muted-foreground mt-1">
-            Cập nhật thông tin cho khóa học của bạn.
-          </p>
+          <p className="text-muted-foreground mt-1">Cập nhật thông tin cho khóa học của bạn.</p>
         </div>
 
         <div className="space-y-6">
@@ -273,8 +271,7 @@ export function StudioCourseEditorPage() {
                       />
                     </div>
                   );
-                })()
-                )}
+                })()}
               </div>
             </CardContent>
           </Card>
@@ -318,11 +315,7 @@ export function StudioCourseEditorPage() {
                     Khi xuất bản, khóa học sẽ hiển thị theo chế độ hiển thị đã chọn.
                   </p>
                 </div>
-                <Switch
-                  id="published"
-                  checked={isPublished}
-                  onCheckedChange={setIsPublished}
-                />
+                <Switch id="published" checked={isPublished} onCheckedChange={setIsPublished} />
               </div>
             </CardContent>
           </Card>
