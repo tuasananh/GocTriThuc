@@ -8,15 +8,18 @@ importers:
 
   .:
     dependencies:
+      '@blocknote/code-block':
+        specifier: ^0.50.0
+        version: 0.50.0(@blocknote/core@0.50.0(@types/hast@3.0.4)(highlight.js@11.11.1))
       '@blocknote/core':
         specifier: ^0.50.0
-        version: 0.50.0(@types/hast@3.0.4)
+        version: 0.50.0(@types/hast@3.0.4)(highlight.js@11.11.1)
       '@blocknote/react':
         specifier: ^0.50.0
-        version: 0.50.0(@floating-ui/dom@1.7.6)(@types/hast@3.0.4)(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
+        version: 0.50.0(@floating-ui/dom@1.7.6)(@types/hast@3.0.4)(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(highlight.js@11.11.1)(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
       '@blocknote/shadcn':
         specifier: ^0.50.0
-        version: 0.50.0(@floating-ui/dom@1.7.6)(@types/hast@3.0.4)(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(postcss@8.5.14)(react-dom@19.2.5(react@19.2.5))(react@19.2.5)(tailwindcss@4.3.0)
+        version: 0.50.0(@floating-ui/dom@1.7.6)(@types/hast@3.0.4)(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(highlight.js@11.11.1)(postcss@8.5.14)(react-dom@19.2.5(react@19.2.5))(react@19.2.5)(tailwindcss@4.3.0)
       '@fontsource-variable/inter':
         specifier: ^5.2.8
         version: 5.2.8
@@ -32,6 +35,9 @@ importers:
       clsx:
         specifier: ^2.1.1
         version: 2.1.1
+      highlight.js:
+        specifier: ^11.11.1
+        version: 11.11.1
       lucide-react:
         specifier: ^1.14.0
         version: 1.16.0(react@19.2.5)
@@ -242,6 +248,11 @@ packages:
   '@babel/types@7.29.0':
     resolution: {integrity: sha512-LwdZHpScM4Qz8Xw2iKSzS+cfglZzJGvofQICy7W7v4caru4EaAmyUuO6BGrbyQ2mYV11W0U8j5mBhd14dd3B0A==}
     engines: {node: '>=6.9.0'}
+
+  '@blocknote/code-block@0.50.0':
+    resolution: {integrity: sha512-QCOePMx2HBDkLOYBPkPmJyITBhWaT7bfeQzjMVJOVMx72wR+v2HCejbKPLDIPIX2ZeqYgBliETHn/O8pOJvpIA==}
+    peerDependencies:
+      '@blocknote/core': 0.50.0
 
   '@blocknote/core@0.50.0':
     resolution: {integrity: sha512-joscwdeB/yVO/2jZQRuoss2uIUQO3Aco5gfvRrTJH3qGNdD+DmY2iSu35kqRucRC0EqzJoN7R0vHY/B8t9YIgA==}
@@ -1278,8 +1289,32 @@ packages:
   '@sec-ant/readable-stream@0.4.1':
     resolution: {integrity: sha512-831qok9r2t8AlxLko40y2ebgSDhenenCatLVeW/uBtnHPyhHOvG0C7TvfgecV+wHzIm5KUICgzmVpWS+IMEAeg==}
 
+  '@shikijs/core@4.1.0':
+    resolution: {integrity: sha512-jLJtSJeuFffqX6/inRE1zqU5aFv2hrszvYgq3OjbAgFRZiWv7abKMDdQzYxuSDfmUPQozZvI/kuy6VMTvnvqTQ==}
+    engines: {node: '>=20'}
+
+  '@shikijs/engine-javascript@4.1.0':
+    resolution: {integrity: sha512-YquhawCUgaBfhsS72e2Y/dI59gCBNPHu3fEO/tvLaXrTssxZrY5ddjtNLTwndrMgPo8b3IscE+xoICDzpTmlFQ==}
+    engines: {node: '>=20'}
+
+  '@shikijs/langs-precompiled@4.1.0':
+    resolution: {integrity: sha512-7FX5AYWvk1U6fVRx4EKjrcYrcx471381R8c1rH+ewpbfUdLRoroIQ5sxvuwb0PdhFK7FhNgY71G8YjPgRcdguw==}
+    engines: {node: '>=20'}
+
+  '@shikijs/primitive@4.1.0':
+    resolution: {integrity: sha512-zx2/2Uwj2q9X3KSyYREEhXO23xBw5WUhP4orK2lE4r+t9JGITmEe0JH+wPmJhqHpOT2bRRs6lAL945+LDvOAGw==}
+    engines: {node: '>=20'}
+
+  '@shikijs/themes@4.1.0':
+    resolution: {integrity: sha512-emCcTnUM7yO2wltYbaxm+yLvcCI4+h8XBKc4KmJ7EZUXoSGjcCHifkI//R4OFit9ewpg7H2/9tjOuXrT2v/Knw==}
+    engines: {node: '>=20'}
+
   '@shikijs/types@4.0.2':
     resolution: {integrity: sha512-qzbeRooUTPnLE+sHD/Z8DStmaDgnbbc/pMrU203950aRqjX/6AFHeDYT+j00y2lPdz0ywJKx7o/7qnqTivtlXg==}
+    engines: {node: '>=20'}
+
+  '@shikijs/types@4.1.0':
+    resolution: {integrity: sha512-3EQWX54fMpniOrDblzAhiwiJwpiTMW6+B9DWyUd9ska483tbayFYuw47UxwuPknI31bKnySfVQ/QW+jFL4rFdA==}
     engines: {node: '>=20'}
 
   '@shikijs/vscode-textmate@10.0.2':
@@ -2330,6 +2365,10 @@ packages:
   hermes-parser@0.25.1:
     resolution: {integrity: sha512-6pEjquH3rqaI6cYAXYPcz9MS4rY6R4ngRgrgfDshRptUZIc3lw0MCIJIGDj9++mfySOuPTHB4nrSW99BCvOPIA==}
 
+  highlight.js@11.11.1:
+    resolution: {integrity: sha512-Xwwo44whKBVCYoliBQwaPvtd/2tYFkRQtXDWj1nackaV2JPXx3L0+Jvd8/qCJ2p+ML0/XVkJ2q+Mr+UVdpJK5w==}
+    engines: {node: '>=12.0.0'}
+
   hono@4.12.14:
     resolution: {integrity: sha512-am5zfg3yu6sqn5yjKBNqhnTX7Cv+m00ox+7jbaKkrLMRJ4rAdldd1xPd/JzbBWspqaQv6RSTrgFN95EsfhC+7w==}
     engines: {node: '>=16.9.0'}
@@ -2904,6 +2943,12 @@ packages:
     resolution: {integrity: sha512-VXJjc87FScF88uafS3JllDgvAm+c/Slfz06lorj2uAY34rlUu0Nt+v8wreiImcrgAjjIHp1rXpTDlLOGw29WwQ==}
     engines: {node: '>=18'}
 
+  oniguruma-parser@0.12.2:
+    resolution: {integrity: sha512-6HVa5oIrgMC6aA6WF6XyyqbhRPJrKR02L20+2+zpDtO5QAzGHAUGw5TKQvwi5vctNnRHkJYmjAhRVQF2EKdTQw==}
+
+  oniguruma-to-es@4.3.6:
+    resolution: {integrity: sha512-csuQ9x3Yr0cEIs/Zgx/OEt9iBw9vqIunAPQkx19R/fiMq2oGVTgcMqO/V3Ybqefr1TBvosI6jU539ksaBULJyA==}
+
   open@11.0.0:
     resolution: {integrity: sha512-smsWv2LzFjP03xmvFoJ331ss6h+jixfA4UUV/Bsiyuu4YJPfN+FIQGOIiv4w9/+MoHkfkJ22UIaQWRVFRfH6Vw==}
     engines: {node: '>=20'}
@@ -3211,6 +3256,15 @@ packages:
   recast@0.23.11:
     resolution: {integrity: sha512-YTUo+Flmw4ZXiWfQKGcwwc11KnoRAYgzAE2E7mXKCjSviTKShtxBsN6YUUBB2gtaBzKzeKunxhUwNHQuRryhWA==}
     engines: {node: '>= 4'}
+
+  regex-recursion@6.0.2:
+    resolution: {integrity: sha512-0YCaSCq2VRIebiaUviZNs0cBz1kg5kVS2UKUfNIx8YVs1cN3AV7NTctO5FOKBA+UT2BPJIWZauYHPqJODG50cg==}
+
+  regex-utilities@2.3.0:
+    resolution: {integrity: sha512-8VhliFJAWRaUiVvREIiW2NXXTmHs4vMNnSzuJVhscgmGav3g9VDxLrQndI3dZZVVdp0ZO/5v0xmX516/7M9cng==}
+
+  regex@6.1.0:
+    resolution: {integrity: sha512-6VwtthbV4o/7+OaAF9I5L5V3llLEsoPyq9P1JVXkedTP33c7MfCG0/5NOPcSJn0TzXcG9YUrR0gQSWioew3LDg==}
 
   rehype-format@5.0.1:
     resolution: {integrity: sha512-zvmVru9uB0josBVpr946OR8ui7nJEdzZobwLOOqHb/OOD88W0Vk2SqLwoVOj0fM6IPCCO6TaV9CvQvJMWwukFQ==}
@@ -3934,7 +3988,16 @@ snapshots:
       '@babel/helper-string-parser': 7.27.1
       '@babel/helper-validator-identifier': 7.28.5
 
-  '@blocknote/core@0.50.0(@types/hast@3.0.4)':
+  '@blocknote/code-block@0.50.0(@blocknote/core@0.50.0(@types/hast@3.0.4)(highlight.js@11.11.1))':
+    dependencies:
+      '@blocknote/core': 0.50.0(@types/hast@3.0.4)(highlight.js@11.11.1)
+      '@shikijs/core': 4.1.0
+      '@shikijs/engine-javascript': 4.1.0
+      '@shikijs/langs-precompiled': 4.1.0
+      '@shikijs/themes': 4.1.0
+      '@shikijs/types': 4.0.2
+
+  '@blocknote/core@0.50.0(@types/hast@3.0.4)(highlight.js@11.11.1)':
     dependencies:
       '@emoji-mart/data': 1.2.1
       '@handlewithcare/prosemirror-inputrules': 0.1.4(prosemirror-model@1.25.4)(prosemirror-state@1.4.4)(prosemirror-view@1.41.8)
@@ -3955,7 +4018,7 @@ snapshots:
       fast-deep-equal: 3.1.3
       hast-util-from-dom: 5.0.1
       lib0: 0.2.117
-      prosemirror-highlight: 0.15.1(@shikijs/types@4.0.2)(@types/hast@3.0.4)(prosemirror-model@1.25.4)(prosemirror-state@1.4.4)(prosemirror-transform@1.12.0)(prosemirror-view@1.41.8)
+      prosemirror-highlight: 0.15.1(@shikijs/types@4.0.2)(@types/hast@3.0.4)(highlight.js@11.11.1)(prosemirror-model@1.25.4)(prosemirror-state@1.4.4)(prosemirror-transform@1.12.0)(prosemirror-view@1.41.8)
       prosemirror-model: 1.25.4
       prosemirror-state: 1.4.4
       prosemirror-tables: 1.8.5
@@ -3984,9 +4047,9 @@ snapshots:
       - sugar-high
       - supports-color
 
-  '@blocknote/react@0.50.0(@floating-ui/dom@1.7.6)(@types/hast@3.0.4)(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.5(react@19.2.5))(react@19.2.5)':
+  '@blocknote/react@0.50.0(@floating-ui/dom@1.7.6)(@types/hast@3.0.4)(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(highlight.js@11.11.1)(react-dom@19.2.5(react@19.2.5))(react@19.2.5)':
     dependencies:
-      '@blocknote/core': 0.50.0(@types/hast@3.0.4)
+      '@blocknote/core': 0.50.0(@types/hast@3.0.4)(highlight.js@11.11.1)
       '@emoji-mart/data': 1.2.1
       '@floating-ui/react': 0.27.19(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
       '@floating-ui/utils': 0.2.11
@@ -4015,10 +4078,10 @@ snapshots:
       - sugar-high
       - supports-color
 
-  '@blocknote/shadcn@0.50.0(@floating-ui/dom@1.7.6)(@types/hast@3.0.4)(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(postcss@8.5.14)(react-dom@19.2.5(react@19.2.5))(react@19.2.5)(tailwindcss@4.3.0)':
+  '@blocknote/shadcn@0.50.0(@floating-ui/dom@1.7.6)(@types/hast@3.0.4)(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(highlight.js@11.11.1)(postcss@8.5.14)(react-dom@19.2.5(react@19.2.5))(react@19.2.5)(tailwindcss@4.3.0)':
     dependencies:
-      '@blocknote/core': 0.50.0(@types/hast@3.0.4)
-      '@blocknote/react': 0.50.0(@floating-ui/dom@1.7.6)(@types/hast@3.0.4)(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
+      '@blocknote/core': 0.50.0(@types/hast@3.0.4)(highlight.js@11.11.1)
+      '@blocknote/react': 0.50.0(@floating-ui/dom@1.7.6)(@types/hast@3.0.4)(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(highlight.js@11.11.1)(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
       '@radix-ui/react-avatar': 1.1.10(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
       '@radix-ui/react-dropdown-menu': 2.1.16(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
       '@radix-ui/react-label': 2.1.7(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
@@ -5093,7 +5156,41 @@ snapshots:
 
   '@sec-ant/readable-stream@0.4.1': {}
 
+  '@shikijs/core@4.1.0':
+    dependencies:
+      '@shikijs/primitive': 4.1.0
+      '@shikijs/types': 4.1.0
+      '@shikijs/vscode-textmate': 10.0.2
+      '@types/hast': 3.0.4
+      hast-util-to-html: 9.0.5
+
+  '@shikijs/engine-javascript@4.1.0':
+    dependencies:
+      '@shikijs/types': 4.1.0
+      '@shikijs/vscode-textmate': 10.0.2
+      oniguruma-to-es: 4.3.6
+
+  '@shikijs/langs-precompiled@4.1.0':
+    dependencies:
+      '@shikijs/types': 4.1.0
+      oniguruma-to-es: 4.3.6
+
+  '@shikijs/primitive@4.1.0':
+    dependencies:
+      '@shikijs/types': 4.1.0
+      '@shikijs/vscode-textmate': 10.0.2
+      '@types/hast': 3.0.4
+
+  '@shikijs/themes@4.1.0':
+    dependencies:
+      '@shikijs/types': 4.1.0
+
   '@shikijs/types@4.0.2':
+    dependencies:
+      '@shikijs/vscode-textmate': 10.0.2
+      '@types/hast': 3.0.4
+
+  '@shikijs/types@4.1.0':
     dependencies:
       '@shikijs/vscode-textmate': 10.0.2
       '@types/hast': 3.0.4
@@ -6212,6 +6309,8 @@ snapshots:
     dependencies:
       hermes-estree: 0.25.1
 
+  highlight.js@11.11.1: {}
+
   hono@4.12.14: {}
 
   html-void-elements@3.0.0: {}
@@ -6868,6 +6967,14 @@ snapshots:
     dependencies:
       mimic-function: 5.0.1
 
+  oniguruma-parser@0.12.2: {}
+
+  oniguruma-to-es@4.3.6:
+    dependencies:
+      oniguruma-parser: 0.12.2
+      regex: 6.1.0
+      regex-recursion: 6.0.2
+
   open@11.0.0:
     dependencies:
       default-browser: 5.5.0
@@ -7008,10 +7115,11 @@ snapshots:
       prosemirror-state: 1.4.4
       prosemirror-view: 1.41.8
 
-  prosemirror-highlight@0.15.1(@shikijs/types@4.0.2)(@types/hast@3.0.4)(prosemirror-model@1.25.4)(prosemirror-state@1.4.4)(prosemirror-transform@1.12.0)(prosemirror-view@1.41.8):
+  prosemirror-highlight@0.15.1(@shikijs/types@4.0.2)(@types/hast@3.0.4)(highlight.js@11.11.1)(prosemirror-model@1.25.4)(prosemirror-state@1.4.4)(prosemirror-transform@1.12.0)(prosemirror-view@1.41.8):
     optionalDependencies:
       '@shikijs/types': 4.0.2
       '@types/hast': 3.0.4
+      highlight.js: 11.11.1
       prosemirror-model: 1.25.4
       prosemirror-state: 1.4.4
       prosemirror-transform: 1.12.0
@@ -7213,6 +7321,16 @@ snapshots:
       source-map: 0.6.1
       tiny-invariant: 1.3.3
       tslib: 2.8.1
+
+  regex-recursion@6.0.2:
+    dependencies:
+      regex-utilities: 2.3.0
+
+  regex-utilities@2.3.0: {}
+
+  regex@6.1.0:
+    dependencies:
+      regex-utilities: 2.3.0
 
   rehype-format@5.0.1:
     dependencies:

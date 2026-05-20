@@ -196,6 +196,19 @@ math-field {
   outline: none !important;
 }
 
+/* Ensure editor and all its nested nodes use the premium Inter Variable font for flawless Vietnamese rendering */
+.bn-container,
+.bn-editor,
+.bn-inline-content,
+.bn-block-outer {
+  font-family: 'Inter Variable', var(--sans) !important;
+}
+
+/* Make inline math text size match and scale nicely with the surrounding text */
+math-field:not([data-math-block='true']):not(.math-block-preview) {
+  font-size: 1.1em !important;
+}
+
 div[data-math-block='true'] math-field::part(container),
 math-field.math-block-preview::part(container) {
   justify-content: center;
@@ -209,4 +222,334 @@ math-field[read-only]::part(menu-toggle) {
 
 math-field[read-only] {
   pointer-events: none !important;
+}
+
+/* Customize Code Block styling to match the premium GocTriThuc theme */
+.bn-block[data-content-type='codeBlock'] pre,
+.bn-block[data-content-type='codeBlock'] code,
+.bn-code-block {
+  background-color: var(--code-bg) !important;
+  border-radius: var(--radius-md) !important;
+  font-family: var(--mono) !important;
+  font-size: 0.95em !important;
+  border: 1px solid var(--border) !important;
+  color: var(--text-h) !important;
+}
+
+/* Styling for elements inside the Rendered Preview to elevate it into a gorgeous, professional article */
+.rendered-preview {
+  font-family:
+    'Inter Variable',
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    Roboto,
+    sans-serif !important;
+  line-height: 1.75 !important;
+  font-size: 1.05rem !important;
+  color: var(--foreground) !important;
+}
+
+/* Headings with perfect weight, letter-spacing, and vertical rhythm */
+.rendered-preview h1 {
+  font-size: 2.25rem !important;
+  font-weight: 800 !important;
+  letter-spacing: -0.025em !important;
+  margin-top: 2rem !important;
+  margin-bottom: 1rem !important;
+  line-height: 1.25 !important;
+  color: var(--foreground) !important;
+}
+
+.rendered-preview h2 {
+  font-size: 1.75rem !important;
+  font-weight: 700 !important;
+  letter-spacing: -0.02em !important;
+  margin-top: 1.75rem !important;
+  margin-bottom: 0.75rem !important;
+  line-height: 1.3 !important;
+  color: var(--foreground) !important;
+}
+
+.rendered-preview h3 {
+  font-size: 1.35rem !important;
+  font-weight: 600 !important;
+  letter-spacing: -0.01em !important;
+  margin-top: 1.5rem !important;
+  margin-bottom: 0.5rem !important;
+  line-height: 1.35 !important;
+  color: var(--foreground) !important;
+}
+
+.rendered-preview h4 {
+  font-size: 1.15rem !important;
+  font-weight: 600 !important;
+  margin-top: 1.25rem !important;
+  margin-bottom: 0.5rem !important;
+  line-height: 1.4 !important;
+  color: var(--foreground) !important;
+}
+
+/* Paragraphs with perfect line height and spacing */
+.rendered-preview p {
+  margin-top: 0 !important;
+  margin-bottom: 1.25rem !important;
+  line-height: 1.75 !important;
+  color: var(--foreground) !important;
+  opacity: 0.9 !important;
+}
+
+/* Lists with proper nesting and gorgeous bullet/number color markers */
+.rendered-preview ul {
+  list-style-type: disc !important;
+  padding-left: 1.5rem !important;
+  margin-top: 0.5rem !important;
+  margin-bottom: 1.25rem !important;
+}
+
+.rendered-preview ul ul {
+  list-style-type: circle !important;
+  margin-top: 0.25rem !important;
+  margin-bottom: 0.25rem !important;
+  padding-left: 1.25rem !important;
+}
+
+.rendered-preview ul ul ul {
+  list-style-type: square !important;
+  padding-left: 1.25rem !important;
+}
+
+.rendered-preview ol {
+  list-style-type: decimal !important;
+  padding-left: 1.5rem !important;
+  margin-top: 0.5rem !important;
+  margin-bottom: 1.25rem !important;
+}
+
+.rendered-preview ol ol {
+  list-style-type: lower-alpha !important;
+  margin-top: 0.25rem !important;
+  margin-bottom: 0.25rem !important;
+  padding-left: 1.25rem !important;
+}
+
+.rendered-preview ol ol ol {
+  list-style-type: lower-roman !important;
+  padding-left: 1.25rem !important;
+}
+
+.rendered-preview li {
+  margin-bottom: 0.5rem !important;
+  line-height: 1.65 !important;
+  color: var(--foreground) !important;
+  padding-left: 0.15rem !important;
+}
+
+.rendered-preview ul > li::marker {
+  color: var(--primary) !important;
+}
+
+.rendered-preview ol > li::marker {
+  color: var(--primary) !important;
+  font-weight: 600 !important;
+}
+
+/* Premium Blockquotes with border accent and subtle background */
+.rendered-preview blockquote {
+  font-style: italic !important;
+  border-left: 4px solid var(--primary) !important;
+  background-color: var(--muted) !important;
+  padding: 1rem 1.5rem !important;
+  margin: 1.5rem 0 !important;
+  border-top-right-radius: var(--radius-md) !important;
+  border-bottom-right-radius: var(--radius-md) !important;
+  color: var(--foreground) !important;
+  opacity: 0.95 !important;
+}
+
+.rendered-preview blockquote p {
+  margin-bottom: 0 !important;
+}
+
+/* Inline Code Elements inside Paragraphs */
+.rendered-preview code:not(pre code) {
+  font-family: var(--mono) !important;
+  font-size: 0.9em !important;
+  background-color: var(--muted) !important;
+  color: var(--primary) !important;
+  padding: 0.15rem 0.35rem !important;
+  border-radius: var(--radius-sm) !important;
+  border: 1px solid var(--border) !important;
+}
+
+/* Custom dark scrollbar for pre blocks */
+.rendered-preview pre::-webkit-scrollbar {
+  height: 8px;
+  width: 8px;
+}
+.rendered-preview pre::-webkit-scrollbar-track {
+  background: #161b22;
+  border-bottom-left-radius: var(--radius-md);
+  border-bottom-right-radius: var(--radius-md);
+}
+.rendered-preview pre::-webkit-scrollbar-thumb {
+  background: #30363d;
+  border-radius: 4px;
+}
+.rendered-preview pre::-webkit-scrollbar-thumb:hover {
+  background: #8b949e;
+}
+
+/* Premium GitHub Dark themed code blocks with highlight.js support */
+.rendered-preview pre {
+  background-color: #0d1117 !important;
+  border: 1px solid #30363d !important;
+  color: #c9d1d9 !important;
+  padding: 1.25rem !important;
+  margin: 1.5rem 0 !important;
+  border-radius: var(--radius-md) !important;
+  overflow-x: auto !important;
+  font-family: var(--mono) !important;
+  font-size: 0.9rem !important;
+  position: relative;
+}
+
+.rendered-preview pre code {
+  background-color: transparent !important;
+  color: #c9d1d9 !important;
+  padding: 0 !important;
+  border-radius: 0 !important;
+  font-size: 0.9rem !important;
+  border: none !important;
+}
+
+/* Syntax highlighting for code blocks */
+.rendered-preview pre .hljs-comment,
+.rendered-preview pre .hljs-quote {
+  color: #8b949e !important;
+  font-style: italic !important;
+}
+
+.rendered-preview pre .hljs-keyword,
+.rendered-preview pre .hljs-selector-tag,
+.rendered-preview pre .hljs-type,
+.rendered-preview pre .hljs-literal,
+.rendered-preview pre .hljs-operator {
+  color: #ff7b72 !important;
+  font-weight: 600 !important;
+}
+
+.rendered-preview pre .hljs-string,
+.rendered-preview pre .hljs-meta .hljs-string {
+  color: #a5d6ff !important;
+}
+
+.rendered-preview pre .hljs-number,
+.rendered-preview pre .hljs-regexp {
+  color: #79c0ff !important;
+}
+
+.rendered-preview pre .hljs-title,
+.rendered-preview pre .hljs-title.class_,
+.rendered-preview pre .hljs-title.function_,
+.rendered-preview pre .hljs-class .hljs-title {
+  color: #d2a8ff !important;
+  font-weight: 600 !important;
+}
+
+.rendered-preview pre .hljs-symbol,
+.rendered-preview pre .hljs-bullet,
+.rendered-preview pre .hljs-subst,
+.rendered-preview pre .hljs-meta {
+  color: #79c0ff !important;
+}
+
+.rendered-preview pre .hljs-built_in,
+.rendered-preview pre .hljs-name {
+  color: #ffa657 !important;
+}
+
+.rendered-preview pre .hljs-attr,
+.rendered-preview pre .hljs-attribute,
+.rendered-preview pre .hljs-variable,
+.rendered-preview pre .hljs-template-variable {
+  color: #79c0ff !important;
+}
+
+.rendered-preview pre .hljs-params {
+  color: #c9d1d9 !important;
+}
+
+.rendered-preview pre .hljs-doctag {
+  color: #ff7b72 !important;
+}
+
+.rendered-preview pre .hljs-tag {
+  color: #7ee787 !important;
+}
+
+/* Math Styles in Rendered Preview */
+.rendered-preview math-field {
+  background: transparent !important;
+  color: inherit !important;
+  border: none !important;
+  outline: none !important;
+  pointer-events: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+.rendered-preview math-field::part(virtual-keyboard-toggle),
+.rendered-preview math-field::part(menu-toggle) {
+  display: none !important;
+}
+
+.rendered-preview math-field.math-inline-preview {
+  display: inline-block !important;
+  vertical-align: middle !important;
+  font-size: 1.1em !important;
+  margin: 0 0.25em !important;
+}
+
+.rendered-preview .math-block-wrapper {
+  margin: 1.5rem 0 !important;
+  padding: 1.25rem !important;
+  background-color: var(--muted) !important;
+  border-radius: var(--radius-md) !important;
+  border: 1px solid var(--border) !important;
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+  overflow-x: auto !important;
+}
+
+.rendered-preview math-field.math-block-preview {
+  font-size: 1.25em !important;
+  width: 100% !important;
+  text-align: center !important;
+}
+
+.rendered-preview math-field.math-block-preview::part(container) {
+  justify-content: center !important;
+}
+
+/* Customize language select dropdown in Code Block */
+.bn-block[data-content-type='codeBlock'] select,
+.bn-code-block-select {
+  background-color: var(--bg) !important;
+  color: var(--text) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--radius-sm) !important;
+  font-family: 'Inter Variable', var(--sans) !important;
+  font-size: 0.85em !important;
+  padding: 0.25rem 0.5rem !important;
+  outline: none !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease !important;
+}
+
+.bn-block[data-content-type='codeBlock'] select:hover,
+.bn-code-block-select:hover {
+  background-color: var(--accent) !important;
+  border-color: var(--border) !important;
 }

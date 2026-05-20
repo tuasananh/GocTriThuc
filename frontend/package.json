@@ -12,6 +12,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@blocknote/code-block": "^0.50.0",
     "@blocknote/core": "^0.50.0",
     "@blocknote/react": "^0.50.0",
     "@blocknote/shadcn": "^0.50.0",
@@ -20,8 +21,9 @@
     "axios": "^1.16.1",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
-    "mathlive": "^0.109.2",
+    "highlight.js": "^11.11.1",
     "lucide-react": "^1.14.0",
+    "mathlive": "^0.109.2",
     "radix-ui": "^1.4.3",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",

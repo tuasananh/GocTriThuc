@@ -1,9 +1,20 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { RichTextEditor } from '@/components/rich-text-editor';
+import hljs from 'highlight.js';
+import 'highlight.js/styles/github.css';
 
 export function EditorTestPage() {
   const [exportedHtml, setExportedHtml] = useState<string>('');
   const storageKey = 'test-editor-save';
+
+  useEffect(() => {
+    if (exportedHtml) {
+      const blocks = document.querySelectorAll('.rendered-preview pre code');
+      blocks.forEach((block) => {
+        hljs.highlightElement(block as HTMLElement);
+      });
+    }
+  }, [exportedHtml]);
 
   const handleClearStorage = () => {
     localStorage.removeItem(storageKey);
@@ -38,17 +49,33 @@ export function EditorTestPage() {
         />
 
         {exportedHtml && (
-          <div className="mt-8 p-4 bg-muted/20 border border-border rounded-xl">
-            <h2 className="text-lg font-semibold text-foreground mb-4">Exported HTML (Lossy)</h2>
-            <div className="bg-background border border-border rounded-lg p-4 font-mono text-sm overflow-x-auto text-muted-foreground">
-              {exportedHtml}
+          <div className="mt-8 space-y-6">
+            <div className="p-6 bg-muted/10 border border-border rounded-xl shadow-sm">
+              <h2 className="text-md font-semibold text-foreground mb-3 flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-primary" />
+                Exported HTML Output
+              </h2>
+              <div className="bg-background border border-border rounded-lg p-4 font-mono text-xs overflow-x-auto text-muted-foreground max-h-48 scrollbar-thin">
+                {exportedHtml}
+              </div>
             </div>
-            <div className="mt-4">
-              <h3 className="text-sm font-medium text-foreground mb-2">Rendered Preview:</h3>
-              <div
-                className="bg-background border border-border rounded-lg p-4 text-foreground"
-                dangerouslySetInnerHTML={{ __html: exportedHtml }}
-              />
+
+            <div className="border border-border rounded-xl overflow-hidden shadow-sm bg-background">
+              <div className="border-b border-border bg-muted/10 px-6 py-4 flex justify-between items-center">
+                <h3 className="text-sm font-semibold tracking-wider text-muted-foreground uppercase flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                  Live Article Preview
+                </h3>
+                <span className="text-xs text-muted-foreground bg-background px-2.5 py-1 border border-border rounded-full font-medium">
+                  Inter Variable Font
+                </span>
+              </div>
+              <div className="p-8 md:p-12 bg-background">
+                <div
+                  className="rendered-preview max-w-3xl mx-auto text-foreground"
+                  dangerouslySetInnerHTML={{ __html: exportedHtml }}
+                />
+              </div>
             </div>
           </div>
         )}

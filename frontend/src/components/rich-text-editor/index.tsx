@@ -3,6 +3,7 @@ import {
   defaultInlineContentSpecs,
   defaultBlockSpecs,
   filterSuggestionItems,
+  createCodeBlockSpec,
 } from '@blocknote/core';
 import {
   useCreateBlockNote,
@@ -14,8 +15,9 @@ import { InlineMath } from './extensions/InlineMath';
 import { MathBlock } from './extensions/MathBlock';
 import { Calculator } from 'lucide-react';
 import { useCallback, useRef, useEffect, useMemo } from 'react';
+import { codeBlockOptions } from '@blocknote/code-block';
 
-import '@blocknote/core/fonts/inter.css';
+// import '@blocknote/core/fonts/inter.css';
 import '@blocknote/shadcn/style.css';
 import 'mathlive';
 
@@ -27,6 +29,7 @@ const schema = BlockNoteSchema.create({
   blockSpecs: {
     ...defaultBlockSpecs,
     mathBlock: MathBlock(),
+    codeBlock: createCodeBlockSpec(codeBlockOptions),
   },
 });
 
@@ -43,16 +46,32 @@ const insertInlineMathItem = (editor: typeof schema.BlockNoteEditor) => ({
 const insertMathBlockItem = (editor: typeof schema.BlockNoteEditor) => ({
   title: 'Math Block',
   onItemClick: () => {
-    editor.insertBlocks(
-      [
-        {
-          type: 'mathBlock',
-          props: { latex: '' },
-        },
-      ],
-      editor.getTextCursorPosition().block,
-      'after',
-    );
+    const currentBlock = editor.getTextCursorPosition().block;
+    const content = currentBlock.content;
+    const isEmpty =
+      !content ||
+      (typeof content === 'string' && content === '') ||
+      (Array.isArray(content) &&
+        (content.length === 0 ||
+          (content.length === 1 && content[0].type === 'text' && content[0].text === '')));
+
+    if (isEmpty) {
+      editor.updateBlock(currentBlock, {
+        type: 'mathBlock',
+        props: { latex: '' },
+      });
+    } else {
+      editor.insertBlocks(
+        [
+          {
+            type: 'mathBlock',
+            props: { latex: '' },
+          },
+        ],
+        currentBlock,
+        'after',
+      );
+    }
   },
   aliases: ['math', 'mathblock'],
   group: 'Math',
