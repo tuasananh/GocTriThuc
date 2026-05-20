@@ -42,19 +42,19 @@ export function StudioCoursesPage() {
   const navigate = useNavigate();
 
   useEffect(() => {
+    async function fetchCourses() {
+      try {
+        const res = await axios.get<Course[]>('/api/courses/own');
+        setCourses(res.data);
+      } catch (err) {
+        console.error('Failed to fetch courses:', err);
+      } finally {
+        setLoading(false);
+      }
+    }
+
     fetchCourses();
   }, []);
-
-  async function fetchCourses() {
-    try {
-      const res = await axios.get<Course[]>('/api/courses/own');
-      setCourses(res.data);
-    } catch (err) {
-      console.error('Failed to fetch courses:', err);
-    } finally {
-      setLoading(false);
-    }
-  }
 
   async function handleCreate() {
     setCreating(true);

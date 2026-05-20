@@ -64,25 +64,25 @@ export function StudioCourseEditorPage() {
   const [isPublished, setIsPublished] = useState(false);
 
   useEffect(() => {
+    async function fetchCourse() {
+      try {
+        const res = await axios.get<Course>(`/api/courses/${courseId}`);
+        const data = res.data;
+        setCourse(data);
+        setTitle(data.title);
+        setDescription(data.description);
+        setThumbnailUrl(data.thumbnailUrl || '');
+        setVisibility(data.visibility);
+        setIsPublished(data.isPublished);
+      } catch {
+        setNotFound(true);
+      } finally {
+        setLoading(false);
+      }
+    }
+
     fetchCourse();
   }, [courseId]);
-
-  async function fetchCourse() {
-    try {
-      const res = await axios.get<Course>(`/api/courses/${courseId}`);
-      const data = res.data;
-      setCourse(data);
-      setTitle(data.title);
-      setDescription(data.description);
-      setThumbnailUrl(data.thumbnailUrl || '');
-      setVisibility(data.visibility);
-      setIsPublished(data.isPublished);
-    } catch {
-      setNotFound(true);
-    } finally {
-      setLoading(false);
-    }
-  }
 
   async function handleSave() {
     setSaving(true);
