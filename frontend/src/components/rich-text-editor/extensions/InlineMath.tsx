@@ -21,8 +21,9 @@ const InlineMathRenderer = ({
     const mathField = ref.current;
     if (!mathField) return;
 
+    let timeoutId: ReturnType<typeof setTimeout> | undefined;
     if (!inlineContent.props.latex) {
-      setTimeout(() => mathField.focus(), 50);
+      timeoutId = setTimeout(() => mathField.focus(), 50);
     }
 
     const handleMoveOut = () => {
@@ -32,6 +33,9 @@ const InlineMathRenderer = ({
 
     mathField.addEventListener('move-out', handleMoveOut);
     return () => {
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
       mathField.removeEventListener('move-out', handleMoveOut);
     };
   }, [editor, inlineContent.props.latex]);

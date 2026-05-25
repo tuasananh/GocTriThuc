@@ -16,8 +16,9 @@ const MathBlockRenderer = (props: {
     const mathField = ref.current;
     if (!mathField) return;
 
+    let timeoutId: ReturnType<typeof setTimeout> | undefined;
     if (!props.block.props.latex) {
-      setTimeout(() => mathField.focus(), 50);
+      timeoutId = setTimeout(() => mathField.focus(), 50);
     }
 
     const handleMoveOut = () => {
@@ -27,6 +28,9 @@ const MathBlockRenderer = (props: {
 
     mathField.addEventListener('move-out', handleMoveOut);
     return () => {
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
       mathField.removeEventListener('move-out', handleMoveOut);
     };
   }, [props.editor, props.block.props.latex]);
