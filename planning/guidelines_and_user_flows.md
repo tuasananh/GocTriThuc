@@ -33,7 +33,7 @@ The core project skeleton, database user tables, and authentication engine are *
 ### 3. Frontend Architecture & Login Completed
 - **Axios Credentials Configuration**: Mapped in `App.tsx` enabling automatic transmission of cookies.
 - **Vite Dev Server Proxy**: Proxies `/api` requests to port `8080` (resolves CORS and CSRF cookie distribution).
-- **Core Layouts**: `MainLayout.tsx` handles dynamic header headers with user avatar dropdown options.
+- **Core Layouts**: `MainLayout.tsx` handles dynamic headers with user avatar dropdown options.
 - **Routing & Authentication Contexts**: Mapped `App.tsx`, `AuthContext.ts`, and `AuthProvider.tsx`. Fetches details on mount.
 - **Login Screens**: `LoginPage` renders premium Google and GitHub sign-in redirects.
 - **Route Guards**: `GuestRoute.tsx` protects access pathways.
@@ -104,12 +104,13 @@ Every developer must post a message in the communication channel with:
 ### 3. API Contract-First Development (The Gold Standard)
 No backend developer begins writing code, and no frontend developer begins building a UI, until the **API Contract** is finalized and documented.
 - **Contract Format**: In the relevant GitHub Issue, write:
-  - **Endpoint**: `METHOD /api/v1/path`
+  - **Endpoint**: `METHOD /api/path`
+    - Use the current unversioned routing scheme already used by the codebase (e.g., `/api/users/me`, `/api/auth/is_authenticated`).
   - **Request Headers**: (e.g., CSRF, Content-Type)
   - **Request Body JSON**: (with field types and validation rules)
   - **Success Response JSON**: (HTTP 200/201, exact structure)
   - **Error Responses**: (HTTP 400, 401, 403, 404, 500 structures)
-- **Frontend Unblocking**: Once the contract is saved, the FE developers immediately write MSW mock data handlers matching these contracts. They build and style the entire page before the backend service is deployed.
+- **Frontend Unblocking**: Once the contract is saved, the FE developers immediately write MSW mock data handlers matching these exact unversioned contracts. They build and style the entire page before the backend service is deployed.
 
 ---
 
@@ -123,7 +124,7 @@ flowchart TD
     A[Unauthenticated Visitor] -->|Browse /courses| B(Guest Mode)
     B -->|Click Restricted Action| C[Redirect to /login?redirect=current_path]
     C -->|Click Google OAuth Button| D[Google Authenticator Screen]
-    D -->|Success| E[Backend /api/auth/me checks user in DB]
+    D -->|Success| E[Backend GET /api/users/me checks user in DB]
     E -->|New User| F[Create user in DB with role 'student' + redirect back]
     E -->|Existing User| G[Fetch existing role + redirect back]
     G -->|If Admin Promotes User| H[Role upgraded to 'instructor' or 'admin']
@@ -213,7 +214,7 @@ These design parameters eliminate ambiguity during parallel coding sprints:
    * *Resolution*: Configure the database foreign key on `parent_id` with `ON DELETE CASCADE`. Deleting a parent comment automatically deletes all of its nested children recursively, keeping database comments intact and self-cleaning.
 5. **Comment Thread Pagination Strategy**:
    * *Assumption*: Querying infinitely nested comments in a single payload could exhaust database performance.
-   * *Resolution*: Root comments are paginated (20 per page). When clicked, replies are loaded in a single subtree fetch up to a depth of **5 levels**. Depth greater than 5 renders a Reddit-style "View single thread" link to fetch that sub-branch in a isolated view.
+   * *Resolution*: Root comments are paginated (20 per page). When clicked, replies are loaded in a single subtree fetch up to a depth of **5 levels**. Depth greater than 5 renders a Reddit-style "View single thread" link to fetch that sub-branch in an isolated view.
 
 ---
 
