@@ -5,4 +5,4 @@
 
 All Google/GitHub OAuth security filter setups, custom OAuth user detail database writers, login pages, and AuthProvider session contextual states have been completed.
 
-Refer to [guidelines_and_user_flows.md](file:///home/tuasananh/repos/GocTriThuc/planning/guidelines_and_user_flows.md) for the completion summary.
+Refer to [guidelines_and_user_flows.md](./guidelines_and_user_flows.md) for the completion summary.

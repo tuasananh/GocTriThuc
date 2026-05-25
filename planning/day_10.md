@@ -65,7 +65,7 @@ Ensure all N+1 loops are audited and spotless clean.
 
 ### Reusable Reddit-Style Comments Drawer
 File: `src/components/CommentThread.tsx`
-Renders infinitely nested discussion sheets recursively. If comments go deeper than **5 levels**, render a "View single thread" link to fetch that sub-branch in a isolated view.
+Renders infinitely nested discussion sheets recursively. If comments go deeper than **5 levels**, render a "View single thread" link to fetch that sub-branch in an isolated view.
 
 ```tsx
 function CommentItem({ comment, depth, currentUserId, onReply, onDelete }: {

@@ -113,23 +113,44 @@ export function VideoLessonViewer({ video }: { video: { provider: string; provid
 
 ### Blog Lesson Viewer (BlockNote Read-Only)
 File: `src/pages/lessons/_components/BlogLessonViewer.tsx`
-Use the `BlockNote` editor's read-only mode to render rich text blocks with high-fidelity formatting.
+Use the `BlockNote` editor's read-only mode to render rich text blocks with high-fidelity formatting by parsing the stored HTML string into BlockNote blocks.
 
 ```tsx
+import { useEffect } from "react";
 import { useCreateBlockNote } from "@blocknote/react";
 import { BlockNoteView } from "@blocknote/mantine";
 import "@blocknote/core/fonts/inter.css";
 import "@blocknote/mantine/style.css";
 
 export function BlogLessonViewer({ blog }: { blog: { content: string } }) {
-  // Load BlockNote instance with HTML contents loaded
   const editor = useCreateBlockNote({
-    initialContent: undefined // or parse HTML blocks
+    initialContent: [],
   });
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadContent() {
+      if (!blog.content?.trim()) {
+        editor.replaceBlocks(editor.document, []);
+        return;
+      }
+
+      const blocks = await editor.tryParseHTMLToBlocks(blog.content);
+      if (!cancelled) {
+        editor.replaceBlocks(editor.document, blocks);
+      }
+    }
+
+    void loadContent();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [blog.content, editor]);
 
   return (
     <article className="prose prose-neutral dark:prose-invert max-w-none">
-      {/* BlockNoteView initialized in read-only */}
       <BlockNoteView editor={editor} editable={false} />
     </article>
   );

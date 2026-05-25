@@ -8,7 +8,7 @@
 ## 🔴 Trung (BE Lead)
 
 ### Task 1 — User profile endpoints
-File: `com/goctrithuc/users/UserController.java` (Ensure update profile PATCH endpoints match this standard).
+File: `backend/src/main/java/com/goctrithuc/backend/controllers/UserController.java` (Ensure update profile PATCH endpoints match this standard).
 
 ```java
 @RestController
