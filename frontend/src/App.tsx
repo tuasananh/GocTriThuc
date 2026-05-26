@@ -1,60 +1,86 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import axios from 'axios';
 import { MainLayout } from '@/layouts/MainLayout';
 import { LandingPage } from '@/pages';
 import { LoginPage } from '@/pages/login';
-// Dashboard component can be implemented later or replaced, keeping it for existing route validity
 import { Dashboard } from '@/pages/dashboard';
 import { GuestRoute } from '@/components/GuestRoute';
+import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { AuthProvider } from './providers/AuthProvider';
+import { Toaster } from '@/components/ui/sonner';
+import { TooltipProvider } from '@/components/ui/tooltip';
 import { lazy, Suspense } from 'react';
 
 const EditorTestPage = lazy(() =>
   import('@/pages/editor-test').then((m) => ({ default: m.EditorTestPage })),
 );
 
-// Configure Axios globally to send session and CSRF cookies
-axios.defaults.withCredentials = true;
-axios.defaults.xsrfCookieName = 'XSRF-TOKEN';
-axios.defaults.xsrfHeaderName = 'X-XSRF-TOKEN';
-
 function App() {
   return (
     <BrowserRouter>
-      <AuthProvider>
-        <Routes>
-          <Route element={<MainLayout />}>
-            <Route path="/" element={<LandingPage />} />
-          </Route>
-          <Route element={<GuestRoute />}>
-            {/* Full-screen auth route */}
-            <Route path="/login" element={<LoginPage />} />
-          </Route>
+      <TooltipProvider>
+        <AuthProvider>
+          <Routes>
+            {/* ── Public (với MainLayout) ────────────────── */}
+            <Route element={<MainLayout />}>
+              <Route path="/" element={<LandingPage />} />
+              {/* Thêm các trang public khác ở đây:
+                  <Route path="/courses" element={<CourseListPage />} />
+                  <Route path="/courses/:id" element={<CourseDetailPage />} />
+              */}
+            </Route>
 
-          {/* Protected Dashboard Route (for future) */}
-          <Route path="/dashboard" element={<Dashboard />} />
+            {/* ── Guest Only (redirect nếu đã đăng nhập) ── */}
+            <Route element={<GuestRoute />}>
+              <Route path="/login" element={<LoginPage />} />
+            </Route>
 
-          {/* Dummy route for individual course details to demonstrate Auth Guard redirect */}
-          <Route
-            path="/courses/:courseId"
-            element={
-              <div className="p-20 text-center text-3xl font-bold bg-background min-h-screen text-foreground">
-                Bạn đã đăng nhập thành công và truy cập vào chi tiết khoá học!
-              </div>
-            }
-          />
+            {/* ── Protected (cần đăng nhập) ─────────────── */}
+            <Route element={<ProtectedRoute />}>
+              <Route element={<MainLayout />}>
+                <Route path="/dashboard" element={<Dashboard />} />
+                {/* Thêm các trang cần auth ở đây:
+                    <Route path="/profile" element={<ProfilePage />} />
+                    <Route path="/courses/:id/classroom" element={<ClassroomPage />} />
+                */}
+              </Route>
+            </Route>
 
-          {/* Test route for BlockNote Editor */}
-          <Route
-            path="/editor-test"
-            element={
-              <Suspense fallback={<div>Loading...</div>}>
-                <EditorTestPage />
-              </Suspense>
-            }
-          />
-        </Routes>
-      </AuthProvider>
+            {/* ── Instructor (cần role teacher) ────────── */}
+            <Route element={<ProtectedRoute requiredRole="teacher" />}>
+              <Route element={<MainLayout />}>
+                {/* Thêm các trang instructor ở đây:
+                    <Route path="/instructor" element={<InstructorDashboard />} />
+                    <Route path="/instructor/courses/:id" element={<CourseEditorPage />} />
+                    <Route path="/instructor/questions" element={<QuestionBankPage />} />
+                */}
+              </Route>
+            </Route>
+
+            {/* ── Admin (cần role admin) ────────────────── */}
+            <Route element={<ProtectedRoute requiredRole="admin" />}>
+              <Route element={<MainLayout />}>
+                {/* Thêm các trang admin ở đây:
+                    <Route path="/admin" element={<AdminDashboard />} />
+                    <Route path="/admin/users" element={<AdminUsersPage />} />
+                */}
+              </Route>
+            </Route>
+
+            {/* ── Dev Tools ─────────────────────────────── */}
+            <Route
+              path="/editor-test"
+              element={
+                <Suspense fallback={<div>Loading...</div>}>
+                  <EditorTestPage />
+                </Suspense>
+              }
+            />
+          </Routes>
+
+          {/* Toast notifications — hiển thị ở góc dưới phải */}
+          <Toaster position="bottom-right" richColors closeButton />
+        </AuthProvider>
+      </TooltipProvider>
     </BrowserRouter>
   );
 }
