@@ -96,16 +96,17 @@ export const moduleHandlers = [
   }),
 
   // ── POST /api/modules/:id/lessons ────────────────────────
-  http.post('/api/modules/:moduleId/lessons', async ({ request }) => {
+  http.post('/api/modules/:moduleId/lessons', async ({ request, params }) => {
     await delay(300);
     const body = (await request.json()) as { title: string; lessonType: string };
+    const moduleId = Number(params.moduleId);
     return HttpResponse.json(
       {
         id: Date.now(),
         title: body.title,
         lessonType: body.lessonType,
         order: 0,
-        moduleId: 101,
+        moduleId,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       },
