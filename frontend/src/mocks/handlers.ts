@@ -13,7 +13,10 @@ const authHandlers = [
     await delay(200);
     // Mặc định là true (đăng nhập) để lập trình viên dễ dev.
     // Sẽ đổi thành false khi họ click Đăng xuất.
-    const isMockAuthenticated = localStorage.getItem('mock_authenticated') !== 'false';
+    const isMockAuthenticated =
+      typeof window !== 'undefined' && typeof window.localStorage !== 'undefined'
+        ? window.localStorage.getItem('mock_authenticated') !== 'false'
+        : true;
 
     if (!isMockAuthenticated) {
       return HttpResponse.json({ authenticated: false });
@@ -31,7 +34,9 @@ const authHandlers = [
   }),
   http.post('/api/logout', async () => {
     await delay(200);
-    localStorage.setItem('mock_authenticated', 'false');
+    if (typeof window !== 'undefined' && typeof window.localStorage !== 'undefined') {
+      window.localStorage.setItem('mock_authenticated', 'false');
+    }
     return HttpResponse.json({ success: true });
   }),
 ];
