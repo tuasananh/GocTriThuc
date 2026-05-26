@@ -1,4 +1,3 @@
-
 import { courseHandlers } from './handlers/courses';
 import { moduleHandlers } from './handlers/modules';
 import { questionHandlers } from './handlers/questions';
