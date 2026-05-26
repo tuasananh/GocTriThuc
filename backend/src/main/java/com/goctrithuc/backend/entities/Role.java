@@ -27,6 +27,12 @@ public class Role {
 
   protected Role() {}
 
+  public Role(String name, Long permissions, String description) {
+    this.name = name;
+    this.permissions = permissions;
+    this.description = description;
+  }
+
   public String getName() {
     return name;
   }

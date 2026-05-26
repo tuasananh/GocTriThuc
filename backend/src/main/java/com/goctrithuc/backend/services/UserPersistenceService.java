@@ -1,6 +1,7 @@
 package com.goctrithuc.backend.services;
 
 import com.goctrithuc.backend.common.util.StringUtil;
+import com.goctrithuc.backend.dtos.UpdateUserRequest;
 import com.goctrithuc.backend.entities.Role;
 import com.goctrithuc.backend.entities.User;
 import com.goctrithuc.backend.entities.UserProvider;
@@ -10,8 +11,10 @@ import com.goctrithuc.backend.repositories.UserProviderRepository;
 import com.goctrithuc.backend.repositories.UserRepository;
 import com.goctrithuc.backend.repositories.UserRoleRepository;
 import java.util.Optional;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
 @Service
 public class UserPersistenceService {
@@ -78,5 +81,49 @@ public class UserPersistenceService {
     if (!userRoleRepository.existsByIdUserIdAndIdRoleName(user.getId(), studentRole.getName())) {
       userRoleRepository.save(new UserRole(user, studentRole));
     }
+  }
+
+  @Transactional
+  public User updateProfile(Long id, UpdateUserRequest req) {
+    User user =
+        userRepository
+            .findById(id)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+
+    if (req.username() != null && !req.username().equals(user.getUsername())) {
+      if (userRepository.existsByUsername(req.username())) {
+        throw new ResponseStatusException(HttpStatus.CONFLICT, "Username already taken");
+      }
+      user.setUsername(req.username());
+    }
+    if (req.displayName() != null) {
+      user.setDisplayName(req.displayName());
+    }
+    if (req.avatarUrl() != null) {
+      user.setAvatarUrl(req.avatarUrl());
+    }
+    return userRepository.save(user);
+  }
+
+  @Transactional
+  public User updateCurrentUserProfile(String email, UpdateUserRequest req) {
+    User user =
+        userRepository
+            .findByEmail(email)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+
+    if (req.username() != null && !req.username().equals(user.getUsername())) {
+      if (userRepository.existsByUsername(req.username())) {
+        throw new ResponseStatusException(HttpStatus.CONFLICT, "Username already taken");
+      }
+      user.setUsername(req.username());
+    }
+    if (req.displayName() != null) {
+      user.setDisplayName(req.displayName());
+    }
+    if (req.avatarUrl() != null) {
+      user.setAvatarUrl(req.avatarUrl());
+    }
+    return userRepository.save(user);
   }
 }

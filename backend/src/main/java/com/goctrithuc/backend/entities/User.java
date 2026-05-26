@@ -64,7 +64,23 @@ public class User {
     return avatarUrl;
   }
 
+  public void setDisplayName(String displayName) {
+    this.displayName = displayName;
+  }
+
+  public void setUsername(String username) {
+    this.username = username;
+  }
+
+  public void setAvatarUrl(String avatarUrl) {
+    this.avatarUrl = avatarUrl;
+  }
+
   public Set<UserRole> getUserRoles() {
     return userRoles;
+  }
+
+  public void setUserRoles(Set<UserRole> userRoles) {
+    this.userRoles = userRoles;
   }
 }

@@ -33,7 +33,5 @@ build/
 .vscode/
 
 # React files
-src/main/resources/static/assets/
-src/main/resources/static/favicon.svg
-src/main/resources/static/icons.svg
-src/main/resources/static/index.html
+src/main/resources/static/**/*
+!src/main/resources/static/.gitkeep
