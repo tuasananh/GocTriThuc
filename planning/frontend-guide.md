@@ -132,6 +132,11 @@ toast.success('Tạo khóa học thành công!');
 toast.error('Tạo thất bại. Vui lòng thử lại.');
 ```
 
+### 6. STATE MANGEMENT & FILE UPLOADS (Quyết định từ Planning)
+
+*   **Quản lý State:** KHÔNG dùng Redux hay Zustand. Chúng ta ưu tiên sự đơn giản: dùng Context cho Auth (`useAuth`), và dùng `useState` hoặc **URL Query Params** cho các state còn lại (như search, filter, pagination).
+*   **Upload File:** KHÔNG dùng Cloudinary. Mọi file/ảnh sẽ được upload thẳng lên hệ thống Backend (Local Disk Storage) qua cổng `POST /api/files/upload`.
+
 ---
 
 ## 📐 Template Trang Mới
