@@ -79,12 +79,13 @@ export const moduleHandlers = [
   }),
 
   // ── POST /api/courses/:id/modules ────────────────────────
-  http.post('/api/courses/:courseId/modules', async ({ request }) => {
+  http.post('/api/courses/:courseId/modules', async ({ request, params }) => {
     await delay(300);
     const body = (await request.json()) as { title: string };
+    const courseId = Number(params.courseId);
     const newModule: ModuleDto = {
       id: Date.now(),
-      courseId: 1,
+      courseId,
       title: body.title,
       order: mockModules.length,
       lessons: [],
