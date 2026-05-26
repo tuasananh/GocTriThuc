@@ -132,10 +132,34 @@ toast.success('Tạo khóa học thành công!');
 toast.error('Tạo thất bại. Vui lòng thử lại.');
 ```
 
-### 6. STATE MANGEMENT & FILE UPLOADS (Quyết định từ Planning)
+### 6. STATE MANAGEMENT & FILE UPLOADS (Quyết định từ Planning)
 
 *   **Quản lý State:** KHÔNG dùng Redux hay Zustand. Chúng ta ưu tiên sự đơn giản: dùng Context cho Auth (`useAuth`), và dùng `useState` hoặc **URL Query Params** cho các state còn lại (như search, filter, pagination).
-*   **Upload File:** KHÔNG dùng Cloudinary. Mọi file/ảnh sẽ được upload thẳng lên hệ thống Backend (Local Disk Storage) qua cổng `POST /api/files/upload`.
+*   **Upload File:** KHÔNG dùng Cloudinary. Mọi file/ảnh sẽ được upload thẳng lên hệ thống Backend (Local Disk Storage) qua cổng `POST /api/files/upload`. Dùng `fileServeUrl(id)` từ `@/types/file` để tạo URL hiển thị file.
+
+### 7. BLOCKNOTE EDITOR — Chế độ read-only vs editable
+
+```tsx
+// ✅ ĐÚNG — Viewer (Student xem bài giảng)
+<BlockNoteView editor={editor} editable={false} />
+
+// ✅ ĐÚNG — Editor (Instructor soạn bài giảng)
+<BlockNoteView editor={editor} editable={true} />
+```
+
+**Lưu ý:** Backend sẽ sanitize HTML bằng `jsoup` trước khi lưu. Frontend KHÔNG cần tự sanitize.
+
+### 8. GIT COMMITS — Tuân thủ Conventional Commits
+
+```bash
+# Format: <type>(<scope>): <description>
+feat(courses): add course creation modal
+fix(auth): handle expired session redirect
+style(ui): format with prettier
+docs(frontend): update frontend-guide.md
+```
+
+**Types:** `feat`, `fix`, `refactor`, `style`, `docs`, `test`, `chore`.
 
 ---
 
@@ -295,9 +319,10 @@ pnpm dlx shadcn@latest add <tên-component>
    * Lỗi/Cảnh báo: `bg-destructive`, `text-destructive`.
 2. **Luôn bọc trang bằng Layout chuẩn:** Sử dụng `<PageShell>` và `<SectionHeader>` cho mọi trang mới để đồng bộ căn lề và khoảng cách (padding/margin).
 3. **Đồng bộ 4 trạng thái:** Luôn dùng `<SkeletonCard>`, `<EmptyState>`, `<ErrorState>` thay vì tự code bằng HTML thường.
-4. **Hiệu ứng sống động (Dynamic Design):** Thêm micro-animations cho thẻ (card) và nút bấm: `transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg`.
+4. **Hiệu ứng sống động (Dynamic Design):** Thêm micro-animations cho thẻ (card) và nút bấm: `transition-all duration-300 hover:-translate-y-1 hover:shadow-xl`.
 5. **Responsive (Mobile-first):** Bắt đầu code cho màn hình nhỏ trước, sau đó dùng breakpoint: `grid-cols-1 sm:grid-cols-2 lg:grid-cols-3`.
-6. **Glassmorphism:** Dành cho Header hoặc nền Modal để tạo cảm giác cao cấp: `bg-background/80 backdrop-blur-md`.
+6. **Glassmorphism:** Dành cho Header hoặc nền Modal để tạo cảm giác cao cấp: `backdrop-blur-md bg-background/80 border border-border/50 shadow-lg`.
+7. **BlockNote Editor:** Dùng `read-only` mode cho viewers, `editable` mode cho authors. Apply custom typography styles cho tiêu đề.
 
 ---
 
@@ -308,4 +333,7 @@ pnpm dlx shadcn@latest add <tên-component>
 - [ ] Dùng `ROUTES.*` cho đường dẫn, không hardcode
 - [ ] Trang xử lý đủ 4 states: Loading / Error / Empty / Data
 - [ ] Responsive: test ở 375px, 768px, 1280px
+- [ ] Upload file dùng `POST /api/files/upload`, không dùng dịch vụ ngoài
+- [ ] BlockNote editor: `editable={false}` cho viewer, `editable={true}` cho editor
+- [ ] Commit message theo Conventional Commits: `feat(scope): description`
 - [ ] Chạy `pnpm run lint` và `pnpm run format` trước khi commit
