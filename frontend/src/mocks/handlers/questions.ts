@@ -90,13 +90,13 @@ export const questionHandlers = [
   }),
 
   // ── POST /api/tests/:id/sessions (start quiz) ─────────────
-  http.post('/api/tests/:testId/sessions', async () => {
+  http.post('/api/tests/:testId/sessions', async ({ params }) => {
     await delay(300);
     return HttpResponse.json(
       {
         id: Date.now(),
         userId: 1,
-        testId: 1003,
+        testId: Number(params.testId),
         startedAt: new Date().toISOString(),
         isDone: false,
         remainingTime: 1800,
