@@ -53,7 +53,7 @@ export function LandingPage() {
       </section>
 
       {/* Catalog Section */}
-      <section id="catalog" className="bg-[#fafafa] border-t border-border/40 py-24 scroll-mt-16">
+      <section id="catalog" className="bg-muted/20 border-t border-border/40 py-24 scroll-mt-16">
         <div className="container mx-auto px-4 md:px-8">
           <div className="flex flex-col items-center justify-between gap-4 md:flex-row md:items-end">
             <div className="space-y-2 text-center md:text-left">

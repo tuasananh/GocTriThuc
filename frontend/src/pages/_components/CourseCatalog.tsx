@@ -17,8 +17,8 @@ interface Course {
   id: number;
   title: string;
   description: string;
-  thumbnail_url: string;
-  is_published: boolean;
+  thumbnailUrl: string | null;
+  isPublished: boolean;
   visibility: 'Public' | 'Restricted' | 'Private';
 }
 
@@ -30,8 +30,15 @@ export function CourseCatalog() {
   useEffect(() => {
     async function fetchCourses() {
       try {
-        const response = await axios.get<Course[]>('/api/courses');
-        setCourses(response.data);
+        const response = await axios.get('/api/courses');
+        const data = response.data;
+        if (Array.isArray(data)) {
+          setCourses(data);
+        } else if (data && Array.isArray(data.content)) {
+          setCourses(data.content);
+        } else {
+          setCourses([]);
+        }
       } catch (err) {
         console.error('Failed to fetch courses:', err);
       } finally {
@@ -73,19 +80,19 @@ export function CourseCatalog() {
       {courses.map((course) => (
         <Card
           key={course.id}
-          className="group flex flex-col overflow-hidden border-border/50 shadow-sm transition-all hover:shadow-xl hover:border-black/10 cursor-pointer rounded-2xl bg-white"
+          className="group flex flex-col overflow-hidden border-border/50 shadow-sm transition-all hover:shadow-xl hover:border-border cursor-pointer rounded-2xl bg-card"
           onClick={() => handleCourseClick(course.id)}
         >
           <div className="relative aspect-video overflow-hidden bg-muted">
             <img
-              src={course.thumbnail_url}
+              src={course.thumbnailUrl || `https://picsum.photos/seed/${course.id}/600/400`}
               alt={course.title}
               className="object-cover w-full h-full transition-transform duration-500 group-hover:scale-105"
             />
             <div className="absolute top-4 left-4 flex gap-2">
               <Badge
                 variant={course.visibility === 'Public' ? 'default' : 'secondary'}
-                className="shadow-sm backdrop-blur-md bg-white/90 text-black border-0"
+                className="shadow-sm backdrop-blur-md bg-background/90 text-foreground border-0"
               >
                 {course.visibility === 'Public' ? 'Công khai' : 'Riêng tư'}
               </Badge>

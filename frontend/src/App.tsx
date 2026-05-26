@@ -6,6 +6,7 @@ import { Dashboard } from '@/pages/dashboard';
 import { GuestRoute } from '@/components/GuestRoute';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { AuthProvider } from './providers/AuthProvider';
+import { ThemeProvider } from '@/providers/ThemeProvider';
 import { Toaster } from '@/components/ui/sonner';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { lazy, Suspense } from 'react';
@@ -17,8 +18,9 @@ const EditorTestPage = lazy(() =>
 function App() {
   return (
     <BrowserRouter>
-      <TooltipProvider>
-        <AuthProvider>
+      <ThemeProvider defaultTheme="system" storageKey="goctrithuc-theme">
+        <TooltipProvider>
+          <AuthProvider>
           <Routes>
             {/* ── Public (với MainLayout) ────────────────── */}
             <Route element={<MainLayout />}>
@@ -81,6 +83,7 @@ function App() {
           <Toaster position="bottom-right" richColors closeButton />
         </AuthProvider>
       </TooltipProvider>
+      </ThemeProvider>
     </BrowserRouter>
   );
 }

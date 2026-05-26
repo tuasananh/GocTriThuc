@@ -13,6 +13,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { GocTriThuc } from '@/components/GocTriThuc';
+import { ThemeToggle } from '@/components/ThemeToggle';
 
 const UserButtonDropdown = ({
   user,
@@ -27,9 +28,9 @@ const UserButtonDropdown = ({
         <Button variant="ghost" className="px-2 py-5">
           {user.displayName || user.username}
           <Avatar>
-            <AvatarImage src={undefined} alt={user.displayName || user.username} />
+            <AvatarImage src={user.avatarUrl || undefined} alt={user.displayName || user.username} />
             <AvatarFallback>
-              {user.displayName?.charAt(0).toUpperCase() || user.username.charAt(0).toUpperCase()}
+              {(user.displayName || user.username || 'U').charAt(0).toUpperCase()}
             </AvatarFallback>
           </Avatar>
         </Button>
@@ -75,6 +76,7 @@ export function MainLayout() {
             </Link>
           </nav>
           <div className="flex items-center gap-4">
+            <ThemeToggle />
             {auth && auth.isAuthenticated ? (
               <UserButtonDropdown user={auth.user} logout={auth.logout} />
             ) : (

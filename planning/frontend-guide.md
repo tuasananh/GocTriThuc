@@ -287,14 +287,19 @@ pnpm dlx shadcn@latest add <tên-component>
 
 ---
 
-## 🎨 Quy Tắc UI/UX
+## 🎨 Quy Tắc UI/UX & Đồng Bộ Giao Diện
 
-1. **Micro-animations:** Thêm `transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg` cho cards
-2. **Responsive:** Luôn code mobile-first: `grid-cols-1 sm:grid-cols-2 lg:grid-cols-3`
-3. **Dark mode:** Dùng CSS variables: `text-foreground`, `bg-background`, `text-muted-foreground`
-4. **Glassmorphism:** Cho header/modal: `bg-background/80 backdrop-blur-md`
-5. **Naming:** File page = `index.tsx`, components riêng = thư mục `_components/`
-6. **IDs:** Tất cả buttons/inputs cần có `id` duy nhất (cho testing)
+Để toàn bộ ứng dụng có giao diện nhất quán, chuyên nghiệp (premium) và hoạt động tốt trên cả Light/Dark mode, các thành viên **BẮT BUỘC** tuân thủ:
+
+1. **KHÔNG dùng màu cứng (Hardcoded Colors):** Tuyệt đối không dùng `bg-red-500`, `text-blue-600`. Bắt buộc phải dùng biến màu Semantic của hệ thống:
+   * Chữ: `text-foreground`, `text-muted-foreground`, `text-primary`.
+   * Nền: `bg-background`, `bg-muted`, `bg-secondary`.
+   * Lỗi/Cảnh báo: `bg-destructive`, `text-destructive`.
+2. **Luôn bọc trang bằng Layout chuẩn:** Sử dụng `<PageShell>` và `<SectionHeader>` cho mọi trang mới để đồng bộ căn lề và khoảng cách (padding/margin).
+3. **Đồng bộ 4 trạng thái:** Luôn dùng `<SkeletonCard>`, `<EmptyState>`, `<ErrorState>` thay vì tự code bằng HTML thường.
+4. **Hiệu ứng sống động (Dynamic Design):** Thêm micro-animations cho thẻ (card) và nút bấm: `transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg`.
+5. **Responsive (Mobile-first):** Bắt đầu code cho màn hình nhỏ trước, sau đó dùng breakpoint: `grid-cols-1 sm:grid-cols-2 lg:grid-cols-3`.
+6. **Glassmorphism:** Dành cho Header hoặc nền Modal để tạo cảm giác cao cấp: `bg-background/80 backdrop-blur-md`.
 
 ---
 

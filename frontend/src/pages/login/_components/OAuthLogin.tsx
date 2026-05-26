@@ -15,7 +15,7 @@ export function OAuthLogin() {
   };
 
   return (
-    <Card className="w-100 shadow-xl border-0 ring-1 ring-black/5 rounded-2xl overflow-hidden backdrop-blur-sm bg-white/70">
+    <Card className="w-full shadow-xl border-0 ring-1 ring-border rounded-2xl overflow-hidden backdrop-blur-md bg-background/80">
       <CardHeader className="space-y-2 text-center py-2">
         <div className="flex justify-center mb-4">
           <div className="bg-primary/10 rounded-full p-4">
@@ -34,7 +34,7 @@ export function OAuthLogin() {
         <Button
           variant="outline"
           size="lg"
-          className="w-full h-12 rounded-xl border-border bg-white text-base justify-start px-6 gap-4 hover:bg-gray-50 transition-colors shadow-sm"
+          className="w-full h-12 rounded-xl text-base justify-start px-6 gap-4 hover:bg-accent hover:text-accent-foreground transition-colors shadow-sm"
           onClick={() => handleLogin('google')}
         >
           <svg className="w-5 h-5" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -61,11 +61,11 @@ export function OAuthLogin() {
         <Button
           variant="outline"
           size="lg"
-          className="w-full h-12 rounded-xl border-border bg-white text-base justify-start px-6 gap-4 hover:bg-gray-50 transition-colors shadow-sm"
+          className="w-full h-12 rounded-xl text-base justify-start px-6 gap-4 hover:bg-accent hover:text-accent-foreground transition-colors shadow-sm"
           onClick={() => handleLogin('github')}
         >
           <svg
-            className="w-5 h-5 text-gray-900"
+            className="w-5 h-5 dark:text-white"
             aria-hidden="true"
             fill="currentColor"
             viewBox="0 0 20 20"
