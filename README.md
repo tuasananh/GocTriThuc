@@ -2,8 +2,8 @@
 
 ## Thành viên dự án
 
-| Vai trò               | Họ và tên        | Nơi công tác    | Email                           |
-| --------------------- | ---------------- | --------------- | ------------------------------- |
+| Vai trò               | Họ và tên        | Nơi công tác    | Email                             |
+| --------------------- | ---------------- | --------------- | --------------------------------- |
 | Quản lý dự án         | Trần Tuấn Anh    | ĐH Bách Khoa HN | <anh.tt2416124@sis.hust.edu.vn>   |
 | Trưởng nhóm Kỹ thuật  | Nguyễn Công Vinh | ĐH Bách Khoa HN | <vinh.nc2400083@sis.hust.edu.vn>  |
 | Thành viên phát triển | Phạm Văn Sâm     | ĐH Bách Khoa HN | <sam.pv2400114@sis.hust.edu.vn>   |

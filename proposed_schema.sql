@@ -37,12 +37,12 @@ CREATE TABLE "public"."users" (
 CREATE TABLE "public"."user_providers" (
     "id"                  bigint      NOT NULL DEFAULT generate_snowflake_id(),
     "user_id"             bigint      NOT NULL,
-    "provider"            text        NOT NULL,
-    "provider_account_id" text        NOT NULL,
+    "provider_name"       text        NOT NULL,
+    "provider_user_id"    text        NOT NULL,
     "created_at"          timestamptz NOT NULL DEFAULT NOW(),
     "updated_at"          timestamptz NOT NULL DEFAULT NOW(),
     PRIMARY KEY ("id"),
-    UNIQUE ("provider", "provider_account_id")
+    UNIQUE ("provider_name", "provider_user_id")
 );
 
 -- Role definitions with bitmask permissions
@@ -275,7 +275,7 @@ CREATE TABLE "public"."mc_questions" (
 
 -- Links questions to a test with ordering and point values
 -- UNIQUE (test_id, order): prevents two questions sharing the same position in a test.
--- Reordering must use a temp-value swap within a single transaction to avoid unique violation.
+-- Reordering must be within a single transaction to avoid unique violation.
 CREATE TABLE "public"."test_question" (
     "test_id"     bigint           NOT NULL,
     "question_id" bigint           NOT NULL,
@@ -450,7 +450,7 @@ ALTER TABLE "public"."test_session_answers"
 -- the row is mutated via JPA, Flyway, or raw SQL.
 -- ============================================================
 
-CREATE OR REPLACE FUNCTION set_updated_at()
+CREATE OR REPLACE FUNCTION update_updated_at_column()
 RETURNS TRIGGER AS $$
 BEGIN
     NEW.updated_at = NOW();
@@ -461,91 +461,91 @@ $$ LANGUAGE plpgsql;
 -- Auth & Identity
 CREATE TRIGGER trg_users_updated_at
     BEFORE UPDATE ON "public"."users"
-    FOR EACH ROW EXECUTE FUNCTION set_updated_at();
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 CREATE TRIGGER trg_user_providers_updated_at
     BEFORE UPDATE ON "public"."user_providers"
-    FOR EACH ROW EXECUTE FUNCTION set_updated_at();
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 CREATE TRIGGER trg_roles_updated_at
     BEFORE UPDATE ON "public"."roles"
-    FOR EACH ROW EXECUTE FUNCTION set_updated_at();
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 -- user_role has no updated_at column (insert/delete only table — trigger removed)
 
 -- Courses & Enrollment
 CREATE TRIGGER trg_courses_updated_at
     BEFORE UPDATE ON "public"."courses"
-    FOR EACH ROW EXECUTE FUNCTION set_updated_at();
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 CREATE TRIGGER trg_enrollments_updated_at
     BEFORE UPDATE ON "public"."enrollments"
-    FOR EACH ROW EXECUTE FUNCTION set_updated_at();
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 CREATE TRIGGER trg_course_resources_updated_at
     BEFORE UPDATE ON "public"."course_resources"
-    FOR EACH ROW EXECUTE FUNCTION set_updated_at();
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 -- Announcements & Comments
 CREATE TRIGGER trg_announcements_updated_at
     BEFORE UPDATE ON "public"."announcements"
-    FOR EACH ROW EXECUTE FUNCTION set_updated_at();
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 CREATE TRIGGER trg_ann_comments_updated_at
     BEFORE UPDATE ON "public"."announcement_comments"
-    FOR EACH ROW EXECUTE FUNCTION set_updated_at();
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 -- Curriculum
 CREATE TRIGGER trg_modules_updated_at
     BEFORE UPDATE ON "public"."modules"
-    FOR EACH ROW EXECUTE FUNCTION set_updated_at();
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 CREATE TRIGGER trg_lessons_updated_at
     BEFORE UPDATE ON "public"."lessons"
-    FOR EACH ROW EXECUTE FUNCTION set_updated_at();
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 CREATE TRIGGER trg_lesson_videos_updated_at
     BEFORE UPDATE ON "public"."lesson_videos"
-    FOR EACH ROW EXECUTE FUNCTION set_updated_at();
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 CREATE TRIGGER trg_lesson_blogs_updated_at
     BEFORE UPDATE ON "public"."lesson_blogs"
-    FOR EACH ROW EXECUTE FUNCTION set_updated_at();
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 CREATE TRIGGER trg_lesson_tests_updated_at
     BEFORE UPDATE ON "public"."lesson_tests"
-    FOR EACH ROW EXECUTE FUNCTION set_updated_at();
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 CREATE TRIGGER trg_lesson_resources_updated_at
     BEFORE UPDATE ON "public"."lesson_resources"
-    FOR EACH ROW EXECUTE FUNCTION set_updated_at();
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 CREATE TRIGGER trg_lesson_comments_updated_at
     BEFORE UPDATE ON "public"."lesson_comments"
-    FOR EACH ROW EXECUTE FUNCTION set_updated_at();
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 -- lesson_completions has no updated_at column (insert/delete only table — trigger removed)
 
 -- Questions & Tests
 CREATE TRIGGER trg_questions_updated_at
     BEFORE UPDATE ON "public"."questions"
-    FOR EACH ROW EXECUTE FUNCTION set_updated_at();
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 CREATE TRIGGER trg_mc_questions_updated_at
     BEFORE UPDATE ON "public"."mc_questions"
-    FOR EACH ROW EXECUTE FUNCTION set_updated_at();
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 CREATE TRIGGER trg_test_question_updated_at
     BEFORE UPDATE ON "public"."test_question"
-    FOR EACH ROW EXECUTE FUNCTION set_updated_at();
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 CREATE TRIGGER trg_test_sessions_updated_at
     BEFORE UPDATE ON "public"."test_sessions"
-    FOR EACH ROW EXECUTE FUNCTION set_updated_at();
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 CREATE TRIGGER trg_tsa_updated_at
     BEFORE UPDATE ON "public"."test_session_answers"
-    FOR EACH ROW EXECUTE FUNCTION set_updated_at();
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 -- ============================================================
 -- PERFORMANCE INDEXES

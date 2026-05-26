@@ -37,11 +37,19 @@
 
 ### 1.1 Purpose
 
-This document specifies the complete functional and non-functional requirements for **GocTriThuc** ("Corner of Knowledge"), a self-hosted, full-stack e-learning platform. It serves as the single authoritative reference for all developers, reviewers, and AI agents contributing to the project. Any architectural or schema deviation requires explicit approval from the Tech Lead.
+This document specifies the complete functional and non-functional requirements
+for **GocTriThuc** ("Corner of Knowledge"), a self-hosted, full-stack e-learning
+platform. It serves as the single authoritative reference for all developers,
+reviewers, and AI agents contributing to the project. Any architectural or
+schema deviation requires explicit approval from the Tech Lead.
 
 ### 1.2 Scope
 
-GocTriThuc allows instructors to create and publish structured courses containing video, rich-text (blog), and quiz lessons. Students enroll in courses, consume lesson content, take timed multiple-choice quizzes, and track their learning progress. Administrators manage users and moderate platform content.
+GocTriThuc allows instructors to create and publish structured courses
+containing video, rich-text (blog), and quiz lessons. Students enroll in
+courses, consume lesson content, take timed multiple-choice quizzes, and track
+their learning progress. Administrators manage users and moderate platform
+content.
 
 ### 1.3 Technology Stack
 
@@ -75,14 +83,22 @@ GocTriThuc allows instructors to create and publish structured courses containin
 
 ### 2.1 Product Perspective
 
-GocTriThuc is a standalone, self-hosted web application. It has no dependency on external cloud services. All assets (course thumbnails, lesson attachments) are stored on local server disk via a Docker-mounted persistent volume. Video lessons embed external YouTube or Vimeo URLs; no video hosting is performed by the platform.
+GocTriThuc is a standalone, self-hosted web application. It has no dependency on
+external cloud services. All assets (course thumbnails, lesson attachments) are
+stored on local server disk via a Docker-mounted persistent volume. Video
+lessons embed external YouTube or Vimeo URLs; no video hosting is performed by
+the platform.
 
 ### 2.2 Product Goals
 
-1. **Empower instructors** to build structured, rich-media course curricula with no external tooling dependencies.
-2. **Provide students** a clean, distraction-free learning environment with progress tracking and timed assessments.
-3. **Enforce security** through server-side permission checks, HTML sanitization, cheat-proof quiz sessions, and CSRF-protected session auth.
-4. **Remain self-contained** — deployable as a single Docker Compose stack with zero paid external service dependencies for v1.
+1. **Empower instructors** to build structured, rich-media course curricula with
+   no external tooling dependencies.
+2. **Provide students** a clean, distraction-free learning environment with
+   progress tracking and timed assessments.
+3. **Enforce security** through server-side permission checks, HTML
+   sanitization, cheat-proof quiz sessions, and CSRF-protected session auth.
+4. **Remain self-contained** — deployable as a single Docker Compose stack with
+   zero paid external service dependencies for v1.
 
 ### 2.3 User Classes
 
@@ -107,7 +123,8 @@ GocTriThuc is a standalone, self-hosted web application. It has no dependency on
 
 ## 3. Actors & Roles
 
-Roles are stored in the `roles` table as a **bitmask `bigint`** in the `permissions` column. Each bit maps to one capability. Default seeded roles:
+Roles are stored in the `roles` table as a **bitmask `bigint`** in the
+`permissions` column. Each bit maps to one capability. Default seeded roles:
 
 | Role      | Permissions Bitmask  | Default On Signup            |
 | --------- | -------------------- | ---------------------------- |
@@ -115,9 +132,11 @@ Roles are stored in the `roles` table as a **bitmask `bigint`** in the `permissi
 | `teacher` | `0x3E`               | ❌ No (admin-promoted)       |
 | `admin`   | `0x7FFFFFFFFFFFFFFF` | ❌ No (manually seeded)      |
 
-Role assignment is stored in the `user_role` join table. A user may hold multiple roles.
+Role assignment is stored in the `user_role` join table. A user may hold
+multiple roles.
 
-> **Authoritative bit-to-capability mapping**: See **Section 6** for the exact constant names and descriptions corresponding to these seeded values.
+> **Authoritative bit-to-capability mapping**: See **Section 6** for the exact
+> constant names and descriptions corresponding to these seeded values.
 
 ---
 
@@ -132,29 +151,44 @@ Role assignment is stored in the `user_role` join table. A user may hold multipl
 #### F1.1 OAuth2 Login
 
 - Users authenticate exclusively via **Google** or **GitHub** OAuth2 flows.
-- On first login, the system creates a `users` record and a `user_providers` record, and assigns the default `student` role via `user_role`.
+- On first login, the system creates a `users` record and a `user_providers`
+  record, and assigns the default `student` role via `user_role`.
 - On subsequent logins, the system fetches the existing user and role(s).
 - No password-based authentication exists.
 
 #### F1.2 Session Management
 
-- Authentication state is maintained via **server-side session cookies** (no JWT).
+- Authentication state is maintained via **server-side session cookies** (no
+  JWT).
 - CSRF protection is enabled natively via Spring Security's SPA CSRF token mode.
-- Sessions are in-memory (no Redis); suitable for single-instance Docker deployment.
-- **Session TTL**: 7-day sliding window. The TTL resets on every authenticated request. Configured via `server.servlet.session.timeout=7d`. Idle sessions (no requests for 7 days) are automatically invalidated.
+- Sessions are in-memory (no Redis); suitable for single-instance Docker
+  deployment.
+- **Session TTL**: 7-day sliding window. The TTL resets on every authenticated
+  request. Configured via `server.servlet.session.timeout=7d`. Idle sessions (no
+  requests for 7 days) are automatically invalidated.
 - Logout via `POST /api/logout` clears the server session.
 
 #### F1.3 User Profile
 
-- `GET /api/users/me` returns the authenticated user's `id`, `email`, `display_name`, `username`, `avatar_url`, and resolved `permissions` bitmask.
-- `PATCH /api/users/{id}` allows updating `display_name` and `username`. Username must remain unique. Returns `404 Not Found` when `{id}` does not match the calling user's own ID (unless admin) — this prevents user ID enumeration by making unauthorized access indistinguishable from non-existence.
-- Avatar upload is handled via the file upload system (F7); `avatar_url` is updated to the served file URL after upload.
+- `GET /api/users/me` returns the authenticated user's `id`, `email`,
+  `display_name`, `username`, `avatar_url`, and resolved `permissions` bitmask.
+- `PATCH /api/users/{id}` allows updating `display_name` and `username`.
+  Username must remain unique. Returns `404 Not Found` when `{id}` does not
+  match the calling user's own ID (unless admin) — this prevents user ID
+  enumeration by making unauthorized access indistinguishable from
+  non-existence.
+- Avatar upload is handled via the file upload system (F7); `avatar_url` is
+  updated to the served file URL after upload.
 
 #### F1.4 Guest Access
 
 - Unauthenticated visitors can browse `Public` and `Restricted` courses.
-- Accessing any protected action (enroll, view lesson, etc.) redirects to `/login?redirect=<original_path>`.
-- For `Restricted` courses, guests see an active **"Login to Request Access"** button that links to `/login?redirect=/courses/{id}`. This preserves redirect intent, so that upon successful login, the user is immediately returned to the course detail page to submit their access request.
+- Accessing any protected action (enroll, view lesson, etc.) redirects to
+  `/login?redirect=<original_path>`.
+- For `Restricted` courses, guests see an active **"Login to Request Access"**
+  button that links to `/login?redirect=/courses/{id}`. This preserves redirect
+  intent, so that upon successful login, the user is immediately returned to the
+  course detail page to submit their access request.
 
 ---
 
@@ -168,14 +202,17 @@ Role assignment is stored in the `user_role` join table. A user may hold multipl
 | `Restricted` | Everyone (including guests) | Must request access; instructor/admin approves |
 | `Private`    | Author + Admin only         | Not joinable; hidden from listings             |
 
-Setting a course back to `Private` **does not revoke** existing enrollments. Previously enrolled students retain access.
+Setting a course back to `Private` **does not revoke** existing enrollments.
+Previously enrolled students retain access.
 
 ##### Course State Machine
 
 `is_published` and `visibility` are two independent flags:
 
-- **`is_published`**: Content-complete flag. `false` = instructor is still editing (draft); `true` = ready for students.
-- **`visibility`**: Access scope. Controls who can discover and join the course once it is published.
+- **`is_published`**: Content-complete flag. `false` = instructor is still
+  editing (draft); `true` = ready for students.
+- **`visibility`**: Access scope. Controls who can discover and join the course
+  once it is published.
 
 | `is_published` | `visibility`             | Student Experience                                           |
 | -------------- | ------------------------ | ------------------------------------------------------------ |
@@ -189,27 +226,44 @@ Setting a course back to `Private` **does not revoke** existing enrollments. Pre
 
 - Only users with the `MANAGE_OWN_COURSES` permission bit can create courses.
 - New courses default to `Private` and `is_published = false`.
-- Fields: `title` (required), `description` (text, optional), `thumbnail_url` (text, optional), `visibility`, `settings` (jsonb, optional — extensible config bag for future course-level options).
+- Fields: `title` (required), `description` (text, optional), `thumbnail_url`
+  (text, optional), `visibility`, `settings` (jsonb, optional — extensible
+  config bag for future course-level options).
 
 #### F2.3 Course Editing & Deletion
 
-- `PUT/PATCH /api/courses/{id}`: Only the course author or an admin may update a course.
-- `DELETE /api/courses/{id}`: Only the course author or an admin may delete a course. Deletion cascades to all modules, lessons, enrollments, and resources.
-  > ⚠️ **UI Requirement**: The frontend **must** display a confirmation modal with an explicit irreversible warning before calling this endpoint (e.g. _"This will permanently delete this course and all student progress. This cannot be undone."_). No soft-delete or recovery mechanism exists.
+- `PUT/PATCH /api/courses/{id}`: Only the course author or an admin may update a
+  course.
+- `DELETE /api/courses/{id}`: Only the course author or an admin may delete a
+  course. Deletion cascades to all modules, lessons, enrollments, and resources.
+  > ⚠️ **UI Requirement**: The frontend **must** display a confirmation modal
+  > with an explicit irreversible warning before calling this endpoint (e.g.
+  > _"This will permanently delete this course and all student progress. This
+  > cannot be undone."_). No soft-delete or recovery mechanism exists.
 
 #### F2.4 Course Listing & Discovery
 
-- `GET /api/courses`: Paginated. Returns only `Public` and `Restricted` courses to unauthenticated/student users. Admins see all.
+- `GET /api/courses`: Paginated. Returns only `Public` and `Restricted` courses
+  to unauthenticated/student users. Admins see all.
 - Supports search by title and filter by visibility.
 
 #### F2.5 Enrollment
 
-- **Public courses**: `POST /api/courses/{id}/enroll` immediately inserts a row into `enrollments`.
-- **Restricted courses**: `POST /api/courses/{id}/access-requests` inserts a row into `course_access_requests`.
+- **Public courses**: `POST /api/courses/{id}/enroll` immediately inserts a row
+  into `enrollments`.
+- **Restricted courses**: `POST /api/courses/{id}/access-requests` inserts a row
+  into `course_access_requests`.
   - Approval: inserts to `enrollments` + deletes from `course_access_requests`.
   - Rejection: deletes from `course_access_requests`.
-- `GET /api/courses/{id}/access-status` returns `{ status: "none" | "requested" | "enrolled" }` for the current user.
-- **Unenrollment**: `DELETE /api/courses/{id}/enroll` removes the calling student's enrollment row. `lesson_completions` for that course are **preserved** so progress is restored automatically if the student re-enrolls later. Active `test_sessions` (`is_done = false`) are also **preserved**. Unenrolled students are allowed to submit and update answers in their currently active, in-progress quiz sessions, but they are forbidden from starting any **new** test sessions until they re-enroll.
+- `GET /api/courses/{id}/access-status` returns
+  `{ status: "none" | "requested" | "enrolled" }` for the current user.
+- **Unenrollment**: `DELETE /api/courses/{id}/enroll` removes the calling
+  student's enrollment row. `lesson_completions` for that course are
+  **preserved** so progress is restored automatically if the student re-enrolls
+  later. Active `test_sessions` (`is_done = false`) are also **preserved**.
+  Unenrolled students are allowed to submit and update answers in their
+  currently active, in-progress quiz sessions, but they are forbidden from
+  starting any **new** test sessions until they re-enroll.
 
 ---
 
@@ -218,35 +272,51 @@ Setting a course back to `Private` **does not revoke** existing enrollments. Pre
 #### F3.1 Modules
 
 - A course contains an ordered list of **Modules**.
-- Instructors (course author only) can create, update, delete, and reorder modules.
-- Module order is managed via `PATCH /api/modules/{id}/order` using `up` / `down` commands. The backend validates bounds and swaps sibling orders.
+- Instructors (course author only) can create, update, delete, and reorder
+  modules.
+- Module order is managed via `PATCH /api/modules/{id}/order` using `up` /
+  `down` commands. The backend validates bounds and swaps sibling orders.
 
 #### F3.2 Lessons
 
 - Each module contains an ordered list of **Lessons**.
 - Lessons have exactly one `lesson_type`: `blog`, `video`, or `test`.
-- On creation, a corresponding row in the subtype table (`lesson_blogs`, `lesson_videos`, or `lesson_tests`) must also be created, sharing the same `id` (table-per-type pattern).
+- On creation, a corresponding row in the subtype table (`lesson_blogs`,
+  `lesson_videos`, or `lesson_tests`) must also be created, sharing the same
+  `id` (table-per-type pattern).
 - Lesson order managed via `PATCH /api/lessons/{id}/order`.
-- Lessons support **hard-delete**: `DELETE /api/lessons/{id}` permanently removes the lesson and its subtypes from the database. Deletion cascades to all lesson resources, comments, and completions. The frontend must display a confirmation dialog before calling this endpoint.
+- Lessons support **hard-delete**: `DELETE /api/lessons/{id}` permanently
+  removes the lesson and its subtypes from the database. Deletion cascades to
+  all lesson resources, comments, and completions. The frontend must display a
+  confirmation dialog before calling this endpoint.
 
 #### F3.3 Video Lessons (`lesson_type = 'video'`)
 
-- Store a `provider` (`youtube` | `vimeo`) and a raw `provider_value` (full URL).
-- The frontend is solely responsible for parsing and rendering the embed player (iframe).
+- Store a `provider` (`youtube` | `vimeo`) and a raw `provider_value` (full
+  URL).
+- The frontend is solely responsible for parsing and rendering the embed player
+  (iframe).
 - No video processing or storage occurs on the server.
 
 #### F3.4 Blog Lessons (`lesson_type = 'blog'`)
 
 - Content is authored using the **BlockNote** rich-text editor on the frontend.
 - The frontend sends raw HTML output to the backend.
-- **Before saving**, the backend passes the HTML through `Jsoup.clean(rawHtml, customSafelist)` (an extension of `Safelist.relaxed()` allowing BlockNote-specific styles, classes, and `data-*` attributes, configured with `.preserveRelativeLinks(true)` to prevent stripping local relative links) to strip any XSS vectors.
+- **Before saving**, the backend passes the HTML through
+  `Jsoup.clean(rawHtml, customSafelist)` (an extension of `Safelist.relaxed()`
+  allowing BlockNote-specific styles, classes, and `data-*` attributes,
+  configured with `.preserveRelativeLinks(true)` to prevent stripping local
+  relative links) to strip any XSS vectors.
 - The cleaned HTML is stored in `lesson_blogs.content`.
 - The frontend renders blog content using BlockNote's read-only mode.
 
 #### F3.5 Test Lessons (`lesson_type = 'test'`)
 
-- A test has a `statement` (description/instructions), a `time_limit` (in seconds), and an optional `settings` (JSONB, extensible config bag for future options such as passing score or max retakes).
-- Questions are linked via the `test_question` join table with an `order` and optional `point` weight.
+- A test has a `statement` (description/instructions), a `time_limit` (in
+  seconds), and an optional `settings` (JSONB, extensible config bag for future
+  options such as passing score or max retakes).
+- Questions are linked via the `test_question` join table with an `order` and
+  optional `point` weight.
 
 ---
 
@@ -255,17 +325,27 @@ Setting a course back to `Private` **does not revoke** existing enrollments. Pre
 #### F4.1 Announcements
 
 - Instructors post announcements within a course (`author_id` required).
-- Enrolled students, the course author, and **admins** can view announcements. Admin access is implicit from the `ADMIN` bit bypass — an admin must be able to read an announcement before moderating its comment thread.
+- Enrolled students, the course author, and **admins** can view announcements.
+  Admin access is implicit from the `ADMIN` bit bypass — an admin must be able
+  to read an announcement before moderating its comment thread.
 - Fields: `title`, `content` (plain text).
 
 #### F4.2 Threaded Comments
 
-- Both `lesson_comments` and `announcement_comments` support **infinite nesting** via a nullable `parent_id` self-reference.
+- Both `lesson_comments` and `announcement_comments` support **infinite
+  nesting** via a nullable `parent_id` self-reference.
 - Root comments are paginated (20 per page).
 - Replies are fetched as a full subtree up to **5 levels deep**.
-- If a comment thread exceeds 5 levels, the UI renders a **"View single thread"** link, redirecting to a dedicated view focused on that sub-branch as the root.
-- **Deletion**: Deleting a comment cascades and hard-deletes all nested child replies (`ON DELETE CASCADE` on `parent_id`).
-- **Editing**: Comment authors may edit their own comment within **15 minutes** of creation. Edits after this window are rejected with `403 Forbidden`. Edited comments have a non-null `edited_at` timestamp visible to readers. Endpoints: `PATCH /api/lessons/comments/{id}` and `PATCH /api/announcements/comments/{id}`.
+- If a comment thread exceeds 5 levels, the UI renders a **"View single
+  thread"** link, redirecting to a dedicated view focused on that sub-branch as
+  the root.
+- **Deletion**: Deleting a comment cascades and hard-deletes all nested child
+  replies (`ON DELETE CASCADE` on `parent_id`).
+- **Editing**: Comment authors may edit their own comment within **15 minutes**
+  of creation. Edits after this window are rejected with `403 Forbidden`. Edited
+  comments have a non-null `edited_at` timestamp visible to readers. Endpoints:
+  `PATCH /api/lessons/comments/{id}` and
+  `PATCH /api/announcements/comments/{id}`.
 
 ---
 
@@ -277,16 +357,27 @@ Setting a course back to `Private` **does not revoke** existing enrollments. Pre
 - For v1, only `multiple_choice` question type is supported.
 - Each MC question stores:
   - `choices`: `text[]` — the list of answer option strings.
-  - `correct_choices`: `int[]` — 0-based indices of the correct options. The backend DTO and service layer must perform strict array bounds validation to ensure all indices are greater than or equal to 0 and strictly less than the length of the `choices` array.
+  - `correct_choices`: `int[]` — 0-based indices of the correct options. The
+    backend DTO and service layer must perform strict array bounds validation to
+    ensure all indices are greater than or equal to 0 and strictly less than the
+    length of the `choices` array.
   - `is_single_choice`: `boolean` — whether only one answer is allowed.
-- Instructors manage their own question banks (cannot see other instructors' questions).
+- Instructors manage their own question banks (cannot see other instructors'
+  questions).
 
 #### F5.2 Question Deletion Policy
 
-- Deleting a question performs a **hard-delete**: `DELETE /api/questions/{id}` permanently removes the question from the database.
-- Foreign keys are configured with `ON DELETE CASCADE`, which automatically deletes linked entries in `test_question` and `test_session_answers`.
-- Active quiz sessions referencing the deleted question will automatically lose that question from the active session.
-- Scores for past quiz sessions that referenced the deleted question are **dynamically recalculated** on-the-fly when requested (see F5.5). Because the question has been deleted, it will no longer contribute to the total score of past attempts. The grade will adjust based on the remaining questions in the test.
+- Deleting a question performs a **hard-delete**: `DELETE /api/questions/{id}`
+  permanently removes the question from the database.
+- Foreign keys are configured with `ON DELETE CASCADE`, which automatically
+  deletes linked entries in `test_question` and `test_session_answers`.
+- Active quiz sessions referencing the deleted question will automatically lose
+  that question from the active session.
+- Scores for past quiz sessions that referenced the deleted question are
+  **dynamically recalculated** on-the-fly when requested (see F5.5). Because the
+  question has been deleted, it will no longer contribute to the total score of
+  past attempts. The grade will adjust based on the remaining questions in the
+  test.
 
 #### F5.3 Test Session Flow
 
@@ -321,16 +412,24 @@ POST /api/sessions/{id}/submit
 
 #### F5.4 Cheat Prevention
 
-- `correct_choices` is **never returned** to students on `GET /api/tests/{id}/questions`. Only instructors receive this field.
-- The remaining time is always **server-calculated** (`started_at + time_limit - NOW()`). Client-side timer manipulation has no effect.
+- `correct_choices` is **never returned** to students on
+  `GET /api/tests/{id}/questions`. Only instructors receive this field.
+- The remaining time is always **server-calculated**
+  (`started_at + time_limit - NOW()`). Client-side timer manipulation has no
+  effect.
 - Only **one active session** (not done) per user per test is allowed at a time.
-- **Lazy Auto-Submission**: If a student has an active session where `started_at + time_limit < NOW()`, the session is considered expired. Upon any subsequent read request (dashboard, session lookup, or results retrieval), the backend must lazily transition `is_done` to `true`, calculate the score using saved answers, and save the state before returning.
+- **Lazy Auto-Submission**: If a student has an active session where
+  `started_at + time_limit < NOW()`, the session is considered expired. Upon any
+  subsequent read request (dashboard, session lookup, or results retrieval), the
+  backend must lazily transition `is_done` to `true`, calculate the score using
+  saved answers, and save the state before returning.
 
 ---
 
 #### F5.5 — Scoring Model
 
-Scores are **not stored** at submission time. `GET /api/sessions/{id}/result` always triggers a live recalculation against the current question bank.
+Scores are **not stored** at submission time. `GET /api/sessions/{id}/result`
+always triggers a live recalculation against the current question bank.
 
 ##### Dual-Mode Scoring
 
@@ -342,18 +441,33 @@ Scores are **not stored** at submission time. `GET /api/sessions/{id}/result` al
 Rules:
 
 - In weighted mode, questions with a `NULL` point default to `1.0`.
-- An unanswered question (`question_answer` is `null` or `[]`) contributes `0` to the score.
-- **Multi-choice all-or-nothing**: For questions where `is_single_choice = false`, the student must select _exactly_ the correct set of choices (matching `correct_choices` exactly). Any partial selection or over-selection earns `0` for that question.
-- Instructors enable weighted mode implicitly by assigning any non-null point value to any question in the test.
-- If a question is hard-deleted from a test, it is removed from the database via cascade. The dynamic score calculation for past and active sessions will exclude this question entirely, recalculating scores on-the-fly based on the remaining questions in the test.
+- An unanswered question (`question_answer` is `null` or `[]`) contributes `0`
+  to the score.
+- **Multi-choice all-or-nothing**: For questions where
+  `is_single_choice = false`, the student must select _exactly_ the correct set
+  of choices (matching `correct_choices` exactly). Any partial selection or
+  over-selection earns `0` for that question.
+- Instructors enable weighted mode implicitly by assigning any non-null point
+  value to any question in the test.
+- If a question is hard-deleted from a test, it is removed from the database via
+  cascade. The dynamic score calculation for past and active sessions will
+  exclude this question entirely, recalculating scores on-the-fly based on the
+  remaining questions in the test.
 
 ---
 
 ### F6 — Progress Tracking
 
-- `POST /api/lessons/{id}/complete`: Toggles a `lesson_completions` record for the authenticated student. Idempotent.
-- `GET /api/courses/{id}/progress`: Returns `{ completedLessons, totalLessons, percent }` for the current user. Returns `403` for unauthenticated or unenrolled users. Course authors and admins may also call this endpoint and receive the same aggregate. If `totalLessons == 0`, the `percent` is safely returned as `0` to prevent division-by-zero crashes.
-- Progress bars are displayed throughout the student dashboard and sidebar navigator.
+- `POST /api/lessons/{id}/complete`: Toggles a `lesson_completions` record for
+  the authenticated student. Idempotent.
+- `GET /api/courses/{id}/progress`: Returns
+  `{ completedLessons, totalLessons, percent }` for the current user. Returns
+  `403` for unauthenticated or unenrolled users. Course authors and admins may
+  also call this endpoint and receive the same aggregate. If
+  `totalLessons == 0`, the `percent` is safely returned as `0` to prevent
+  division-by-zero crashes.
+- Progress bars are displayed throughout the student dashboard and sidebar
+  navigator.
 
 ---
 
@@ -362,19 +476,25 @@ Rules:
 #### F7.1 Upload
 
 - `POST /api/files/upload` accepts `multipart/form-data`.
-- Files are saved to disk at the path configured by the `UPLOAD_DIR` environment variable (defaults to `./uploads` relative to the project root).
-- A `files` row is inserted with `provider = 'local'` and `provider_value` = relative path on disk.
+- Files are saved to disk at the path configured by the `UPLOAD_DIR` environment
+  variable (defaults to `./uploads` relative to the project root).
+- A `files` row is inserted with `provider = 'local'` and `provider_value` =
+  relative path on disk.
 - The endpoint returns the created file's `id`.
 
 #### F7.2 Serving
 
-- `GET /api/files/serve/{id}` reads the file from disk and streams it back with the correct MIME headers.
-- No authentication required to serve files (URLs are opaque IDs, not guessable paths).
+- `GET /api/files/serve/{id}` reads the file from disk and streams it back with
+  the correct MIME headers.
+- No authentication required to serve files (URLs are opaque IDs, not guessable
+  paths).
 
 #### F7.3 Attachments
 
-- Files can be attached as resources to courses (`course_resources`) or lessons (`lesson_resources`) via dedicated endpoints.
-- `POST /api/courses/{id}/resources` and `POST /api/lessons/{id}/resources` link a file ID to the entity.
+- Files can be attached as resources to courses (`course_resources`) or lessons
+  (`lesson_resources`) via dedicated endpoints.
+- `POST /api/courses/{id}/resources` and `POST /api/lessons/{id}/resources` link
+  a file ID to the entity.
 
 ---
 
@@ -419,18 +539,32 @@ Accessible only to users with `admin` role.
 
 ### 5.1 Security
 
-- **Authorization boundary**: Permission checks happen in the **Service layer**, never only in the Controller.
-- **HTML sanitization**: All HTML from client (BlockNote blog content, comments) is sanitized via Jsoup before persistence.
-- **CSRF**: Enabled natively. SPA CSRF token is transmitted with every mutating request.
-- **Session hijack mitigation**: Server-side sessions; no tokens stored client-side.
-- **Student data isolation**: Quiz `correct_choices` values are stripped from student-facing API responses.
-- **File upload constraints**: `POST /api/files/upload` enforces a **50 MB** maximum file size (`spring.servlet.multipart.max-file-size=50MB`) and a MIME type allowlist (`image/*`, `video/*`, `application/pdf`, `text/plain`, `application/zip`). To prevent content-type header spoofing, the backend must perform **server-side magic bytes (signature) validation** using a library (such as Apache Tika) to inspect the file signature. Requests exceeding limits or failing signature validation are rejected with `400 Bad Request`.
+- **Authorization boundary**: Permission checks happen in the **Service layer**,
+  never only in the Controller.
+- **HTML sanitization**: All HTML from client (BlockNote blog content, comments)
+  is sanitized via Jsoup before persistence.
+- **CSRF**: Enabled natively. SPA CSRF token is transmitted with every mutating
+  request.
+- **Session hijack mitigation**: Server-side sessions; no tokens stored
+  client-side.
+- **Student data isolation**: Quiz `correct_choices` values are stripped from
+  student-facing API responses.
+- **File upload constraints**: `POST /api/files/upload` enforces a **50 MB**
+  maximum file size (`spring.servlet.multipart.max-file-size=50MB`) and a MIME
+  type allowlist (`image/*`, `video/*`, `application/pdf`, `text/plain`,
+  `application/zip`). To prevent content-type header spoofing, the backend must
+  perform **server-side magic bytes (signature) validation** using a library
+  (such as Apache Tika) to inspect the file signature. Requests exceeding limits
+  or failing signature validation are rejected with `400 Bad Request`.
 
 ### 5.2 Performance
 
-- **N+1 prevention**: All JPA queries are audited with `spring.jpa.show-sql=true`. `JOIN FETCH` or `@EntityGraph` used wherever lazy loading would trigger N+1.
+- **N+1 prevention**: All JPA queries are audited with
+  `spring.jpa.show-sql=true`. `JOIN FETCH` or `@EntityGraph` used wherever lazy
+  loading would trigger N+1.
 - **Pagination**: All list endpoints (courses, users, comments) are paginated.
-- **Snowflake IDs**: Distributed-safe, time-ordered 64-bit IDs with no DB sequence contention.
+- **Snowflake IDs**: Distributed-safe, time-ordered 64-bit IDs with no DB
+  sequence contention.
 
 ### 5.3 Testability
 
@@ -454,20 +588,24 @@ Every data-fetching view must implement all four states:
 
 ### 5.5 Accessibility & Responsiveness
 
-- UI must be tested and functional at 375px (mobile), 768px (tablet), and 1280px (desktop).
+- UI must be tested and functional at 375px (mobile), 768px (tablet), and 1280px
+  (desktop).
 - Dark mode styling must be verified across all page types.
 
 ### 5.6 Deployment
 
 - Single `docker compose up` from project root starts all services.
 - No external paid services required for full functionality in v1.
-- Upload directory is configurable via `UPLOAD_DIR` env variable to avoid permission issues across OS environments.
+- Upload directory is configurable via `UPLOAD_DIR` env variable to avoid
+  permission issues across OS environments.
 
 ---
 
 ## 6. Permission Model
 
-Permissions are encoded as a **bitmask `bigint`** on the `roles.permissions` column. The frontend helper `usePermission(bit)` checks the user's resolved bitmask to conditionally render UI.
+Permissions are encoded as a **bitmask `bigint`** on the `roles.permissions`
+column. The frontend helper `usePermission(bit)` checks the user's resolved
+bitmask to conditionally render UI.
 
 #### Authoritative Bit Definitions
 
@@ -481,22 +619,32 @@ Permissions are encoded as a **bitmask `bigint`** on the `roles.permissions` col
 | 5   | `0x20` | `ACCESS_TESTS`         | Start quiz sessions, submit answers, and view own results                                       | student, teacher, admin |
 | ... |        | _(extensible)_         | Additional bits reserved for future capabilities                                                |                         |
 
-> These constants are defined in the backend enum/constants file and seeded via Flyway migrations. The seeded role values are:
+> These constants are defined in the backend enum/constants file and seeded via
+> Flyway migrations. The seeded role values are:
 >
 > - `student` = `ENROLL_COURSE | ACCESS_TESTS` = `0x04 | 0x20` = **`0x24`**
-> - `teacher` = `MANAGE_OWN_COURSES | ENROLL_COURSE | MANAGE_OWN_QUESTIONS | MANAGE_OWN_TESTS | ACCESS_TESTS` = **`0x3E`**
+> - `teacher` =
+>   `MANAGE_OWN_COURSES | ENROLL_COURSE | MANAGE_OWN_QUESTIONS | MANAGE_OWN_TESTS | ACCESS_TESTS`
+>   = **`0x3E`**
 > - `admin` = **`0x7FFFFFFFFFFFFFFF`** (all bits set)
 
 #### Authorization Enforcement Model
 
-All protected operations use a **two-layer check** enforced via a strict custom `@PreAuthorize("@permissionService.hasPermission(principal.id, bit)")` annotation in the Controller layer (gating access at the entry point) and double-checked in the Service layer:
+All protected operations use a **two-layer check** enforced via a strict custom
+`@PreAuthorize("@permissionService.hasPermission(principal.id, bit)")`
+annotation in the Controller layer (gating access at the entry point) and
+double-checked in the Service layer:
 
-1. **Capability layer**: Verify the calling user's bitmask contains the required bit (e.g. `MANAGE_OWN_COURSES`).
+1. **Capability layer**: Verify the calling user's bitmask contains the required
+   bit (e.g. `MANAGE_OWN_COURSES`).
 2. **Ownership layer**: Verify `resource.authorId == currentUser.id`.
 
-**Admin bypass**: If the calling user has the `ADMIN` bit (`0x01`), the ownership layer is skipped entirely. Admin can perform any operation on any resource.
+**Admin bypass**: If the calling user has the `ADMIN` bit (`0x01`), the
+ownership layer is skipped entirely. Admin can perform any operation on any
+resource.
 
-Endpoints described as _"Author or Admin"_ enforce: `hasCapability(X) AND (isAuthor OR isAdmin)`.
+Endpoints described as _"Author or Admin"_ enforce:
+`hasCapability(X) AND (isAuthor OR isAdmin)`.
 
 ---
 
@@ -547,7 +695,7 @@ questions
 | Test settings                                      | `jsonb` — mapped in Java using the third-party Hypersistence Utils library (`JsonBinaryType`) to avoid JPA driver mapping exceptions while keeping standard Java `Map` structures.                                                                   |
 | File storage                                       | Local disk, `provider = 'local'`, path in `provider_value`; served via streaming endpoint                                                                                                                                                            |
 | Timestamps                                         | All tables use `timestamptz NOT NULL DEFAULT NOW()`                                                                                                                                                                                                  |
-| `updated_at` trigger                               | A shared PostgreSQL `set_updated_at()` function registered as `BEFORE UPDATE` on all tables auto-updates `updated_at` at the DB level, regardless of how rows are modified (JPA or raw SQL).                                                         |
+| `updated_at` trigger                               | A shared PostgreSQL `update_updated_at_column()` function, attached via per-table `tr_*` `BEFORE UPDATE` triggers, auto-updates `updated_at` at the DB level regardless of how rows are modified (JPA or raw SQL).                                   |
 | User soft-delete                                   | Users are soft-deleted via `is_active = false` + `deleted_at` timestamp. Hard user deletion is never performed to prevent orphaning uploaded files on disk.                                                                                          |
 | No course soft-delete                              | Course deletion is hard and immediate with cascade. The frontend must show a confirmation modal with an irreversible warning. Recovery is out of scope for v1.                                                                                       |
 | Hard course, module, lesson, and question deletion | Course, module, lesson, and question deletions are hard and immediate with cascade. Appropriate frontend confirmation dialogs must prevent accidental clicks. Past quiz session results are dynamically updated if a referenced question is deleted. |
@@ -654,7 +802,8 @@ Spring Boot (port 8080)
 PostgreSQL (Docker container)
 ```
 
-Vite proxies `/api` requests to port `8080`, keeping the origin identical for seamless CSRF cookie exchange without CORS configuration.
+Vite proxies `/api` requests to port `8080`, keeping the origin identical for
+seamless CSRF cookie exchange without CORS configuration.
 
 ### Production
 
@@ -666,7 +815,8 @@ Spring Boot (port 8080)
 Persistent Docker Volume → /uploads/** (local file storage)
 ```
 
-The entire application ships as a single deployable unit via `docker-compose.prod.yml`. No separate frontend server is needed.
+The entire application ships as a single deployable unit via
+`docker-compose.prod.yml`. No separate frontend server is needed.
 
 ### Environment Variables
 
@@ -685,7 +835,8 @@ The entire application ships as a single deployable unit via `docker-compose.pro
 
 ## 10. Out of Scope (v1)
 
-The following are explicitly **excluded** from v1 to keep scope tight and the two-week deadline achievable:
+The following are explicitly **excluded** from v1 to keep scope tight and the
+two-week deadline achievable:
 
 | Feature                                            | Reason Excluded                                                                                     |
 | -------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
@@ -706,4 +857,6 @@ The following are explicitly **excluded** from v1 to keep scope tight and the tw
 
 ---
 
-_This document should be treated as the single source of truth for system behavior. All developers and AI agents contributing to GocTriThuc must align their implementations with the requirements defined here._
+_This document should be treated as the single source of truth for system
+behavior. All developers and AI agents contributing to GocTriThuc must align
+their implementations with the requirements defined here._

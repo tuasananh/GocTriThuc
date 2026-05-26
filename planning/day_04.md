@@ -251,14 +251,14 @@ export function CourseListPage() {
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(0);
   const [visibility, setVisibility] = useState<"Public" | "Restricted">(
-    "Public"
+    "Public",
   );
 
   const fetchCourses = useCallback(async () => {
     setLoading(true);
     try {
       const res = await api.get<PageResponse<CourseDto>>("/api/courses", {
-        params: { search: search || undefined, page, size: 12, visibility }
+        params: { search: search || undefined, page, size: 12, visibility },
       });
       setCourses(res.data);
     } finally {
@@ -374,7 +374,7 @@ export function CourseCard({ course }: { course: CourseDto }) {
   const visibilityBadge = {
     Public: { label: "Công khai", variant: "secondary" as const },
     Restricted: { label: "Giới hạn", variant: "outline" as const },
-    Private: { label: "Riêng tư", variant: "destructive" as const }
+    Private: { label: "Riêng tư", variant: "destructive" as const },
   }[course.visibility];
 
   return (
@@ -449,10 +449,10 @@ const mockCourses = Array.from({ length: 9 }, (_, i) => ({
     id: 1,
     displayName: "Nguyễn Công Vinh",
     username: "vinh_nc",
-    avatarUrl: null
+    avatarUrl: null,
   },
   createdAt: new Date().toISOString(),
-  updatedAt: new Date().toISOString()
+  updatedAt: new Date().toISOString(),
 }));
 
 export const courseHandlers = [
@@ -462,7 +462,7 @@ export const courseHandlers = [
     const size = Number(url.searchParams.get("size") ?? 12);
     const search = url.searchParams.get("search") ?? "";
     const filtered = mockCourses.filter((c) =>
-      c.title.toLowerCase().includes(search.toLowerCase())
+      c.title.toLowerCase().includes(search.toLowerCase()),
     );
     const slice = filtered.slice(page * size, (page + 1) * size);
     return HttpResponse.json({
@@ -470,21 +470,21 @@ export const courseHandlers = [
       totalElements: filtered.length,
       totalPages: Math.ceil(filtered.length / size),
       number: page,
-      size
+      size,
     });
   }),
   http.get("/api/courses/:courseId", ({ params }) =>
     HttpResponse.json(
-      mockCourses.find((c) => c.id === Number(params.courseId)) ?? null
-    )
+      mockCourses.find((c) => c.id === Number(params.courseId)) ?? null,
+    ),
   ),
   http.post("/api/courses", async ({ request }) => {
     const body = (await request.json()) as Record<string, unknown>;
     return HttpResponse.json(
       { ...mockCourses[0], ...body, id: 999 },
-      { status: 201 }
+      { status: 201 },
     );
-  })
+  }),
 ];
 ```
 
@@ -500,7 +500,7 @@ File: `src/pages/courses/_components/CreateCourseModal.tsx`
 export function CreateCourseModal({
   open,
   onClose,
-  onCreated
+  onCreated,
 }: {
   open: boolean;
   onClose: () => void;
@@ -521,7 +521,7 @@ export function CreateCourseModal({
       const res = await api.post<CourseDto>("/api/courses", {
         title,
         description,
-        visibility
+        visibility,
       });
       onCreated(res.data);
       onClose();
