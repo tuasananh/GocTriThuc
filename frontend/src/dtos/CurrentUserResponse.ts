@@ -5,9 +5,9 @@ export type CurrentUserResponse =
     }
   | {
       authenticated: true;
-      displayName: string;
+      displayName: string | null;
       email: string;
-      avatarUrl: string;
+      avatarUrl: string | null;
       username: string;
       roles: string[];
       permissions: string;

@@ -1,7 +1,7 @@
 export class CurrentUser {
-  displayName: string;
+  displayName: string | null;
   email: string;
-  avatarUrl: string;
+  avatarUrl: string | null;
   username: string;
   roles: string[];
   permissions: bigint;
@@ -14,9 +14,9 @@ export class CurrentUser {
     roles: string[] | undefined,
     permissions: string | undefined,
   ) {
-    this.displayName = displayName || '';
+    this.displayName = displayName ?? null;
     this.email = email || '';
-    this.avatarUrl = avatarUrl || '';
+    this.avatarUrl = avatarUrl ?? null;
     this.username = username || '';
     this.roles = roles || [];
     this.permissions = BigInt(permissions || '0');
