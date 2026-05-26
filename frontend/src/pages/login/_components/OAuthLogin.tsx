@@ -2,13 +2,14 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/com
 import { Button } from '@/components/ui/button';
 import { BookOpen } from 'lucide-react';
 import { GocTriThuc } from '@/components/GocTriThuc';
+import { ROUTES } from '@/lib/routes';
 
 export function OAuthLogin() {
   const handleLogin = (provider: string) => {
     if (import.meta.env.MODE === 'development') {
       // Giả lập đăng nhập nhanh cho môi trường dev local không cần backend
       localStorage.setItem('mock_authenticated', 'true');
-      window.location.href = '/dashboard';
+      window.location.href = ROUTES.DASHBOARD;
     } else {
       window.location.href = `/oauth2/authorization/${provider}`;
     }
