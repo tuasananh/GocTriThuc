@@ -1,20 +1,25 @@
 # Day 4 — Course Listing & Creation
 
-**Goal**: Anyone (including guests) can browse public courses. Instructors can create courses.
-**Done when**: Course list page loads with real data (or MSW mock), pagination works, instructor sees "Tạo khóa học" button and can create a course.
+**Goal**: Anyone (including guests) can browse public courses. Instructors can
+create courses. **Done when**: Course list page loads with real data (or MSW
+mock), pagination works, instructor sees "Tạo khóa học" button and can create a
+course.
 
 ---
 
 ## 🔴 Trung (BE Lead)
 
 ### Task 1 — CourseEntity
+
 File: `com/goctrithuc/courses/CourseEntity.java`
 
 ```java
 @Entity
 @Table(name = "courses")
 public class CourseEntity {
-  @Id private Long id;
+  @Id
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
+  private Long id;
   @Column(nullable = false) private String title;
   private String description;
   @Column(name = "thumbnail_url") private String thumbnailUrl;
@@ -41,6 +46,7 @@ public enum CourseVisibility { Public, Restricted, Private }
 ```
 
 ### Task 2 — CourseRepository
+
 File: `com/goctrithuc/courses/CourseRepository.java`
 
 ```java
@@ -63,6 +69,7 @@ public interface CourseRepository extends JpaRepository<CourseEntity, Long> {
 ```
 
 ### Task 3 — `GET /api/courses` (paginated, visibility-filtered)
+
 File: `com/goctrithuc/courses/CourseController.java`
 
 ```java
@@ -84,7 +91,7 @@ public class CourseController {
   }
 
   @PostMapping
-  @PreAuthorize("@permissionService.hasPermission(#auth.principal.id, T(com.goctrithuc.shared.Permission).CREATE_COURSE)")
+  @PreAuthorize("@permissionService.hasPermission(#auth.principal.id, T(com.goctrithuc.shared.Permission).MANAGE_OWN_COURSES)")
   public ResponseEntity<CourseResponse> createCourse(
       @Valid @RequestBody CreateCourseRequest req,
       Authentication auth) {
@@ -104,6 +111,7 @@ public class CourseController {
 ```
 
 `CreateCourseRequest.java`:
+
 ```java
 public record CreateCourseRequest(
     @NotBlank @Size(max = 200) String title,
@@ -114,6 +122,7 @@ public record CreateCourseRequest(
 ```
 
 `CourseResponse.java`:
+
 ```java
 public record CourseResponse(
     Long id, String title, String description,
@@ -132,6 +141,7 @@ public record CourseResponse(
 ```
 
 ### Task 4 — `CourseService.listPublic`
+
 ```java
 @Service
 public class CourseService {
@@ -156,7 +166,7 @@ public class CourseService {
     if (c.getVisibility() == CourseVisibility.Private) {
       Long userId = getCurrentUserId(auth);
       boolean isAuthorOrAdmin = c.getAuthorId().equals(userId)
-          || permissionService.hasPermission(userId, Permission.EDIT_ANY_COURSE);
+          || permissionService.hasPermission(userId, Permission.ADMIN);
       if (!isAuthorOrAdmin) throw new ResponseStatusException(HttpStatus.FORBIDDEN);
     }
     return c;
@@ -165,7 +175,7 @@ public class CourseService {
   @Transactional
   public CourseEntity create(Long authorId, CreateCourseRequest req) {
     CourseEntity c = new CourseEntity();
-    c.setId(idGenerator.nextId());
+    // ID is assigned by DB via DEFAULT generate_snowflake_id() — do not set manually
     c.setTitle(req.title());
     c.setDescription(req.description());
     c.setThumbnailUrl(req.thumbnailUrl());
@@ -181,6 +191,7 @@ public class CourseService {
 ```
 
 ### Task 5 — Integration tests
+
 - `GET /api/courses` without auth → 200 with public courses
 - `GET /api/courses/{id}` for Private course without auth → 403
 - `POST /api/courses` with student role → 403
@@ -191,32 +202,27 @@ public class CourseService {
 ## 🔴 Anh (BE Dev / PM)
 
 ### Task 1 — `GET /api/courses/{id}` with author joined
-Add `@EntityGraph(attributePaths = {"author"})` to `CourseRepository.findById` override:
+
+Add `@EntityGraph(attributePaths = {"author"})` to `CourseRepository.findById`
+override:
+
 ```java
 @EntityGraph(attributePaths = {"author"})
 Optional<CourseEntity> findById(Long id);
 ```
 
-### Task 2 — IdGenerator (Snowflake-like)
-File: `com/goctrithuc/shared/IdGenerator.java`
+### Task 2 — PM: Publish API contract for Day 5 (Enrollment)
 
-For now, use a simple time-based ID (or a DB sequence). Simple version:
-```java
-@Component
-public class IdGenerator {
-  private static final AtomicLong counter = new AtomicLong(0);
-
-  public long nextId() {
-    // milliseconds since epoch shifted + counter for uniqueness
-    return (Instant.now().toEpochMilli() << 12) | (counter.incrementAndGet() & 0xFFF);
-  }
-}
-```
-
-### Task 3 — PM: Publish API contract for Day 5 (Enrollment)
+> **Note on ID generation**: Do NOT use a Java-side `IdGenerator`. All entity
+> IDs are assigned by PostgreSQL via `DEFAULT generate_snowflake_id()`. In JPA,
+> either use `@GeneratedValue(strategy = GenerationType.IDENTITY)` on
+> Snowflake-typed `@Id` fields, or omit the setter and let JPA read back the
+> DB-assigned value post-INSERT. This is consistent with the resolved Q1
+> decision and existing Flyway migrations.
 
 Post as GitHub Issue comment:
-```
+
+```http
 POST /api/courses/{id}/enroll
   Auth required. Body: none.
   Response: 201 EnrollmentDto | 409 (already enrolled)
@@ -235,20 +241,23 @@ GET /api/courses/{id}/modules
 ## 🔵 Vinh (FE Lead)
 
 ### Task 1 — Course Listing page
+
 File: `src/pages/courses/CourseListPage.tsx`
 
 ```tsx
 export function CourseListPage() {
   const [courses, setCourses] = useState<PageResponse<CourseDto> | null>(null);
   const [loading, setLoading] = useState(true);
-  const [search, setSearch] = useState('');
+  const [search, setSearch] = useState("");
   const [page, setPage] = useState(0);
-  const [visibility, setVisibility] = useState<'Public' | 'Restricted'>('Public');
+  const [visibility, setVisibility] = useState<"Public" | "Restricted">(
+    "Public",
+  );
 
   const fetchCourses = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await api.get<PageResponse<CourseDto>>('/api/courses', {
+      const res = await api.get<PageResponse<CourseDto>>("/api/courses", {
         params: { search: search || undefined, page, size: 12, visibility },
       });
       setCourses(res.data);
@@ -263,33 +272,44 @@ export function CourseListPage() {
     return () => clearTimeout(t);
   }, [fetchCourses]);
 
-  const canCreateCourse = usePermission(PERMISSION.CREATE_COURSE);
+  const canCreateCourse = usePermission(PERMISSION.MANAGE_OWN_COURSES);
 
   return (
     <PageShell>
       <SectionHeader
         title="Khám phá khóa học"
         description="Tìm kiếm và đăng ký các khóa học phù hợp với bạn"
-        action={canCreateCourse && (
-          <Button id="btn-create-course" onClick={() => setShowCreate(true)}>
-            <Plus size={16} className="mr-1" /> Tạo khóa học
-          </Button>
-        )}
+        action={
+          canCreateCourse && (
+            <Button id="btn-create-course" onClick={() => setShowCreate(true)}>
+              <Plus size={16} className="mr-1" /> Tạo khóa học
+            </Button>
+          )
+        }
       />
 
       {/* Search + Filter */}
       <div className="mb-6 flex flex-col gap-3 sm:flex-row">
         <div className="relative flex-1">
-          <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+          <Search
+            size={16}
+            className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+          />
           <Input
             id="input-course-search"
             placeholder="Tìm kiếm khóa học..."
             className="pl-9"
             value={search}
-            onChange={(e) => { setSearch(e.target.value); setPage(0); }}
+            onChange={(e) => {
+              setSearch(e.target.value);
+              setPage(0);
+            }}
           />
         </div>
-        <Tabs value={visibility} onValueChange={(v) => setVisibility(v as 'Public' | 'Restricted')}>
+        <Tabs
+          value={visibility}
+          onValueChange={(v) => setVisibility(v as "Public" | "Restricted")}
+        >
           <TabsList>
             <TabsTrigger value="Public">Công khai</TabsTrigger>
             <TabsTrigger value="Restricted">Giới hạn</TabsTrigger>
@@ -300,7 +320,9 @@ export function CourseListPage() {
       {/* Grid */}
       {loading ? (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {Array.from({ length: 8 }).map((_, i) => <SkeletonCard key={i} />)}
+          {Array.from({ length: 8 }).map((_, i) => (
+            <SkeletonCard key={i} />
+          ))}
         </div>
       ) : courses?.content.length === 0 ? (
         <EmptyState
@@ -310,18 +332,32 @@ export function CourseListPage() {
         />
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {courses?.content.map((c) => <CourseCard key={c.id} course={c} />)}
+          {courses?.content.map((c) => (
+            <CourseCard key={c.id} course={c} />
+          ))}
         </div>
       )}
 
       {/* Pagination */}
       {courses && courses.totalPages > 1 && (
         <div className="mt-8 flex justify-center gap-2">
-          <Button variant="outline" disabled={page === 0} onClick={() => setPage(p => p - 1)}>←</Button>
+          <Button
+            variant="outline"
+            disabled={page === 0}
+            onClick={() => setPage((p) => p - 1)}
+          >
+            ←
+          </Button>
           <span className="flex items-center px-4 text-sm text-muted-foreground">
             Trang {page + 1} / {courses.totalPages}
           </span>
-          <Button variant="outline" disabled={page >= courses.totalPages - 1} onClick={() => setPage(p => p + 1)}>→</Button>
+          <Button
+            variant="outline"
+            disabled={page >= courses.totalPages - 1}
+            onClick={() => setPage((p) => p + 1)}
+          >
+            →
+          </Button>
         </div>
       )}
     </PageShell>
@@ -330,14 +366,15 @@ export function CourseListPage() {
 ```
 
 ### Task 2 — `CourseCard` component
+
 File: `src/pages/courses/_components/CourseCard.tsx`
 
 ```tsx
 export function CourseCard({ course }: { course: CourseDto }) {
   const visibilityBadge = {
-    Public: { label: 'Công khai', variant: 'secondary' as const },
-    Restricted: { label: 'Giới hạn', variant: 'outline' as const },
-    Private: { label: 'Riêng tư', variant: 'destructive' as const },
+    Public: { label: "Công khai", variant: "secondary" as const },
+    Restricted: { label: "Giới hạn", variant: "outline" as const },
+    Private: { label: "Riêng tư", variant: "destructive" as const },
   }[course.visibility];
 
   return (
@@ -346,8 +383,11 @@ export function CourseCard({ course }: { course: CourseDto }) {
         {/* Thumbnail */}
         <div className="aspect-video overflow-hidden bg-muted">
           {course.thumbnailUrl ? (
-            <img src={course.thumbnailUrl} alt={course.title}
-              className="h-full w-full object-cover transition-transform duration-200 group-hover:scale-105" />
+            <img
+              src={course.thumbnailUrl}
+              alt={course.title}
+              className="h-full w-full object-cover transition-transform duration-200 group-hover:scale-105"
+            />
           ) : (
             <div className="flex h-full items-center justify-center">
               <BookOpen size={32} className="text-muted-foreground" />
@@ -357,16 +397,28 @@ export function CourseCard({ course }: { course: CourseDto }) {
         <CardContent className="p-4">
           <div className="mb-2 flex items-center justify-between">
             <Badge {...visibilityBadge}>{visibilityBadge.label}</Badge>
-            {!course.isPublished && <Badge variant="outline" className="text-amber-600">Bản nháp</Badge>}
+            {!course.isPublished && (
+              <Badge variant="outline" className="text-amber-600">
+                Bản nháp
+              </Badge>
+            )}
           </div>
-          <h3 className="font-semibold text-foreground line-clamp-2 mb-2">{course.title}</h3>
-          <p className="text-sm text-muted-foreground line-clamp-2">{course.description}</p>
+          <h3 className="font-semibold text-foreground line-clamp-2 mb-2">
+            {course.title}
+          </h3>
+          <p className="text-sm text-muted-foreground line-clamp-2">
+            {course.description}
+          </p>
           <div className="mt-3 flex items-center gap-2">
             <Avatar className="h-6 w-6">
               <AvatarImage src={course.author.avatarUrl ?? undefined} />
-              <AvatarFallback className="text-xs">{course.author.displayName[0]}</AvatarFallback>
+              <AvatarFallback className="text-xs">
+                {course.author.displayName[0]}
+              </AvatarFallback>
             </Avatar>
-            <span className="text-xs text-muted-foreground">{course.author.displayName}</span>
+            <span className="text-xs text-muted-foreground">
+              {course.author.displayName}
+            </span>
           </div>
         </CardContent>
       </Card>
@@ -380,40 +432,58 @@ export function CourseCard({ course }: { course: CourseDto }) {
 ## 🔵 Sâm (FE Dev 1)
 
 ### Task 1 — MSW handlers for courses
+
 File: `src/mocks/handlers/courses.ts`
 
 ```typescript
-import { http, HttpResponse } from 'msw';
+import { http, HttpResponse } from "msw";
 
 const mockCourses = Array.from({ length: 9 }, (_, i) => ({
-  id: i + 1, title: `Khóa học mẫu ${i + 1}`,
-  description: 'Mô tả khóa học này rất thú vị và bổ ích.',
-  thumbnailUrl: null, isPublished: i % 3 !== 0, visibility: 'Public',
-  author: { id: 1, displayName: 'Nguyễn Công Vinh', username: 'vinh_nc', avatarUrl: null },
-  createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(),
+  id: i + 1,
+  title: `Khóa học mẫu ${i + 1}`,
+  description: "Mô tả khóa học này rất thú vị và bổ ích.",
+  thumbnailUrl: null,
+  isPublished: i % 3 !== 0,
+  visibility: "Public",
+  author: {
+    id: 1,
+    displayName: "Nguyễn Công Vinh",
+    username: "vinh_nc",
+    avatarUrl: null,
+  },
+  createdAt: new Date().toISOString(),
+  updatedAt: new Date().toISOString(),
 }));
 
 export const courseHandlers = [
-  http.get('/api/courses', ({ request }) => {
+  http.get("/api/courses", ({ request }) => {
     const url = new URL(request.url);
-    const page = Number(url.searchParams.get('page') ?? 0);
-    const size = Number(url.searchParams.get('size') ?? 12);
-    const search = url.searchParams.get('search') ?? '';
-    const filtered = mockCourses.filter(c =>
-      c.title.toLowerCase().includes(search.toLowerCase())
+    const page = Number(url.searchParams.get("page") ?? 0);
+    const size = Number(url.searchParams.get("size") ?? 12);
+    const search = url.searchParams.get("search") ?? "";
+    const filtered = mockCourses.filter((c) =>
+      c.title.toLowerCase().includes(search.toLowerCase()),
     );
     const slice = filtered.slice(page * size, (page + 1) * size);
     return HttpResponse.json({
-      content: slice, totalElements: filtered.length,
-      totalPages: Math.ceil(filtered.length / size), number: page, size,
+      content: slice,
+      totalElements: filtered.length,
+      totalPages: Math.ceil(filtered.length / size),
+      number: page,
+      size,
     });
   }),
-  http.get('/api/courses/:courseId', ({ params }) =>
-    HttpResponse.json(mockCourses.find(c => c.id === Number(params.courseId)) ?? null)
+  http.get("/api/courses/:courseId", ({ params }) =>
+    HttpResponse.json(
+      mockCourses.find((c) => c.id === Number(params.courseId)) ?? null,
+    ),
   ),
-  http.post('/api/courses', async ({ request }) => {
-    const body = await request.json() as Record<string, unknown>;
-    return HttpResponse.json({ ...mockCourses[0], ...body, id: 999 }, { status: 201 });
+  http.post("/api/courses", async ({ request }) => {
+    const body = (await request.json()) as Record<string, unknown>;
+    return HttpResponse.json(
+      { ...mockCourses[0], ...body, id: 999 },
+      { status: 201 },
+    );
   }),
 ];
 ```
@@ -423,17 +493,24 @@ export const courseHandlers = [
 ## 🔵 Tuấn (FE Dev 2)
 
 ### Task 1 — `CreateCourseModal`
+
 File: `src/pages/courses/_components/CreateCourseModal.tsx`
 
 ```tsx
-export function CreateCourseModal({ open, onClose, onCreated }: {
+export function CreateCourseModal({
+  open,
+  onClose,
+  onCreated,
+}: {
   open: boolean;
   onClose: () => void;
   onCreated: (course: CourseDto) => void;
 }) {
-  const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
-  const [visibility, setVisibility] = useState<'Public' | 'Restricted' | 'Private'>('Public');
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [visibility, setVisibility] = useState<
+    "Public" | "Restricted" | "Private"
+  >("Public");
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -441,15 +518,19 @@ export function CreateCourseModal({ open, onClose, onCreated }: {
     setLoading(true);
     setErrors({});
     try {
-      const res = await api.post<CourseDto>('/api/courses', { title, description, visibility });
+      const res = await api.post<CourseDto>("/api/courses", {
+        title,
+        description,
+        visibility,
+      });
       onCreated(res.data);
       onClose();
-      toast.success('Tạo khóa học thành công!');
+      toast.success("Tạo khóa học thành công!");
     } catch (err: unknown) {
       if (axios.isAxiosError(err) && err.response?.data?.errors) {
         setErrors(err.response.data.errors);
       } else {
-        toast.error('Tạo thất bại. Vui lòng thử lại.');
+        toast.error("Tạo thất bại. Vui lòng thử lại.");
       }
     } finally {
       setLoading(false);
@@ -465,31 +546,64 @@ export function CreateCourseModal({ open, onClose, onCreated }: {
         <div className="space-y-4">
           <div>
             <Label htmlFor="course-title">Tên khóa học *</Label>
-            <Input id="course-title" value={title} onChange={e => setTitle(e.target.value)} />
-            {errors.title && <p className="mt-1 text-xs text-destructive">{errors.title}</p>}
+            <Input
+              id="course-title"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+            />
+            {errors.title && (
+              <p className="mt-1 text-xs text-destructive">{errors.title}</p>
+            )}
           </div>
           <div>
             <Label htmlFor="course-desc">Mô tả *</Label>
-            <Textarea id="course-desc" rows={3} value={description}
-              onChange={e => setDescription(e.target.value)} />
-            {errors.description && <p className="mt-1 text-xs text-destructive">{errors.description}</p>}
+            <Textarea
+              id="course-desc"
+              rows={3}
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+            />
+            {errors.description && (
+              <p className="mt-1 text-xs text-destructive">
+                {errors.description}
+              </p>
+            )}
           </div>
           <div>
             <Label htmlFor="course-visibility">Chế độ hiển thị</Label>
-            <Select value={visibility} onValueChange={(v) => setVisibility(v as 'Public' | 'Restricted' | 'Private')}>
-              <SelectTrigger id="course-visibility"><SelectValue /></SelectTrigger>
+            <Select
+              value={visibility}
+              onValueChange={(v) =>
+                setVisibility(v as "Public" | "Restricted" | "Private")
+              }
+            >
+              <SelectTrigger id="course-visibility">
+                <SelectValue />
+              </SelectTrigger>
               <SelectContent>
-                <SelectItem value="Public">Công khai — ai cũng có thể đăng ký</SelectItem>
-                <SelectItem value="Restricted">Giới hạn — cần được duyệt</SelectItem>
+                <SelectItem value="Public">
+                  Công khai — ai cũng có thể đăng ký
+                </SelectItem>
+                <SelectItem value="Restricted">
+                  Giới hạn — cần được duyệt
+                </SelectItem>
                 <SelectItem value="Private">Riêng tư — chỉ bạn thấy</SelectItem>
               </SelectContent>
             </Select>
           </div>
         </div>
         <DialogFooter>
-          <Button variant="ghost" onClick={onClose}>Hủy</Button>
-          <Button id="btn-submit-create-course" onClick={submit} disabled={loading}>
-            {loading ? <Loader2 size={16} className="animate-spin mr-2" /> : null}
+          <Button variant="ghost" onClick={onClose}>
+            Hủy
+          </Button>
+          <Button
+            id="btn-submit-create-course"
+            onClick={submit}
+            disabled={loading}
+          >
+            {loading ? (
+              <Loader2 size={16} className="animate-spin mr-2" />
+            ) : null}
             Tạo khóa học
           </Button>
         </DialogFooter>
