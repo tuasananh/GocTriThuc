@@ -5,8 +5,8 @@ import { useAuth } from '@/contexts/AuthContext';
  *
  * Dùng:
  *   import { PERMISSION, usePermission } from '@/lib/permissions';
- *   const canCreate = usePermission(PERMISSION.CREATE_COURSE);
- *   {canCreate && <Button>Tạo khóa học</Button>}
+ *   const canManageCourse = usePermission(PERMISSION.MANAGE_COURSES);
+ *   {canManageCourse && <Button>Tạo khóa học</Button>}
  */
 export const PERMISSION = {
   /** Bit 0: Quyền admin */
