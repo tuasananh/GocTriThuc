@@ -11,6 +11,14 @@ import { fileHandlers } from './handlers/files';
 const authHandlers = [
   http.get('/api/users/me', async () => {
     await delay(200);
+    // Mặc định là true (đăng nhập) để lập trình viên dễ dev.
+    // Sẽ đổi thành false khi họ click Đăng xuất.
+    const isMockAuthenticated = localStorage.getItem('mock_authenticated') !== 'false';
+
+    if (!isMockAuthenticated) {
+      return HttpResponse.json({ authenticated: false });
+    }
+
     return HttpResponse.json({
       authenticated: true,
       displayName: 'Nguyễn Công Vinh',
@@ -20,6 +28,11 @@ const authHandlers = [
       roles: ['teacher'],
       permissions: '62', // 0x3E = teacher (bits 1-5)
     });
+  }),
+  http.post('/api/logout', async () => {
+    await delay(200);
+    localStorage.setItem('mock_authenticated', 'false');
+    return HttpResponse.json({ success: true });
   }),
 ];
 

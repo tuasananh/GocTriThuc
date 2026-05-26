@@ -23,6 +23,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     async function fetchCurrentUser() {
       try {
         const response = await fetch('/api/users/me');
+        if (!response.ok) {
+          setAuthValue(unauthenticatedAuthValue);
+          return;
+        }
 
         const data: CurrentUserResponse = await response.json();
 
