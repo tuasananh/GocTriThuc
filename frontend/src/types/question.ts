@@ -46,6 +46,7 @@ export interface TestSessionDto {
   userId: number;
   testId: number;
   startedAt: string;
+  submittedAt: string | null; // null khi đang làm bài
   isDone: boolean;
   remainingTime: number; // seconds — tính từ server
   createdAt: string;
@@ -53,7 +54,7 @@ export interface TestSessionDto {
 
 export interface TestSessionAnswerDto {
   questionId: number;
-  questionAnswer: string | null;
+  questionAnswer: number[] | null; // mảng index lựa chọn, ví dụ [0, 2]
 }
 
 export interface TestResultDto {
@@ -67,7 +68,7 @@ export interface TestResultDto {
     statement: string;
     choices: string[];
     correctChoices: number[];
-    studentAnswer: string | null;
+    studentAnswer: number[] | null;
     isCorrect: boolean;
     point: number;
   }[];

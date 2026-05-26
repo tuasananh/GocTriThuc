@@ -15,6 +15,8 @@ export interface UserDetailDto extends UserDto {
   email: string;
   roles: string[];
   permissions: string; // bigint as string
+  isActive: boolean;
+  deletedAt: string | null;
   createdAt: string;
   updatedAt: string;
 }

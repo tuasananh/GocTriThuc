@@ -10,6 +10,7 @@ export interface CommentDto {
   author: UserDto;
   parentId: number | null;
   replies: CommentDto[]; // nested (max depth 5 từ server)
+  editedAt: string | null; // null nếu chưa chỉnh sửa
   createdAt: string;
   updatedAt: string;
 }
@@ -24,6 +25,7 @@ export interface AnnouncementDto {
   courseId: number;
   title: string;
   content: string;
+  author: UserDto;
   createdAt: string;
   updatedAt: string;
 }

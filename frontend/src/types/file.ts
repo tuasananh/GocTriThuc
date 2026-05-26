@@ -5,6 +5,9 @@
 export interface FileDto {
   id: number;
   providerValue: string; // relative path on server
+  mimeType: string | null;
+  originalName: string | null;
+  sizeBytes: number | null;
   createdAt: string;
 }
 

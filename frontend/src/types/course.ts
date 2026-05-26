@@ -15,6 +15,7 @@ export interface CourseDto {
   isPublished: boolean;
   visibility: CourseVisibility;
   author: UserDto;
+  settings?: Record<string, unknown>;
   createdAt: string;
   updatedAt: string;
 }
@@ -92,6 +93,7 @@ export interface LessonDetailDto extends LessonDto {
     testId: number;
     statement: string;
     timeLimit: number; // seconds
+    settings?: Record<string, unknown>; // extensible config (passing_score, max_retakes, etc.)
   };
 }
 
