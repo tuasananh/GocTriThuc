@@ -217,16 +217,14 @@ Mở `src/main.tsx` — MSW đã được cấu hình sẵn. Khi backend chưa s
 
 ### Đổi trạng thái auth
 
-Mở `src/mocks/handlers.ts`, tìm `authHandlers`:
-
-```ts
-// Đổi authenticated: false để test trạng thái chưa đăng nhập
-authenticated: true,
-// Đổi roles: ['student'] để test quyền student
-roles: ['teacher'],
-// Đổi permissions: '36' (0x24) để test quyền student
-permissions: '62', // 0x3E = teacher
-```
+*   **Đăng nhập / Đăng xuất:** Bạn **không cần** phải sửa code để test luồng đăng nhập/đăng xuất nữa. Bạn có thể click trực tiếp nút **Đăng xuất** trên thanh Header hoặc nút **Đăng nhập với Google/GitHub** trên giao diện Login. Hệ thống sẽ tự động lưu và cập nhật trạng thái đăng nhập vào `localStorage` của trình duyệt.
+*   **Thay đổi Quyền hạn (Roles/Permissions):** Để test giao diện hiển thị cho Học viên (`student`) hoặc Quản trị viên (`admin`), hãy mở `src/mocks/handlers.ts`, tìm `authHandlers` và chỉnh sửa:
+    ```ts
+    // Đổi roles để test giao diện tương ứng: ['student'] hoặc ['admin'] hoặc ['teacher']
+    roles: ['teacher'],
+    // Đổi permissions (BigInt dạng chuỗi): '62' (0x3E) = teacher, '1' = admin, v.v.
+    permissions: '62',
+    ```
 
 ### Thêm mock handler mới
 
