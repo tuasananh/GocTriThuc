@@ -21,68 +21,68 @@ function App() {
       <ThemeProvider defaultTheme="system" storageKey="goctrithuc-theme">
         <TooltipProvider>
           <AuthProvider>
-          <Routes>
-            {/* ── Public (với MainLayout) ────────────────── */}
-            <Route element={<MainLayout />}>
-              <Route path="/" element={<LandingPage />} />
-              {/* Thêm các trang public khác ở đây:
+            <Routes>
+              {/* ── Public (với MainLayout) ────────────────── */}
+              <Route element={<MainLayout />}>
+                <Route path="/" element={<LandingPage />} />
+                {/* Thêm các trang public khác ở đây:
                   <Route path="/courses" element={<CourseListPage />} />
                   <Route path="/courses/:id" element={<CourseDetailPage />} />
               */}
-            </Route>
+              </Route>
 
-            {/* ── Guest Only (redirect nếu đã đăng nhập) ── */}
-            <Route element={<GuestRoute />}>
-              <Route path="/login" element={<LoginPage />} />
-            </Route>
+              {/* ── Guest Only (redirect nếu đã đăng nhập) ── */}
+              <Route element={<GuestRoute />}>
+                <Route path="/login" element={<LoginPage />} />
+              </Route>
 
-            {/* ── Protected (cần đăng nhập) ─────────────── */}
-            <Route element={<ProtectedRoute />}>
-              <Route element={<MainLayout />}>
-                <Route path="/dashboard" element={<Dashboard />} />
-                {/* Thêm các trang cần auth ở đây:
+              {/* ── Protected (cần đăng nhập) ─────────────── */}
+              <Route element={<ProtectedRoute />}>
+                <Route element={<MainLayout />}>
+                  <Route path="/dashboard" element={<Dashboard />} />
+                  {/* Thêm các trang cần auth ở đây:
                     <Route path="/profile" element={<ProfilePage />} />
                     <Route path="/courses/:id/classroom" element={<ClassroomPage />} />
                 */}
+                </Route>
               </Route>
-            </Route>
 
-            {/* ── Instructor (cần role teacher) ────────── */}
-            <Route element={<ProtectedRoute requiredRole="teacher" />}>
-              <Route element={<MainLayout />}>
-                {/* Thêm các trang instructor ở đây:
+              {/* ── Instructor (cần role teacher) ────────── */}
+              <Route element={<ProtectedRoute requiredRole="teacher" />}>
+                <Route element={<MainLayout />}>
+                  {/* Thêm các trang instructor ở đây:
                     <Route path="/instructor" element={<InstructorDashboard />} />
                     <Route path="/instructor/courses/:id" element={<CourseEditorPage />} />
                     <Route path="/instructor/questions" element={<QuestionBankPage />} />
                 */}
+                </Route>
               </Route>
-            </Route>
 
-            {/* ── Admin (cần role admin) ────────────────── */}
-            <Route element={<ProtectedRoute requiredRole="admin" />}>
-              <Route element={<MainLayout />}>
-                {/* Thêm các trang admin ở đây:
+              {/* ── Admin (cần role admin) ────────────────── */}
+              <Route element={<ProtectedRoute requiredRole="admin" />}>
+                <Route element={<MainLayout />}>
+                  {/* Thêm các trang admin ở đây:
                     <Route path="/admin" element={<AdminDashboard />} />
                     <Route path="/admin/users" element={<AdminUsersPage />} />
                 */}
+                </Route>
               </Route>
-            </Route>
 
-            {/* ── Dev Tools ─────────────────────────────── */}
-            <Route
-              path="/editor-test"
-              element={
-                <Suspense fallback={<div>Loading...</div>}>
-                  <EditorTestPage />
-                </Suspense>
-              }
-            />
-          </Routes>
+              {/* ── Dev Tools ─────────────────────────────── */}
+              <Route
+                path="/editor-test"
+                element={
+                  <Suspense fallback={<div>Loading...</div>}>
+                    <EditorTestPage />
+                  </Suspense>
+                }
+              />
+            </Routes>
 
-          {/* Toast notifications — hiển thị ở góc dưới phải */}
-          <Toaster position="bottom-right" richColors closeButton />
-        </AuthProvider>
-      </TooltipProvider>
+            {/* Toast notifications — hiển thị ở góc dưới phải */}
+            <Toaster position="bottom-right" richColors closeButton />
+          </AuthProvider>
+        </TooltipProvider>
       </ThemeProvider>
     </BrowserRouter>
   );

@@ -28,7 +28,10 @@ const UserButtonDropdown = ({
         <Button variant="ghost" className="px-2 py-5">
           {user.displayName || user.username}
           <Avatar>
-            <AvatarImage src={user.avatarUrl || undefined} alt={user.displayName || user.username} />
+            <AvatarImage
+              src={user.avatarUrl || undefined}
+              alt={user.displayName || user.username}
+            />
             <AvatarFallback>
               {(user.displayName || user.username || 'U').charAt(0).toUpperCase()}
             </AvatarFallback>
