@@ -27,10 +27,8 @@ export const ROUTES = {
   // ── Instructor ─────────────────────────────────
   INSTRUCTOR_DASHBOARD: '/instructor',
   INSTRUCTOR_COURSE_EDITOR: (id: number | string) => `/instructor/courses/${id}`,
-  INSTRUCTOR_LESSON_EDITOR: (lessonId: number | string) =>
-    `/instructor/lessons/${lessonId}/edit`,
-  INSTRUCTOR_TEST_BUILDER: (lessonId: number | string) =>
-    `/instructor/lessons/${lessonId}/test`,
+  INSTRUCTOR_LESSON_EDITOR: (lessonId: number | string) => `/instructor/lessons/${lessonId}/edit`,
+  INSTRUCTOR_TEST_BUILDER: (lessonId: number | string) => `/instructor/lessons/${lessonId}/test`,
   QUESTION_BANK: '/instructor/questions',
 
   // ── Admin ──────────────────────────────────────

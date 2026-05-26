@@ -5,7 +5,11 @@ export const fileHandlers = [
   http.post('/api/files/upload', async () => {
     await delay(800); // giả lập upload chậm
     return HttpResponse.json(
-      { id: Date.now(), providerValue: `uploads/mock-${Date.now()}.jpg`, createdAt: new Date().toISOString() },
+      {
+        id: Date.now(),
+        providerValue: `uploads/mock-${Date.now()}.jpg`,
+        createdAt: new Date().toISOString(),
+      },
       { status: 201 },
     );
   }),

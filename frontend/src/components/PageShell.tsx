@@ -10,13 +10,7 @@ import type { ReactNode } from 'react';
  *     <CourseGrid />
  *   </PageShell>
  */
-export function PageShell({
-  children,
-  className,
-}: {
-  children: ReactNode;
-  className?: string;
-}) {
+export function PageShell({ children, className }: { children: ReactNode; className?: string }) {
   return (
     <div className={`container mx-auto px-4 py-8 md:px-8 md:py-12 ${className ?? ''}`}>
       {children}

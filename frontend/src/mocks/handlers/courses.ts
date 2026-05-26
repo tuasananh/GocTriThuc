@@ -29,7 +29,8 @@ const mockCourses: CourseDto[] = Array.from({ length: 15 }, (_, i) => ({
     'Testing & QA Automation',
     'Quản Lý Dự Án Phần Mềm',
   ][i],
-  description: 'Khóa học chất lượng cao với nội dung thực tiễn, bài tập phong phú và hỗ trợ từ giảng viên.',
+  description:
+    'Khóa học chất lượng cao với nội dung thực tiễn, bài tập phong phú và hỗ trợ từ giảng viên.',
   thumbnailUrl: null,
   isPublished: i < 12,
   visibility: i < 10 ? 'Public' : i < 13 ? 'Restricted' : 'Private',
@@ -48,13 +49,9 @@ export const courseHandlers = [
     const search = url.searchParams.get('search') ?? '';
     const visibility = url.searchParams.get('visibility') ?? 'Public';
 
-    let filtered = mockCourses.filter(
-      (c) => c.visibility === visibility && c.isPublished,
-    );
+    let filtered = mockCourses.filter((c) => c.visibility === visibility && c.isPublished);
     if (search) {
-      filtered = filtered.filter((c) =>
-        c.title.toLowerCase().includes(search.toLowerCase()),
-      );
+      filtered = filtered.filter((c) => c.title.toLowerCase().includes(search.toLowerCase()));
     }
 
     const start = page * size;

@@ -24,14 +24,17 @@ export function RoleBadge({ role }: { role: string }) {
 const roleConfig: Record<string, { label: string; className: string }> = {
   admin: {
     label: 'Admin',
-    className: 'border-red-200 bg-red-50 text-red-700 dark:border-red-800 dark:bg-red-950 dark:text-red-300',
+    className:
+      'border-red-200 bg-red-50 text-red-700 dark:border-red-800 dark:bg-red-950 dark:text-red-300',
   },
   teacher: {
     label: 'Giảng viên',
-    className: 'border-blue-200 bg-blue-50 text-blue-700 dark:border-blue-800 dark:bg-blue-950 dark:text-blue-300',
+    className:
+      'border-blue-200 bg-blue-50 text-blue-700 dark:border-blue-800 dark:bg-blue-950 dark:text-blue-300',
   },
   student: {
     label: 'Học viên',
-    className: 'border-green-200 bg-green-50 text-green-700 dark:border-green-800 dark:bg-green-950 dark:text-green-300',
+    className:
+      'border-green-200 bg-green-50 text-green-700 dark:border-green-800 dark:bg-green-950 dark:text-green-300',
   },
 };

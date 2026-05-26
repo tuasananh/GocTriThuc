@@ -5,20 +5,68 @@ import type { ModuleDto, LessonDetailDto } from '@/types';
 
 const mockModules: ModuleDto[] = [
   {
-    id: 101, courseId: 1, title: 'Giới thiệu React', order: 0,
-    createdAt: '2026-05-01T00:00:00Z', updatedAt: '2026-05-01T00:00:00Z',
+    id: 101,
+    courseId: 1,
+    title: 'Giới thiệu React',
+    order: 0,
+    createdAt: '2026-05-01T00:00:00Z',
+    updatedAt: '2026-05-01T00:00:00Z',
     lessons: [
-      { id: 1001, title: 'React là gì?', lessonType: 'blog', order: 0, moduleId: 101, createdAt: '2026-05-01T00:00:00Z', updatedAt: '2026-05-01T00:00:00Z' },
-      { id: 1002, title: 'Cài đặt môi trường', lessonType: 'video', order: 1, moduleId: 101, createdAt: '2026-05-01T00:00:00Z', updatedAt: '2026-05-01T00:00:00Z' },
-      { id: 1003, title: 'Bài kiểm tra nhập môn', lessonType: 'test', order: 2, moduleId: 101, createdAt: '2026-05-01T00:00:00Z', updatedAt: '2026-05-01T00:00:00Z' },
+      {
+        id: 1001,
+        title: 'React là gì?',
+        lessonType: 'blog',
+        order: 0,
+        moduleId: 101,
+        createdAt: '2026-05-01T00:00:00Z',
+        updatedAt: '2026-05-01T00:00:00Z',
+      },
+      {
+        id: 1002,
+        title: 'Cài đặt môi trường',
+        lessonType: 'video',
+        order: 1,
+        moduleId: 101,
+        createdAt: '2026-05-01T00:00:00Z',
+        updatedAt: '2026-05-01T00:00:00Z',
+      },
+      {
+        id: 1003,
+        title: 'Bài kiểm tra nhập môn',
+        lessonType: 'test',
+        order: 2,
+        moduleId: 101,
+        createdAt: '2026-05-01T00:00:00Z',
+        updatedAt: '2026-05-01T00:00:00Z',
+      },
     ],
   },
   {
-    id: 102, courseId: 1, title: 'Components & Props', order: 1,
-    createdAt: '2026-05-02T00:00:00Z', updatedAt: '2026-05-02T00:00:00Z',
+    id: 102,
+    courseId: 1,
+    title: 'Components & Props',
+    order: 1,
+    createdAt: '2026-05-02T00:00:00Z',
+    updatedAt: '2026-05-02T00:00:00Z',
     lessons: [
-      { id: 1004, title: 'Function Components', lessonType: 'blog', order: 0, moduleId: 102, createdAt: '2026-05-02T00:00:00Z', updatedAt: '2026-05-02T00:00:00Z' },
-      { id: 1005, title: 'Props và State', lessonType: 'video', order: 1, moduleId: 102, createdAt: '2026-05-02T00:00:00Z', updatedAt: '2026-05-02T00:00:00Z' },
+      {
+        id: 1004,
+        title: 'Function Components',
+        lessonType: 'blog',
+        order: 0,
+        moduleId: 102,
+        createdAt: '2026-05-02T00:00:00Z',
+        updatedAt: '2026-05-02T00:00:00Z',
+      },
+      {
+        id: 1005,
+        title: 'Props và State',
+        lessonType: 'video',
+        order: 1,
+        moduleId: 102,
+        createdAt: '2026-05-02T00:00:00Z',
+        updatedAt: '2026-05-02T00:00:00Z',
+      },
     ],
   },
 ];
@@ -35,8 +83,13 @@ export const moduleHandlers = [
     await delay(300);
     const body = (await request.json()) as { title: string };
     const newModule: ModuleDto = {
-      id: Date.now(), courseId: 1, title: body.title, order: mockModules.length,
-      lessons: [], createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(),
+      id: Date.now(),
+      courseId: 1,
+      title: body.title,
+      order: mockModules.length,
+      lessons: [],
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
     };
     return HttpResponse.json(newModule, { status: 201 });
   }),
@@ -45,10 +98,18 @@ export const moduleHandlers = [
   http.post('/api/modules/:moduleId/lessons', async ({ request }) => {
     await delay(300);
     const body = (await request.json()) as { title: string; lessonType: string };
-    return HttpResponse.json({
-      id: Date.now(), title: body.title, lessonType: body.lessonType,
-      order: 0, moduleId: 101, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(),
-    }, { status: 201 });
+    return HttpResponse.json(
+      {
+        id: Date.now(),
+        title: body.title,
+        lessonType: body.lessonType,
+        order: 0,
+        moduleId: 101,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      },
+      { status: 201 },
+    );
   }),
 
   // ── GET /api/lessons/:id ─────────────────────────────────
@@ -56,8 +117,13 @@ export const moduleHandlers = [
     await delay(200);
     const id = Number(params.lessonId);
     const detail: LessonDetailDto = {
-      id, title: 'Bài giảng mẫu', lessonType: 'blog', order: 0, moduleId: 101,
-      createdAt: '2026-05-01T00:00:00Z', updatedAt: '2026-05-01T00:00:00Z',
+      id,
+      title: 'Bài giảng mẫu',
+      lessonType: 'blog',
+      order: 0,
+      moduleId: 101,
+      createdAt: '2026-05-01T00:00:00Z',
+      updatedAt: '2026-05-01T00:00:00Z',
       blog: { content: '<h2>Nội dung bài giảng</h2><p>Đây là nội dung blog mẫu.</p>' },
     };
     return HttpResponse.json(detail);
