@@ -113,10 +113,10 @@ export const questionHandlers = [
   }),
 
   // ── POST /api/sessions/:id/submit ─────────────────────────
-  http.post('/api/sessions/:sessionId/submit', async () => {
+  http.post('/api/sessions/:sessionId/submit', async ({ params }) => {
     await delay(500);
     return HttpResponse.json({
-      sessionId: 1,
+      sessionId: Number(params.sessionId),
       totalScore: 8,
       maxScore: 10,
       percent: 80,
