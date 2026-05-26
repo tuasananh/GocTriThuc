@@ -2,6 +2,7 @@ import { CourseCatalog } from '@/pages/_components/CourseCatalog';
 import { Button } from '@/components/ui/button';
 import { ArrowRight, Sparkles } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { ROUTES } from '@/lib/routes';
 
 export function LandingPage() {
   return (
@@ -46,7 +47,7 @@ export function LandingPage() {
               size="lg"
               className="rounded-full h-14 px-8 text-base border-border"
             >
-              <Link to="/login">Trở thành học viên</Link>
+              <Link to={ROUTES.LOGIN}>Trở thành học viên</Link>
             </Button>
           </div>
         </div>

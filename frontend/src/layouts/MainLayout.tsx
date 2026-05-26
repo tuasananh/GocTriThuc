@@ -14,6 +14,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { GocTriThuc } from '@/components/GocTriThuc';
 import { ThemeToggle } from '@/components/ThemeToggle';
+import { ROUTES } from '@/lib/routes';
 
 const UserButtonDropdown = ({
   user,
@@ -43,7 +44,7 @@ const UserButtonDropdown = ({
         <DropdownMenuGroup>
           <DropdownMenuLabel>@{user.username}</DropdownMenuLabel>
           <DropdownMenuItem>
-            <Link to="/dashboard">Trang cá nhân</Link>
+            <Link to={ROUTES.DASHBOARD}>Trang cá nhân</Link>
           </DropdownMenuItem>
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
@@ -84,7 +85,7 @@ export function MainLayout() {
               <UserButtonDropdown user={auth.user} logout={auth.logout} />
             ) : (
               <Button asChild className="rounded-full px-6">
-                <Link to="/login">Bắt đầu ngay</Link>
+                <Link to={ROUTES.LOGIN}>Bắt đầu ngay</Link>
               </Button>
             )}
           </div>

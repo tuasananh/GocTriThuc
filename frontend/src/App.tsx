@@ -6,9 +6,9 @@ import { Dashboard } from '@/pages/dashboard';
 import { GuestRoute } from '@/components/GuestRoute';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { AuthProvider } from './providers/AuthProvider';
-import { ThemeProvider } from '@/providers/ThemeProvider';
-import { Toaster } from '@/components/ui/sonner';
+import { ThemeProvider } from 'next-themes';
 import { TooltipProvider } from '@/components/ui/tooltip';
+import { Toaster } from '@/components/ui/sonner';
 import { lazy, Suspense } from 'react';
 
 const EditorTestPage = lazy(() =>
@@ -18,7 +18,7 @@ const EditorTestPage = lazy(() =>
 function App() {
   return (
     <BrowserRouter>
-      <ThemeProvider defaultTheme="system" storageKey="goctrithuc-theme">
+      <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
         <TooltipProvider>
           <AuthProvider>
             <Routes>
@@ -79,7 +79,6 @@ function App() {
               />
             </Routes>
 
-            {/* Toast notifications — hiển thị ở góc dưới phải */}
             <Toaster position="bottom-right" richColors closeButton />
           </AuthProvider>
         </TooltipProvider>
