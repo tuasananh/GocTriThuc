@@ -2,7 +2,6 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/com
 import { Button } from '@/components/ui/button';
 import { BookOpen } from 'lucide-react';
 import { GocTriThuc } from '@/components/GocTriThuc';
-import { ROUTES } from '@/lib/routes';
 
 export function OAuthLogin() {
   const handleLogin = (provider: string) => {
