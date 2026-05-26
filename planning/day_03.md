@@ -1,14 +1,19 @@
 # Day 3 — User Profile & Local Server File Uploads
 
-**Goal**: Users can view and edit their profile. Avatar images upload directly to the backend and serve from local disk (mapped to a persistent volume).
-**Done when**: Profile edits save to DB; avatar upload works end-to-end (local disk → DB → displayed in Navbar).
+**Goal**: Users can view and edit their profile. Avatar images upload directly
+to the backend and serve from local disk (mapped to a persistent volume). **Done
+when**: Profile edits save to DB; avatar upload works end-to-end (local disk →
+DB → displayed in Navbar).
 
 ---
 
 ## 🔴 Trung (BE Lead)
 
 ### Task 1 — User profile endpoints
-File: `backend/src/main/java/com/goctrithuc/backend/controllers/UserController.java` (Ensure update profile PATCH endpoints match this standard).
+
+File:
+`backend/src/main/java/com/goctrithuc/backend/controllers/UserController.java`
+(Ensure update profile PATCH endpoints match this standard).
 
 ```java
 @RestController
@@ -44,6 +49,7 @@ public class UserController {
 ```
 
 `UpdateUserRequest.java`:
+
 ```java
 public record UpdateUserRequest(
     @Size(min = 2, max = 100) String displayName,
@@ -54,6 +60,7 @@ public record UpdateUserRequest(
 ```
 
 `UserService.updateProfile`:
+
 ```java
 @Transactional
 public UserEntity updateProfile(Long id, UpdateUserRequest req) {
@@ -74,8 +81,9 @@ public UserEntity updateProfile(Long id, UpdateUserRequest req) {
 ```
 
 ### Task 2 — File Storage & Upload API
-File: `com/goctrithuc/files/FileController.java`
-Integrate standard multipart form data uploads saving straight to local persistent drive.
+
+File: `com/goctrithuc/files/FileController.java` Integrate standard multipart
+form data uploads saving straight to local persistent drive.
 
 ```java
 @RestController
@@ -96,6 +104,7 @@ public class FileController {
 ```
 
 Configure dynamic directories in `application.yaml`:
+
 ```yaml
 app:
   upload-dir: ${UPLOAD_DIR:./uploads}
@@ -106,8 +115,9 @@ app:
 ## 🔴 Anh (BE Dev / PM)
 
 ### Task 1 — FileEntity & Serve Controller
-Expose file serving utilities reading disk files and streaming them straight to client image elements.
-File: `com/goctrithuc/files/FileEntity.java`
+
+Expose file serving utilities reading disk files and streaming them straight to
+client image elements. File: `com/goctrithuc/files/FileEntity.java`
 
 ```java
 @Entity
@@ -122,6 +132,7 @@ public class FileEntity {
 ```
 
 File serving endpoint:
+
 ```java
 @GetMapping("/serve/{id}")
 public ResponseEntity<Resource> serveFile(@PathVariable Long id) {
@@ -135,6 +146,7 @@ public ResponseEntity<Resource> serveFile(@PathVariable Long id) {
 ```
 
 ### Task 2 — Jakarta validation audits
+
 Ensure email validations `@Email` and name constraints are fully configured.
 
 ---
@@ -142,22 +154,28 @@ Ensure email validations `@Email` and name constraints are fully configured.
 ## 🔵 Vinh (FE Lead)
 
 ### Task 1 — Profile view layouts
+
 Expose profile updates and forms connecting to dynamic edit PATCH services.
 
 ### Task 2 — Direct Server multipart uploads
-File: `src/pages/profile/_components/AvatarUpload.tsx`
-Trigger multipart POST uploads to the backend.
+
+File: `src/pages/profile/_components/AvatarUpload.tsx` Trigger multipart POST
+uploads to the backend.
 
 ```tsx
 const handleFile = async (file: File) => {
   setUploading(true);
   try {
     const form = new FormData();
-    form.append('file', file);
-    const { data } = await api.post<{ id: string; providerValue: string }>('/api/files/upload', form, {
-      headers: { 'Content-Type': 'multipart/form-data' }
-    });
-    
+    form.append("file", file);
+    const { data } = await api.post<{ id: string; providerValue: string }>(
+      "/api/files/upload",
+      form,
+      {
+        headers: { "Content-Type": "multipart/form-data" },
+      },
+    );
+
     // Register file ID in user avatar profile
     const serveUrl = `/api/files/serve/${data.id}`;
     await api.patch(`/api/users/${userId}`, { avatarUrl: serveUrl });
@@ -173,12 +191,16 @@ const handleFile = async (file: File) => {
 ## 🔵 Sâm (FE Dev 1)
 
 ### Task 1 — MSW handlers configuration
+
 Add mock file handlers returning test upload responses.
 
 ```typescript
-http.post('/api/files/upload', () =>
-  HttpResponse.json({ id: 99, providerValue: 'uploads/mock.jpg' }, { status: 201 })
-)
+http.post("/api/files/upload", () =>
+  HttpResponse.json(
+    { id: 99, providerValue: "uploads/mock.jpg" },
+    { status: 201 },
+  ),
+);
 ```
 
 ---
@@ -186,11 +208,13 @@ http.post('/api/files/upload', () =>
 ## 🔵 Tuấn (FE Dev 2)
 
 ### Task 1 — badge and helper directives
+
 Build standard `<RoleBadge>` and `usePermission` directives.
 
 ---
 
 ## ✅ End-of-Day Checklist
+
 - [ ] Profile edits PATCH successfully.
 - [ ] Avatar multipart uploading saves file locally inside `./uploads`.
 - [ ] Serves file back to browser seamlessly via `/api/files/serve/{id}`.
