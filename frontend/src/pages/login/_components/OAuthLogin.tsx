@@ -6,13 +6,7 @@ import { ROUTES } from '@/lib/routes';
 
 export function OAuthLogin() {
   const handleLogin = (provider: string) => {
-    if (import.meta.env.MODE === 'development') {
-      // Giả lập đăng nhập nhanh cho môi trường dev local không cần backend
-      localStorage.setItem('mock_authenticated', 'true');
-      window.location.href = ROUTES.DASHBOARD;
-    } else {
-      window.location.href = `/oauth2/authorization/${provider}`;
-    }
+    window.location.href = `/oauth2/authorization/${provider}`;
   };
 
   return (
