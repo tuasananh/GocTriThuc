@@ -36,14 +36,14 @@ public class McQuestionEntity {
 `POST /api/questions`:
 ```java
 @PostMapping
-@PreAuthorize("@permissionService.hasPermission(#auth.principal.id, T(com.goctrithuc.shared.Permission).CREATE_QUESTION)")
+@PreAuthorize("@permissionService.hasPermission(#auth.principal.id, T(com.goctrithuc.shared.Permission).MANAGE_OWN_QUESTIONS)")
 public ResponseEntity<QuestionResponse> createQuestion(
     @Valid @RequestBody CreateQuestionRequest req, Authentication auth) {
   Long authorId = getCurrentUserId(auth);
-  Long qId = idGenerator.nextId();
+  // ID is assigned by DB via DEFAULT generate_snowflake_id() — do not set manually
 
   QuestionEntity q = new QuestionEntity();
-  q.setId(qId); q.setStatement(req.statement());
+  q.setStatement(req.statement());
   q.setAuthorId(authorId); q.setQuestionType(QuestionType.multiple_choice);
   q.setCreatedAt(Instant.now()); q.setUpdatedAt(Instant.now());
   questionRepo.save(q);
@@ -64,6 +64,8 @@ public record CreateQuestionRequest(
     @Size(min = 2, max = 6) List<@NotBlank String> choices,
     @NotEmpty List<Integer> correctChoices,
     boolean isSingleChoice) {}
+
+// Note: The controller/validator must strictly verify that all indices in `correctChoices` are >= 0 and < choices.size() to prevent ArrayIndexOutOfBoundsException in the scoring engine.
 ```
 
 `GET /api/questions` (paginated, filter by `authorId`):
@@ -75,8 +77,8 @@ public ResponseEntity<Page<QuestionResponse>> listQuestions(
     @RequestParam(required = false) String search,
     Pageable pageable, Authentication auth) {
   Long userId = getCurrentUserId(auth);
-  // Instructors see their own questions; admins see all
-  Long filterAuthor = permissionService.hasPermission(userId, Permission.EDIT_ANY_COURSE)
+  // Instructors see their own questions; admins (ADMIN bit) see all
+  Long filterAuthor = permissionService.hasPermission(userId, Permission.ADMIN)
       ? authorId : userId;
   return ResponseEntity.ok(
       questionService.list(filterAuthor, search, pageable)
@@ -85,7 +87,9 @@ public ResponseEntity<Page<QuestionResponse>> listQuestions(
 ```
 
 `PUT /api/questions/{id}` — update statement, choices, correctChoices
-`DELETE /api/questions/{id}` — delete (fail if used in an active test)
+`DELETE /api/questions/{id}` — **hard-delete**: permanently removes the question and its mc_question rows from the database.
+  Deletion cascades to `test_question` and `test_session_answers` (removing the question from all tests and past/active attempts).
+  Dynamic score calculations will exclude the deleted question on-the-fly.
 
 ### Test lesson management
 `POST /api/tests/{testId}/questions` — add question to test:
@@ -119,15 +123,16 @@ public ResponseEntity<Void> addQuestion(
 public ResponseEntity<List<QuestionResponse>> getTestQuestions(
     @PathVariable Long testId, Authentication auth) {
   Long userId = getCurrentUserId(auth);
-  boolean isInstructor = permissionService.hasPermission(userId, Permission.CREATE_QUESTION);
-  List<TestQuestionEntity> tqs = testQuestionRepo.findByTestIdOrderByOrder(testId);
-  return ResponseEntity.ok(tqs.stream().map(tq -> {
-    QuestionEntity q = questionRepo.findById(tq.getQuestionId()).orElseThrow();
-    McQuestionEntity mc = mcQuestionRepo.findById(tq.getQuestionId()).orElseThrow();
-    return isInstructor
-        ? QuestionResponse.fromInstructor(q, mc)
-        : QuestionResponse.fromStudent(q, mc);
-  }).toList());
+  // Gate on MANAGE_OWN_QUESTIONS bit: any teacher or admin sees correct_choices
+  boolean isInstructor = permissionService.hasPermission(userId, Permission.MANAGE_OWN_QUESTIONS);
+
+  // Single JOIN query — avoids N+1 (no per-question findById loop)
+  List<TestQuestionWithDetails> rows = testQuestionRepo.findWithDetails(testId);
+  return ResponseEntity.ok(rows.stream().map(row ->
+      isInstructor
+          ? QuestionResponse.fromInstructor(row.question(), row.mcQuestion())
+          : QuestionResponse.fromStudent(row.question(), row.mcQuestion())
+  ).toList());
 }
 ```
 
@@ -148,7 +153,7 @@ public class LessonTestEntity {
 }
 ```
 
-`PUT /api/lessons/{id}/test` — create/update test settings:
+`PUT /api/lessons/{id}/test` — update test settings (statement, timeLimit):
 ```java
 public record UpdateTestRequest(
     @NotBlank String statement,
@@ -156,7 +161,9 @@ public record UpdateTestRequest(
     String settings) {}
 ```
 
-On lesson creation with `lessonType == test`, the `lesson_tests` row is created empty. This endpoint fills in the details.
+> **Note**: `statement` and `time_limit` are now required at lesson creation time (both columns are `NOT NULL`).
+> When creating a lesson of type `test`, the creation request must include `statement` and `timeLimit`.
+> There is no "create empty then fill later" pattern — use this endpoint only for subsequent edits.
 
 `GET /api/tests/{testId}` — returns test info (statement, timeLimit) for the test page.
 
@@ -185,7 +192,7 @@ File: `src/pages/instructor/TestBuilderPage.tsx`
 ```tsx
 export function TestBuilderPage() {
   const { lessonId } = useParams<{ lessonId: string }>();
-  const [testId, setTestId] = useState<number | null>(null);
+  const [testId, setTestId] = useState<string | null>(null);
   const [questions, setQuestions] = useState<TestQuestionItem[]>([]);
   const [showPicker, setShowPicker] = useState(false);
   const [statement, setStatement] = useState('');
@@ -207,7 +214,7 @@ export function TestBuilderPage() {
     toast.success('Đã lưu cài đặt bài kiểm tra');
   };
 
-  const removeQuestion = async (questionId: number) => {
+  const removeQuestion = async (questionId: string) => {
     await api.delete(`/api/tests/${testId}/questions/${questionId}`);
     setQuestions(q => q.filter(x => x.id !== questionId));
   };
@@ -355,11 +362,11 @@ export function QuestionForm({ onSaved }: { onSaved: (q: QuestionDto) => void })
 ### `QuestionPickerModal` — search and add questions to test
 ```tsx
 export function QuestionPickerModal({ open, onClose, testId, onAdded }: {
-  open: boolean; onClose: () => void; testId: number; onAdded: (q: TestQuestionItem) => void;
+  open: boolean; onClose: () => void; testId: string; onAdded: (q: TestQuestionItem) => void;
 }) {
   const [questions, setQuestions] = useState<QuestionDto[]>([]);
   const [search, setSearch] = useState('');
-  const [adding, setAdding] = useState<number | null>(null);
+  const [adding, setAdding] = useState<string | null>(null);
 
   useEffect(() => {
     if (open) api.get<PageResponse<QuestionDto>>('/api/questions', { params: { search, size: 20 } })

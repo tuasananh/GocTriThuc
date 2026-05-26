@@ -47,7 +47,7 @@ Before any frontend starts on a feature, the backend must publish an **API contr
 
 | Member | Tasks |
 | :--- | :--- |
-| **Trung (BE Lead)** | Implement search/listing `GET /api/courses` (paginated, visibility-filtered based on role: Guest = Public only, Student = Public/Restricted, Teacher/Admin = All). Implement course creation `POST /api/courses` (restricted to CREATE_COURSE). |
+| **Trung (BE Lead)** | Implement search/listing `GET /api/courses` (paginated, visibility-filtered based on role: Guest = Public + Restricted, Student = Public + Restricted, Teacher/Admin = All including Private). Implement course creation `POST /api/courses` (restricted to `MANAGE_OWN_COURSES` permission). |
 | **Anh (BE Dev / PM)** | Implement course detail `GET /api/courses/{id}` (prevent guests/unauthorized users from viewing Private courses). Write `@EntityGraph` joint queries to prevent N+1 queries. |
 | **Vinh (FE Lead)** | Build Course Search catalog layout. Build dynamic grid view rendering lists of courses. |
 | **Sâm (FE Dev 1)** | Build debounced search filters and visibility tabs (`All / Public / Restricted`). Write MSW mock courses handlers. |

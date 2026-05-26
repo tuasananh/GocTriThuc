@@ -59,8 +59,8 @@ public class CourseAccessRequestEntity {
 ```
 
 - `POST /api/courses/{id}/access-requests` — creates a record in `course_access_requests`.
-- `DELETE /api/access-requests/{id}` — withdraws/declines request by deleting the record.
-- `POST /api/access-requests/{id}/approve` — moves request to `enrollments` and deletes request.
+- `DELETE /api/courses/{courseId}/access-requests/{userId}` — withdraws/declines request by deleting the record.
+- `POST /api/courses/{courseId}/access-requests/{userId}/approve` — moves request to `enrollments` and deletes request.
 
 `GET /api/courses/{id}/access-status`:
 ```java

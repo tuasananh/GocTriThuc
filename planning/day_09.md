@@ -12,16 +12,19 @@
 ```java
 @Entity @Table(name = "test_sessions")
 public class TestSessionEntity {
-  @Id private Long id;
+  @Id
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
+  private Long id;
   @Column(name = "user_id") private Long userId;
   @Column(name = "test_id") private Long testId;
   @Column(name = "started_at") private Instant startedAt;
+  @Column(name = "submitted_at") private Instant submittedAt; // set when session is submitted
   @Column(name = "is_done") private boolean isDone;
   private Instant createdAt; private Instant updatedAt;
 }
 ```
 
-- Ensure cascade delete: deleting a question cascadingly removes `test_question` and `test_session_answers` entries (hard cascade delete).
+- Note: question deletion is a **hard-delete** with database-level `ON DELETE CASCADE`. Active quiz sessions will dynamically exclude the deleted question, and past quiz results will recalculate on-the-fly.
 
 `POST /api/tests/{testId}/sessions` — start a session:
 Calculate remaining time on server and return in payload `remainingTime` in seconds to prevent cheating or refresh resets.
@@ -53,7 +56,7 @@ public ResponseEntity<TestSessionResponse> startSession(
     return ResponseEntity.status(409).body(null); // already submitted
 
   TestSessionEntity s = new TestSessionEntity();
-  s.setId(idGenerator.nextId());
+  // ID is assigned by DB via DEFAULT generate_snowflake_id() — do not set manually
   s.setUserId(userId); s.setTestId(testId);
   s.setStartedAt(Instant.now()); s.setDone(false);
   s.setCreatedAt(Instant.now()); s.setUpdatedAt(Instant.now());
@@ -112,4 +115,5 @@ Displays test metrics and results page.
 ## ✅ End-of-Day Checklist
 - [ ] Active remaining time calculated server-side and returned to frontend.
 - [ ] Re-entering active quiz session resumes exact countdown seconds.
-- [ ] Deleting a question cascadingly wipes join elements cleanly.
+- [ ] Dynamic score calculations correctly handle deleted questions on past quiz sessions on-the-fly.
+- [ ] `submitted_at` is set accurately on final submission for "time taken" display.

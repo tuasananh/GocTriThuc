@@ -50,13 +50,13 @@ These engineering choices represent the finalized technical standards for the pl
 | **Session Storage** | In-Memory Session | **Completed.** In-memory session store (no Redis). Simplest for single-instance Docker. |
 | **File Management** | Local Server Storage | **Drop Cloudinary.** All file uploads go via `multipart/form-data` to backend, saved to disk in a persistent **Docker Volume** (zero cost, self-hosted, offline-friendly). Expose download/serve APIs. Configurable directory path to prevent permission issues. |
 | **Blog Lesson Editor** | BlockNote Editor | Default editor is **BlockNote** (`feat/blocknote-impl` branch). Frontend inputs/renders rich text, backend receives and sanitizes raw HTML strings. |
-| **HTML Sanitization** | Backend Jsoup | Backend sanitizes all incoming HTML strings (from BlockNote/Comments) using the `jsoup` library with a relaxed `Safelist` before saving to prevent XSS. |
+| **HTML Sanitization** | Backend Jsoup | Backend sanitizes all incoming HTML strings (from BlockNote/Comments) using the `jsoup` library with a custom extended `Safelist` (allowing BlockNote styles, classes, and data attributes) before saving to prevent XSS. |
 | **State Management** | Context + Local State | React Context for global auth state (`useAuth`). Local component state or URL parameters for all features (courses, curricula, tests). No complex RTK/Zustand libraries. Minimal merge conflicts. |
 | **Nesting Comments** | Infinite reddit-style | Infinite nesting depth. If comments get too deep (e.g. >5 levels), render a link to redirect the user to a dedicated page for that specific sub-thread. |
 | **Restricted Requests** | Separate Request Table | Create a separate `course_access_requests` table (avoids enum column complexity). Approval inserts to `enrollments` and deletes request. Rejection simply deletes request. |
 | **Curriculum Order** | Strict Simple UI | Avoid drag-and-drop. Stick to **Up/Down sorting buttons** or manual numeric fields. Fast to code, robust, mobile-friendly. |
 | **Test Sessions** | Server-Calculated Timer | Session stores `started_at`. Backend returns `remaining_time` in seconds. Prevent cheating or refresh reset. |
-| **Question Deletion** | Hard Cascade Delete | Cascade delete question associations from `test_question` and `test_session_answers`. Historic quiz scores dynamically adjust based on remaining questions. |
+| **Question & Lesson Deletion** | Hard-Delete | Enforce a clean hard-delete with DB-level `ON DELETE CASCADE`. Past quiz scores are dynamically recalculated on-the-fly when requested (deleted questions no longer contribute to total points). |
 | **Mocking Strategy** | Mock Service Worker | Stick with MSW for dev simulation. |
 | **Testing Standards** | Pragmatic Integration | Require at least **1 integration test** (happy path) per endpoint and **1 security check test** (unauthorized/forbidden path) instead of strict code coverage metrics. |
 
@@ -173,8 +173,8 @@ flowchart TD
     F -->|Edit Quiz Lesson| I[Test Builder & Question Picker]
     
     D -->|Access Requests| J[Fetch pending course_access_requests]
-    J -->|Click Approve| K["POST /api/access-requests/{id}/approve -> Insert to enrollments & delete request"]
-    J -->|Click Decline| L["DELETE /api/access-requests/{id} -> Delete request"]
+    J -->|Click Approve| K["POST /api/courses/{courseId}/access-requests/{userId}/approve"]
+    J -->|Click Decline| L["DELETE /api/courses/{courseId}/access-requests/{userId}"]
     
     D -->|Publish Course| M["PATCH /api/courses/{id} -> Toggle Visibility to Public or Restricted"]
 ```
@@ -214,7 +214,7 @@ These design parameters eliminate ambiguity during parallel coding sprints:
    * *Resolution*: Configure the database foreign key on `parent_id` with `ON DELETE CASCADE`. Deleting a parent comment automatically deletes all of its nested children recursively, keeping database comments intact and self-cleaning.
 5. **Comment Thread Pagination Strategy**:
    * *Assumption*: Querying infinitely nested comments in a single payload could exhaust database performance.
-   * *Resolution*: Root comments are paginated (20 per page). When clicked, replies are loaded in a single subtree fetch up to a depth of **5 levels**. Depth greater than 5 renders a Reddit-style "View single thread" link to fetch that sub-branch in an isolated view.
+   * *Resolution*: Root comments are paginated (20 per page). When clicked, replies are loaded up to a depth of **5 levels** in a single database subtree fetch utilizing a **Recursive Common Table Expression (CTE)** in PostgreSQL. Depth greater than 5 renders a Reddit-style "View single thread" link to fetch that sub-branch in an isolated view.
 
 ---
 
@@ -232,9 +232,9 @@ These design parameters eliminate ambiguity during parallel coding sprints:
 
 ### Backend Rules (security-first, high performance)
 - **Strict Authorization Mapping**: Check permissions in the Service layer, never just in the Controller.
-- **HTML Sanitization**: For blog contents uploaded via `BlockNote`, pass raw HTML through a strict sanitization library (`jsoup`) before writing to the database to eliminate XSS injections:
+- **HTML Sanitization**: For blog contents uploaded via `BlockNote`, pass raw HTML through a strict sanitization library (`jsoup`) before writing to the database to eliminate XSS injections. Ensure the custom `Safelist` is configured with `.preserveRelativeLinks(true)` so that relative media paths (such as `/api/files/serve/{id}`) are not stripped:
   ```java
-  String sanitized = Jsoup.clean(rawHtml, Safelist.relaxed());
+  String sanitized = Jsoup.clean(rawHtml, customBlockNoteSafelist);
   ```
 - **JPA N+1 Audits**: Run with SQL logging active. Avoid nested loops querying lazy-loaded associations. Use `JOIN FETCH` or `@EntityGraph`.
 - **Validation Boundaries**: Annotate DTOs with `@NotNull`, `@NotBlank`, `@Size`, `@Pattern`. Return localized, precise field-level messages in `GlobalExceptionHandler`.
@@ -275,8 +275,8 @@ This is the revised day-by-day blueprint. Focus shifts purely to the remaining f
 **Objective**: Build a premium course discovery catalog and enable course creation for instructors.
 
 #### 🔴 BE Lead (Trung): Course Search Engine & Authorization Limits
-- **Course API**: Build `GET /api/courses` with pagination and search parameters. Implement visibility filters.
-- **Course Insertion**: Build `POST /api/courses` restricted to roles with `CREATE_COURSE` permission.
+- **Course API**: Build `GET /api/courses` with pagination and search parameters. Implement visibility filters (guests and unauthenticated users see Public + Restricted; only Private courses are hidden).
+- **Course Insertion**: Build `POST /api/courses` restricted to roles with `MANAGE_OWN_COURSES` permission.
 
 #### 🔴 BE Dev (Anh): Course Detail Endpoint & Performance Tuning
 - **Detail Extraction**: Build `GET /api/courses/{id}`. Prevent unauthorized users from querying `Private` courses.
@@ -290,7 +290,7 @@ This is the revised day-by-day blueprint. Focus shifts purely to the remaining f
 - **Search Filters**: Build a debounced search bar input (updating search criteria 300ms after the user stops typing). Add tabs to filter courses by visibility: `All`, `Public`, or `Restricted`.
 
 #### 🔵 FE Dev 2 (Tuấn): Course Creation Dialog
-- **Course Creation Dialog**: Build `<CreateCourseModal>` accessible only to users with the `CREATE_COURSE` permission. Include fields for title, description, visibility state, and a thumbnail upload dropzone.
+- **Course Creation Dialog**: Build `<CreateCourseModal>` accessible only to users with the `MANAGE_OWN_COURSES` permission. Include fields for title, description, visibility state, and a thumbnail upload dropzone.
 
 ---
 
@@ -420,8 +420,8 @@ This is the revised day-by-day blueprint. Focus shifts purely to the remaining f
 #### 🔴 BE Lead (Trung): Threaded Comments & Restricted Access Approvals
 - **Reddit-Style Comments**: Build Comment CRUD endpoints for `lesson_comments` and `announcement_comments`. Support infinite nesting using a nullable `parent_id` column.
 - **Access Request Management**: Build access request endpoints:
-  - `POST /api/access-requests/{id}/approve` (finds pending `course_access_requests` entry, deletes it, and inserts a matching record in `enrollments`).
-  - `DELETE /api/access-requests/{id}` (denies request by deleting it from `course_access_requests`).
+  - `POST /api/courses/{courseId}/access-requests/{userId}/approve` (finds pending `course_access_requests` entry, deletes it, and inserts a matching record in `enrollments`).
+  - `DELETE /api/courses/{courseId}/access-requests/{userId}` (denies request by deleting it from `course_access_requests`).
 
 #### 🔴 BE Dev (Anh): Admin APIs, SQL Profiling & Code Formatting
 - **Admin User Management APIs**: Expose `GET /api/admin/users` (paginated list of all accounts) and `PUT /api/admin/users/{id}/role` (allows role changes). Ensure `@PreAuthorize` restricts this strictly to users with Admin permissions.

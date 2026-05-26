@@ -38,7 +38,7 @@ File: `com/goctrithuc/admin/AdminUserController.java`
 ```java
 @RestController
 @RequestMapping("/api/admin/users")
-@PreAuthorize("hasRole('ADMIN')")
+@PreAuthorize("@permissionService.hasPermission(principal.id, 1)")
 public class AdminUserController {
 
   @GetMapping
@@ -70,9 +70,9 @@ Renders infinitely nested discussion sheets recursively. If comments go deeper t
 ```tsx
 function CommentItem({ comment, depth, currentUserId, onReply, onDelete }: {
   comment: CommentDto; depth: number;
-  currentUserId: number | undefined;
-  onReply: (content: string, parentId: number) => Promise<void>;
-  onDelete: (id: number) => Promise<void>;
+  currentUserId: string | undefined;
+  onReply: (content: string, parentId: string) => Promise<void>;
+  onDelete: (id: string) => Promise<void>;
 }) {
   const [showReply, setShowReply] = useState(false);
   

@@ -14,7 +14,9 @@ File: `com/goctrithuc/courses/CourseEntity.java`
 @Entity
 @Table(name = "courses")
 public class CourseEntity {
-  @Id private Long id;
+  @Id
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
+  private Long id;
   @Column(nullable = false) private String title;
   private String description;
   @Column(name = "thumbnail_url") private String thumbnailUrl;
@@ -84,7 +86,7 @@ public class CourseController {
   }
 
   @PostMapping
-  @PreAuthorize("@permissionService.hasPermission(#auth.principal.id, T(com.goctrithuc.shared.Permission).CREATE_COURSE)")
+  @PreAuthorize("@permissionService.hasPermission(#auth.principal.id, T(com.goctrithuc.shared.Permission).MANAGE_OWN_COURSES)")
   public ResponseEntity<CourseResponse> createCourse(
       @Valid @RequestBody CreateCourseRequest req,
       Authentication auth) {
@@ -156,7 +158,7 @@ public class CourseService {
     if (c.getVisibility() == CourseVisibility.Private) {
       Long userId = getCurrentUserId(auth);
       boolean isAuthorOrAdmin = c.getAuthorId().equals(userId)
-          || permissionService.hasPermission(userId, Permission.EDIT_ANY_COURSE);
+          || permissionService.hasPermission(userId, Permission.ADMIN);
       if (!isAuthorOrAdmin) throw new ResponseStatusException(HttpStatus.FORBIDDEN);
     }
     return c;
@@ -165,7 +167,7 @@ public class CourseService {
   @Transactional
   public CourseEntity create(Long authorId, CreateCourseRequest req) {
     CourseEntity c = new CourseEntity();
-    c.setId(idGenerator.nextId());
+    // ID is assigned by DB via DEFAULT generate_snowflake_id() — do not set manually
     c.setTitle(req.title());
     c.setDescription(req.description());
     c.setThumbnailUrl(req.thumbnailUrl());
@@ -197,23 +199,13 @@ Add `@EntityGraph(attributePaths = {"author"})` to `CourseRepository.findById` o
 Optional<CourseEntity> findById(Long id);
 ```
 
-### Task 2 — IdGenerator (Snowflake-like)
-File: `com/goctrithuc/shared/IdGenerator.java`
+### Task 2 — PM: Publish API contract for Day 5 (Enrollment)
 
-For now, use a simple time-based ID (or a DB sequence). Simple version:
-```java
-@Component
-public class IdGenerator {
-  private static final AtomicLong counter = new AtomicLong(0);
-
-  public long nextId() {
-    // milliseconds since epoch shifted + counter for uniqueness
-    return (Instant.now().toEpochMilli() << 12) | (counter.incrementAndGet() & 0xFFF);
-  }
-}
-```
-
-### Task 3 — PM: Publish API contract for Day 5 (Enrollment)
+> **Note on ID generation**: Do NOT use a Java-side `IdGenerator`. All entity IDs are assigned
+> by PostgreSQL via `DEFAULT generate_snowflake_id()`. In JPA, either use
+> `@GeneratedValue(strategy = GenerationType.IDENTITY)` on Snowflake-typed `@Id` fields,
+> or omit the setter and let JPA read back the DB-assigned value post-INSERT.
+> This is consistent with the resolved Q1 decision and existing Flyway migrations.
 
 Post as GitHub Issue comment:
 ```
@@ -263,7 +255,7 @@ export function CourseListPage() {
     return () => clearTimeout(t);
   }, [fetchCourses]);
 
-  const canCreateCourse = usePermission(PERMISSION.CREATE_COURSE);
+  const canCreateCourse = usePermission(PERMISSION.MANAGE_OWN_COURSES);
 
   return (
     <PageShell>

@@ -30,10 +30,12 @@ public class UserController {
       @PathVariable Long id,
       @Valid @RequestBody UpdateUserRequest req,
       Authentication auth) {
-    // Only the user themselves can update their own profile
     Long currentUserId = getCurrentUserId(auth);
-    if (!currentUserId.equals(id)) {
-      return ResponseEntity.status(403).build();
+    boolean isAdmin = permissionService.hasPermission(currentUserId, Permission.ADMIN);
+    // Return 404 (not 403) when ID doesn't match — prevents user ID enumeration.
+    // Admins may update any user's profile regardless of ID.
+    if (!currentUserId.equals(id) && !isAdmin) {
+      return ResponseEntity.notFound().build();
     }
     UserEntity updated = userService.updateProfile(id, req);
     return ResponseEntity.ok(UserResponse.from(updated));
@@ -152,7 +154,7 @@ const handleFile = async (file: File) => {
   try {
     const form = new FormData();
     form.append('file', file);
-    const { data } = await api.post<{ id: number; providerValue: string }>('/api/files/upload', form, {
+    const { data } = await api.post<{ id: string; providerValue: string }>('/api/files/upload', form, {
       headers: { 'Content-Type': 'multipart/form-data' }
     });
     

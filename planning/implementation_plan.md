@@ -21,50 +21,9 @@
 | Q8 | Comment tables | **Keep separate** — `lesson_comments` and `announcement_comments` both supporting infinite nesting with Reddit-style sub-thread page redirects if depth > 5 |
 | Q9 | State Management | **React Context** for Auth (`useAuth`), local component state or URL query params for all other features. Zero boilerplate, zero merge conflicts. |
 | Q10| Timed Quiz Sessions | **Server-calculated remaining time** returned from API based on `started_at` and `time_limit`. Cheat-proof and crash-proof. |
-| Q11| Question Deletion | **Hard cascade delete** on relation tables. Past scores dynamically recalculate based on remaining questions. |
-| Q12| HTML Sanitization | **Backend Jsoup Sanitizer** with a relaxed Safelist before saving blog content from BlockNote editor. |
+| Q11| Question & Lesson Deletion | **Hard-delete** with dynamic score recalculation. Enforces cascade delete on relation tables `test_question` and `test_session_answers`. Past scores dynamically recalculate on-the-fly (deleted questions are excluded from the points pool). |
+| Q12| HTML Sanitization | **Backend Jsoup Sanitizer** with a custom BlockNote-extended Safelist to preserve editor CSS styling classes and attributes while removing XSS threats. |
 | Q13| Integration & Testing | **Vite Proxy** for local dev, static files placement in backend static folder for prod. Require **1 integration test** (happy path) and **1 security test** per endpoint. |
-
----
-
-## Schema Corrections (Flyway Migration Required)
-
-The following must be established in the first migration for remaining tables:
-
-```sql
--- Create course_access_requests table
-CREATE TABLE course_access_requests (
-    user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    course_id BIGINT NOT NULL, -- references courses(id) once created
-    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    PRIMARY KEY (user_id, course_id)
-);
-
--- Fix courses table (define description, thumbnail_url, and settings as TEXT correctly from start)
-CREATE TABLE courses (
-    id BIGINT PRIMARY KEY DEFAULT generate_snowflake_id(),
-    title TEXT NOT NULL,
-    description TEXT,
-    thumbnail_url TEXT,
-    is_published BOOLEAN NOT NULL DEFAULT FALSE,
-    visibility TEXT NOT NULL, -- 'Public' | 'Restricted' | 'Private'
-    author_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    settings TEXT,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-);
-
--- Fix lessons table primary key (single PK id, composite PK is a typo)
-CREATE TABLE lessons (
-    id BIGINT PRIMARY KEY DEFAULT generate_snowflake_id(),
-    title TEXT NOT NULL,
-    lesson_type TEXT NOT NULL, -- 'blog' | 'video' | 'test'
-    "order" INT NOT NULL,
-    module_id BIGINT NOT NULL, -- references modules(id) ON DELETE CASCADE
-    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-);
-```
 
 ---
 
@@ -139,7 +98,7 @@ Default roles seeded: `admin` (0x7FFFFFFFFFFFFFFF), `teacher` (0x3E), and `stude
 | **Day 1** | **[COMPLETED]** Base directories, security configs, snowflake schema migrations, and role configurations. | **[COMPLETED]** Axios, global layouts, routing skeleton, auth context, and page shells. |
 | **Day 2** | **[COMPLETED]** Google/GitHub OAuth integrations, `/api/users/me` profile queries, logout actions. | **[COMPLETED]** LoginPage redirect handles, useAuth hooks, GuestRoute wrappers, and header avatar dropdowns. |
 | **Day 3** | Implement local disk multipart upload endpoints: `POST /api/files/upload` and file serving API `GET /api/files/serve/{id}`. Expose `PATCH /api/users/{id}` (profile updates). | Build User Profile page with direct local disk asset upload components (`<AvatarUpload>`). Build dynamic `<RoleBadge>` components. |
-| **Day 4** | Implement course endpoints `GET /api/courses` (paginated, visibility-filtered) and `POST /api/courses` (restricted to CREATE_COURSE). | Build Course Listing page with course cards, search bar, and visibility filters. Build `<CreateCourseModal>` modal. |
+| **Day 4** | Implement course endpoints `GET /api/courses` (paginated, visibility-filtered; guests see Public + Restricted) and `POST /api/courses` (restricted to `MANAGE_OWN_COURSES`). | Build Course Listing page with course cards, search bar, and visibility filters. Build `<CreateCourseModal>` modal. |
 | **Day 5** | Implement `PUT/PATCH/DELETE /api/courses/{id}`. Implement enrollment endpoints `POST /api/courses/{id}/enroll` and access requests `POST /api/courses/{id}/access-requests`. Expose access check API. | Build Course Detail page with contextual enroll actions ("Enroll", "Request Access", "Pending"). Build course sidebar outline navigation accordions. |
 
 ### Week 2 — Content, Tests & Polish

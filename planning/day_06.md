@@ -20,12 +20,12 @@ public ResponseEntity<ModuleResponse> createModule(
   CourseEntity course = courseRepo.findById(courseId)
       .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
   if (!course.getAuthorId().equals(userId) &&
-      !permissionService.hasPermission(userId, Permission.EDIT_ANY_COURSE))
+      !permissionService.hasPermission(userId, Permission.ADMIN))
     return ResponseEntity.status(403).build();
 
   int nextOrder = moduleRepo.countByCourseId(courseId);
   ModuleEntity m = new ModuleEntity();
-  m.setId(idGenerator.nextId());
+  // ID is assigned by DB via DEFAULT generate_snowflake_id() — do not set manually
   m.setCourseId(courseId);
   m.setTitle(req.title());
   m.setOrder(nextOrder);
@@ -58,8 +58,8 @@ public record CreateLessonRequest(
 
 On create, also create the sub-entity:
 - `lessonType == video` → insert empty row in `lesson_videos`
-- `lessonType == blog`  → insert empty row in `lesson_blogs` (`content = ""`)
-- `lessonType == test`  → insert row in `lesson_tests` (requires `statement`, `timeLimit`)
+- `lessonType == blog`  → insert row in `lesson_blogs` with required `content` (even if it's the BlockNote empty-document HTML — `content NOT NULL`)
+- `lessonType == test`  → insert row in `lesson_tests` with required `statement` and `timeLimit` (`NOT NULL` columns — no empty row allowed)
 
 `PUT /api/lessons/{id}` — update title only (content is updated separately by Day 7)
 `DELETE /api/lessons/{id}` — delete lesson + sub-entity
