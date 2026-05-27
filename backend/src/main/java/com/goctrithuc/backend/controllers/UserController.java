@@ -5,7 +5,6 @@ import com.goctrithuc.backend.dtos.PublicUserResponse;
 import com.goctrithuc.backend.dtos.UpdateUserRequest;
 import com.goctrithuc.backend.entities.User;
 import com.goctrithuc.backend.repositories.UserRepository;
-import com.goctrithuc.backend.repositories.UserRoleRepository;
 import com.goctrithuc.backend.services.UserPersistenceService;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
@@ -20,25 +19,19 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.server.ResponseStatusException;
 
 @RestController
 @RequestMapping("/api/users")
 public class UserController {
   private static final Logger logger = LoggerFactory.getLogger(UserController.class);
   private final UserRepository userRepository;
-  private final UserRoleRepository userRoleRepository;
+  private final UserPersistenceService userPersistenceService;
 
   public UserController(
-      UserRepository userRepository,
-      UserRoleRepository userRoleRepository,
-      UserPersistenceService userPersistenceService) {
+      UserRepository userRepository, UserPersistenceService userPersistenceService) {
     this.userRepository = userRepository;
-    this.userRoleRepository = userRoleRepository;
     this.userPersistenceService = userPersistenceService;
   }
-
-  private final UserPersistenceService userPersistenceService;
 
   @GetMapping("/me")
   public ResponseEntity<CurrentUserResponse> getCurrentUser(
@@ -109,16 +102,7 @@ public class UserController {
     }
 
     String email = emailObj.toString();
-    User currentUser =
-        userRepository
-            .findByEmail(email)
-            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
-
-    if (!currentUser.getId().equals(id)) {
-      return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
-    }
-
-    User updated = userPersistenceService.updateProfile(id, req);
+    User updated = userPersistenceService.updateProfileAuthorized(email, id, req);
     return ResponseEntity.ok(PublicUserResponse.from(updated));
   }
 }

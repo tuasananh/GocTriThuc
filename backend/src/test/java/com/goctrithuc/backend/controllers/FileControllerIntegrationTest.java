@@ -67,8 +67,8 @@ public class FileControllerIntegrationTest extends BaseIntegrationTest {
     String email = "uploader@hust.edu.vn";
     User user = userRepository.save(new User(email, "Uploader", "uploader", null));
 
-    MockMultipartFile mockFile =
-        new MockMultipartFile("file", "avatar.png", "image/png", "dummy-image-bytes".getBytes());
+    byte[] pngBytes = new byte[] {(byte) 0x89, 'P', 'N', 'G', '\r', '\n', 0x1a, '\n', 0, 0, 0, 0};
+    MockMultipartFile mockFile = new MockMultipartFile("file", "avatar.png", "image/png", pngBytes);
 
     mockMvc
         .perform(
@@ -96,8 +96,8 @@ public class FileControllerIntegrationTest extends BaseIntegrationTest {
 
   @Test
   void shouldRejectUploadWhenUserIsUnauthenticated() throws Exception {
-    MockMultipartFile mockFile =
-        new MockMultipartFile("file", "avatar.png", "image/png", "dummy-image-bytes".getBytes());
+    byte[] pngBytes = new byte[] {(byte) 0x89, 'P', 'N', 'G', '\r', '\n', 0x1a, '\n', 0, 0, 0, 0};
+    MockMultipartFile mockFile = new MockMultipartFile("file", "avatar.png", "image/png", pngBytes);
 
     mockMvc
         .perform(MockMvcRequestBuilders.multipart("/api/files/upload").file(mockFile).with(csrf()))
@@ -110,7 +110,8 @@ public class FileControllerIntegrationTest extends BaseIntegrationTest {
     String secureFilename = "1_test_avatar.png";
     Path targetPath = Paths.get(uploadDir).resolve(secureFilename).toAbsolutePath().normalize();
     Files.createDirectories(targetPath.getParent());
-    Files.write(targetPath, "dummy-image-bytes".getBytes());
+    byte[] pngBytes = new byte[] {(byte) 0x89, 'P', 'N', 'G', '\r', '\n', 0x1a, '\n', 0, 0, 0, 0};
+    Files.write(targetPath, pngBytes);
 
     File fileEntity = fileRepository.save(new File(1L, "local", secureFilename));
 
@@ -119,7 +120,7 @@ public class FileControllerIntegrationTest extends BaseIntegrationTest {
         .andExpect(status().isOk())
         .andExpect(header().string("Content-Type", "image/png"))
         .andExpect(header().string("Cache-Control", "public, max-age=31536000"))
-        .andExpect(content().bytes("dummy-image-bytes".getBytes()))
+        .andExpect(content().bytes(pngBytes))
         .andDo(print());
   }
 
@@ -148,6 +149,45 @@ public class FileControllerIntegrationTest extends BaseIntegrationTest {
     mockMvc
         .perform(MockMvcRequestBuilders.get("/api/files/serve/" + fileEntity.getId()))
         .andExpect(status().isBadRequest())
+        .andDo(print());
+  }
+
+  @Test
+  void shouldRejectUploadWhenFileIsSpoofed() throws Exception {
+    String email = "uploader@hust.edu.vn";
+    userRepository.save(new User(email, "Uploader", "uploader", null));
+
+    MockMultipartFile spoofedFile =
+        new MockMultipartFile(
+            "file", "malicious.png", "image/png", "#!/bin/bash\necho 'hack'".getBytes());
+
+    mockMvc
+        .perform(
+            MockMvcRequestBuilders.multipart("/api/files/upload")
+                .file(spoofedFile)
+                .with(oauth2Login().attributes(attrs -> attrs.put("email", email)))
+                .with(csrf()))
+        .andExpect(status().isBadRequest())
+        .andDo(print());
+  }
+
+  @Test
+  void shouldAcceptUploadWhenFileIsAllowedMimeType() throws Exception {
+    String email = "uploader@hust.edu.vn";
+    userRepository.save(new User(email, "Uploader", "uploader", null));
+
+    MockMultipartFile realTextFile =
+        new MockMultipartFile(
+            "file", "notes.txt", "text/plain", "This is some note text".getBytes());
+
+    mockMvc
+        .perform(
+            MockMvcRequestBuilders.multipart("/api/files/upload")
+                .file(realTextFile)
+                .with(oauth2Login().attributes(attrs -> attrs.put("email", email)))
+                .with(csrf()))
+        .andExpect(status().isCreated())
+        .andExpect(jsonPath("$.id").exists())
         .andDo(print());
   }
 }

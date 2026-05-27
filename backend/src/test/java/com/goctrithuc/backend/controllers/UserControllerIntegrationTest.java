@@ -87,6 +87,7 @@ public class UserControllerIntegrationTest extends BaseIntegrationTest {
         .andExpect(jsonPath("$.displayName").value("Public User"))
         .andExpect(jsonPath("$.username").value("publicuser"))
         .andExpect(jsonPath("$.avatarUrl").value("http://example.com/avatar.jpg"))
+        .andExpect(jsonPath("$.email").doesNotExist())
         .andDo(print());
   }
 
@@ -134,7 +135,7 @@ public class UserControllerIntegrationTest extends BaseIntegrationTest {
                 .with(csrf())
                 .contentType(org.springframework.http.MediaType.APPLICATION_JSON)
                 .content(requestBody))
-        .andExpect(status().isForbidden())
+        .andExpect(status().isNotFound())
         .andDo(print());
   }
 
@@ -185,13 +186,16 @@ public class UserControllerIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  void shouldRejectProfileUpdateWhenAdminTriesToUpdateOtherUser() throws Exception {
+  void shouldAllowProfileUpdateWhenUserIsAdminAndUpdatesOtherUser() throws Exception {
     User student =
         userRepository.save(
             new User("student@hust.edu.vn", "Student Name", "studentusername", null));
 
     String adminEmail = "admin@goctrithuc.com";
     User admin = userRepository.save(new User(adminEmail, "Admin User", "adminuser", null));
+    var adminRole = roleRepository.findByName("admin");
+    assert adminRole.isPresent();
+    userRoleRepository.save(new UserRole(admin, adminRole.get()));
 
     UpdateUserRequest request = new UpdateUserRequest("Moderated Name", "moderateduser", null);
     String requestBody =
@@ -205,7 +209,10 @@ public class UserControllerIntegrationTest extends BaseIntegrationTest {
                 .with(csrf())
                 .contentType(org.springframework.http.MediaType.APPLICATION_JSON)
                 .content(requestBody))
-        .andExpect(status().isForbidden())
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.id").value(student.getId()))
+        .andExpect(jsonPath("$.displayName").value("Moderated Name"))
+        .andExpect(jsonPath("$.username").value("moderateduser"))
         .andDo(print());
   }
 

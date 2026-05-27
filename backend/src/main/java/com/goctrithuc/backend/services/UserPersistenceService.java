@@ -84,25 +84,31 @@ public class UserPersistenceService {
   }
 
   @Transactional
-  public User updateProfile(Long id, UpdateUserRequest req) {
-    User user =
+  public User updateProfileAuthorized(
+      String currentUserEmail, Long targetUserId, UpdateUserRequest req) {
+    User currentUser =
         userRepository
-            .findById(id)
+            .findByEmailWithRoles(currentUserEmail)
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
 
-    if (req.username() != null && !req.username().equals(user.getUsername())) {
-      if (userRepository.existsByUsername(req.username())) {
-        throw new ResponseStatusException(HttpStatus.CONFLICT, "Username already taken");
-      }
-      user.setUsername(req.username());
+    User targetUser = userRepository.findById(targetUserId).orElse(null);
+
+    boolean isAdmin =
+        currentUser.getUserRoles() != null
+            && currentUser.getUserRoles().stream()
+                .map(UserRole::getRole)
+                .anyMatch(
+                    role ->
+                        "admin".equalsIgnoreCase(role.getName())
+                            || (role.getPermissions() != null
+                                && (role.getPermissions() & 0x01L) != 0L));
+
+    if (targetUser == null || (!currentUser.getId().equals(targetUserId) && !isAdmin)) {
+      throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found");
     }
-    if (req.displayName() != null) {
-      user.setDisplayName(req.displayName());
-    }
-    if (req.avatarUrl() != null) {
-      user.setAvatarUrl(req.avatarUrl());
-    }
-    return userRepository.save(user);
+
+    applyUpdates(targetUser, req);
+    return userRepository.save(targetUser);
   }
 
   @Transactional
@@ -112,6 +118,11 @@ public class UserPersistenceService {
             .findByEmail(email)
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
 
+    applyUpdates(user, req);
+    return userRepository.save(user);
+  }
+
+  private void applyUpdates(User user, UpdateUserRequest req) {
     if (req.username() != null && !req.username().equals(user.getUsername())) {
       if (userRepository.existsByUsername(req.username())) {
         throw new ResponseStatusException(HttpStatus.CONFLICT, "Username already taken");
@@ -124,6 +135,5 @@ public class UserPersistenceService {
     if (req.avatarUrl() != null) {
       user.setAvatarUrl(req.avatarUrl());
     }
-    return userRepository.save(user);
   }
 }

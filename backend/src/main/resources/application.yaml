@@ -2,6 +2,10 @@ server:
   port: ${APP_PORT:?APP_PORT is required}
 
 spring:
+  servlet:
+    multipart:
+      max-file-size: 50MB
+      max-request-size: 50MB
   config:
     # Tell Spring to import your root .env file
     import: optional:file:../.env[.properties]

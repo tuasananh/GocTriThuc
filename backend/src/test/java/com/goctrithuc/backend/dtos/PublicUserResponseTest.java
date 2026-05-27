@@ -15,7 +15,6 @@ class PublicUserResponseTest {
 
     assertNotNull(response);
     assertEquals(user.getId(), response.id());
-    assertEquals(user.getEmail(), response.email());
     assertEquals(user.getDisplayName(), response.displayName());
     assertEquals(user.getUsername(), response.username());
     assertEquals(user.getAvatarUrl(), response.avatarUrl());

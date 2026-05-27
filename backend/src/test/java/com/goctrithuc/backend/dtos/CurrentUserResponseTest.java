@@ -16,6 +16,7 @@ class CurrentUserResponseTest {
 
     assertNotNull(response);
     assertFalse(response.authenticated());
+    assertNull(response.id());
     assertNull(response.displayName());
     assertNull(response.email());
     assertNull(response.avatarUrl());
@@ -32,6 +33,7 @@ class CurrentUserResponseTest {
 
     assertNotNull(response);
     assertFalse(response.authenticated());
+    assertNull(response.id());
     assertEquals(errorMessage, response.error());
     assertNull(response.displayName());
   }
@@ -52,6 +54,7 @@ class CurrentUserResponseTest {
 
     assertNotNull(response);
     assertTrue(response.authenticated());
+    assertEquals(user.getId(), response.id());
     assertEquals(user.getDisplayName(), response.displayName());
     assertEquals(user.getEmail(), response.email());
     assertEquals(user.getAvatarUrl(), response.avatarUrl());

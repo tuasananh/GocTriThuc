@@ -3,15 +3,20 @@ package com.goctrithuc.backend.services;
 import com.goctrithuc.backend.entities.File;
 import com.goctrithuc.backend.repositories.FileRepository;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.util.List;
 import java.util.UUID;
+import org.apache.tika.Tika;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
@@ -21,6 +26,9 @@ public class FileService {
 
   private final FileRepository fileRepository;
   private final Path uploadLocation;
+  private final Tika tika = new Tika();
+  private final List<String> mimeAllowlist =
+      List.of("image/", "video/", "application/pdf", "text/plain", "application/zip");
 
   public FileService(FileRepository fileRepository, @Value("${app.upload-dir}") String uploadDir) {
     this.fileRepository = fileRepository;
@@ -38,18 +46,65 @@ public class FileService {
       throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "File is empty");
     }
 
+    String detectedMimeType;
+    try (InputStream is = file.getInputStream()) {
+      detectedMimeType = tika.detect(is);
+    } catch (IOException e) {
+      throw new ResponseStatusException(
+          HttpStatus.INTERNAL_SERVER_ERROR, "Failed to read file signature", e);
+    }
+
+    if (detectedMimeType == null) {
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Could not determine file type");
+    }
+
+    boolean isAllowed = false;
+    for (String allowedMime : mimeAllowlist) {
+      if (allowedMime.endsWith("/")) {
+        if (detectedMimeType.startsWith(allowedMime)) {
+          isAllowed = true;
+          break;
+        }
+      } else {
+        if (detectedMimeType.equals(allowedMime)) {
+          isAllowed = true;
+          break;
+        }
+      }
+    }
+
+    if (!isAllowed) {
+      throw new ResponseStatusException(
+          HttpStatus.BAD_REQUEST, "File type not allowed: " + detectedMimeType);
+    }
+
     String originalFilename = StringUtils.cleanPath(file.getOriginalFilename());
     if (originalFilename.contains("..")) {
       throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid file path sequence");
     }
 
     String secureFilename = userId + "_" + UUID.randomUUID() + "_" + originalFilename;
+    Path targetPath = this.uploadLocation.resolve(secureFilename).normalize().toAbsolutePath();
+    if (!targetPath.startsWith(this.uploadLocation)) {
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid file path");
+    }
+
+    if (TransactionSynchronizationManager.isActualTransactionActive()) {
+      TransactionSynchronizationManager.registerSynchronization(
+          new TransactionSynchronization() {
+            @Override
+            public void afterCompletion(int status) {
+              if (status == STATUS_ROLLED_BACK) {
+                try {
+                  Files.deleteIfExists(targetPath);
+                } catch (IOException ignored) {
+                }
+              }
+            }
+          });
+    }
 
     try {
-      Path targetPath = this.uploadLocation.resolve(secureFilename).normalize().toAbsolutePath();
-      if (!targetPath.startsWith(this.uploadLocation)) {
-        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid file path");
-      }
       Files.copy(file.getInputStream(), targetPath, StandardCopyOption.REPLACE_EXISTING);
     } catch (IOException e) {
       throw new ResponseStatusException(
