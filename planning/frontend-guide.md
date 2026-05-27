@@ -107,7 +107,7 @@ navigate(ROUTES.COURSES);
 import { usePermission, PERMISSION } from '@/lib/permissions';
 
 function CourseListPage() {
-  const canCreateCourse = usePermission(PERMISSION.MANAGE_COURSES);
+  const canCreateCourse = usePermission(PERMISSION.MANAGE_OWN_COURSES);
 
   return (
     <PageShell>
