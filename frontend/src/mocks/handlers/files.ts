@@ -4,10 +4,14 @@ export const fileHandlers = [
   // ── POST /api/files/upload ─────────────────────────────────
   http.post('/api/files/upload', async () => {
     await delay(800); // giả lập upload chậm
+    const mockFileId = Date.now();
     return HttpResponse.json(
       {
-        id: Date.now(),
-        providerValue: `uploads/mock-${Date.now()}.jpg`,
+        id: mockFileId,
+        providerValue: `uploads/mock-${mockFileId}.jpg`,
+        mimeType: 'image/jpeg',
+        originalName: `mock-${mockFileId}.jpg`,
+        sizeBytes: 51200, // 50KB
         createdAt: new Date().toISOString(),
       },
       { status: 201 },
