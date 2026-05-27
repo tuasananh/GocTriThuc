@@ -10,6 +10,7 @@ import { ThemeProvider } from 'next-themes';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { Toaster } from '@/components/ui/sonner';
 import { lazy, Suspense } from 'react';
+import { ROUTES } from '@/lib/routes';
 
 const EditorTestPage = lazy(() =>
   import('@/pages/editor-test').then((m) => ({ default: m.EditorTestPage })),
@@ -24,25 +25,25 @@ function App() {
             <Routes>
               {/* ── Public (với MainLayout) ────────────────── */}
               <Route element={<MainLayout />}>
-                <Route path="/" element={<LandingPage />} />
+                <Route path={ROUTES.HOME} element={<LandingPage />} />
                 {/* Thêm các trang public khác ở đây:
-                  <Route path="/courses" element={<CourseListPage />} />
-                  <Route path="/courses/:id" element={<CourseDetailPage />} />
+                  <Route path={ROUTES.COURSES} element={<CourseListPage />} />
+                  <Route path={ROUTES.COURSE_DETAIL(':id')} element={<CourseDetailPage />} />
               */}
               </Route>
 
               {/* ── Guest Only (redirect nếu đã đăng nhập) ── */}
               <Route element={<GuestRoute />}>
-                <Route path="/login" element={<LoginPage />} />
+                <Route path={ROUTES.LOGIN} element={<LoginPage />} />
               </Route>
 
               {/* ── Protected (cần đăng nhập) ─────────────── */}
               <Route element={<ProtectedRoute />}>
                 <Route element={<MainLayout />}>
-                  <Route path="/dashboard" element={<Dashboard />} />
+                  <Route path={ROUTES.DASHBOARD} element={<Dashboard />} />
                   {/* Thêm các trang cần auth ở đây:
-                    <Route path="/profile" element={<ProfilePage />} />
-                    <Route path="/courses/:id/classroom" element={<ClassroomPage />} />
+                    <Route path={ROUTES.PROFILE} element={<ProfilePage />} />
+                    <Route path={ROUTES.CLASSROOM(':id')} element={<ClassroomPage />} />
                 */}
                 </Route>
               </Route>
@@ -51,9 +52,9 @@ function App() {
               <Route element={<ProtectedRoute requiredRole="teacher" />}>
                 <Route element={<MainLayout />}>
                   {/* Thêm các trang instructor ở đây:
-                    <Route path="/instructor" element={<InstructorDashboard />} />
-                    <Route path="/instructor/courses/:id" element={<CourseEditorPage />} />
-                    <Route path="/instructor/questions" element={<QuestionBankPage />} />
+                    <Route path={ROUTES.INSTRUCTOR_DASHBOARD} element={<InstructorDashboard />} />
+                    <Route path={ROUTES.INSTRUCTOR_COURSE_EDITOR(':id')} element={<CourseEditorPage />} />
+                    <Route path={ROUTES.QUESTION_BANK} element={<QuestionBankPage />} />
                 */}
                 </Route>
               </Route>
@@ -62,8 +63,8 @@ function App() {
               <Route element={<ProtectedRoute requiredRole="admin" />}>
                 <Route element={<MainLayout />}>
                   {/* Thêm các trang admin ở đây:
-                    <Route path="/admin" element={<AdminDashboard />} />
-                    <Route path="/admin/users" element={<AdminUsersPage />} />
+                    <Route path={ROUTES.ADMIN_DASHBOARD} element={<AdminDashboard />} />
+                    <Route path={ROUTES.ADMIN_USERS} element={<AdminUsersPage />} />
                 */}
                 </Route>
               </Route>
