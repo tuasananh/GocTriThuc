@@ -15,8 +15,7 @@ export const ROUTES = {
 
   // ── Classroom (Enrolled student) ───────────────
   CLASSROOM: (courseId: string) => `/courses/${courseId}/classroom`,
-  LESSON: (courseId: string, lessonId: string) =>
-    `/courses/${courseId}/lessons/${lessonId}`,
+  LESSON: (courseId: string, lessonId: string) => `/courses/${courseId}/lessons/${lessonId}`,
   TEST_TAKE: (testId: string) => `/tests/${testId}/take`,
   TEST_RESULT: (sessionId: string) => `/tests/sessions/${sessionId}/result`,
 
