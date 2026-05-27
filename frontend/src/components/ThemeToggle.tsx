@@ -3,13 +3,13 @@ import { Button } from '@/components/ui/button';
 import { useTheme } from 'next-themes';
 
 export function ThemeToggle() {
-  const { theme, setTheme } = useTheme();
+  const { resolvedTheme, setTheme } = useTheme();
 
   return (
     <Button
       variant="ghost"
       size="icon"
-      onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}
+      onClick={() => setTheme(resolvedTheme === 'light' ? 'dark' : 'light')}
       className="rounded-full w-9 h-9"
       title="Đổi giao diện"
     >
