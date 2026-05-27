@@ -61,7 +61,7 @@ export const questionHandlers = [
     const body = (await request.json()) as Record<string, unknown>;
     return HttpResponse.json(
       {
-        id: Date.now(),
+        id: String(Date.now()),
         ...body,
         questionType: 'multiple_choice',
         createdAt: new Date().toISOString(),
@@ -94,9 +94,9 @@ export const questionHandlers = [
     await delay(300);
     return HttpResponse.json(
       {
-        id: Date.now(),
+        id: String(Date.now()),
         userId: '1',
-        testId: Number(params.testId),
+        testId: params.testId as string,
         startedAt: new Date().toISOString(),
         submittedAt: null,
         isDone: false,
@@ -117,7 +117,7 @@ export const questionHandlers = [
   http.post('/api/sessions/:sessionId/submit', async ({ params }) => {
     await delay(500);
     return HttpResponse.json({
-      sessionId: Number(params.sessionId),
+      sessionId: params.sessionId as string,
       totalScore: 8,
       maxScore: 10,
       percent: 80,
