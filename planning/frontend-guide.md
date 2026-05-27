@@ -317,6 +317,7 @@ pnpm dlx shadcn@latest add <tên-component>
    * Chữ: `text-foreground`, `text-muted-foreground`, `text-primary`.
    * Nền: `bg-background`, `bg-muted`, `bg-secondary`.
    * Lỗi/Cảnh báo: `bg-destructive`, `text-destructive`.
+   * *(Ngoại lệ: Được phép dùng màu cứng cho các Badge hiển thị Role/Status (ví dụ: RoleBadge) hoặc các cục màu blur trang trí (Blobs) nếu hệ thống màu semantic không đủ biểu đạt).*
 2. **Luôn bọc trang bằng Layout chuẩn:** Sử dụng `<PageShell>` và `<SectionHeader>` cho mọi trang mới để đồng bộ căn lề và khoảng cách (padding/margin).
 3. **Đồng bộ 4 trạng thái:** Luôn dùng `<SkeletonCard>`, `<EmptyState>`, `<ErrorState>` thay vì tự code bằng HTML thường.
 4. **Hiệu ứng sống động (Dynamic Design):** Thêm micro-animations cho thẻ (card) và nút bấm: `transition-all duration-300 hover:-translate-y-1 hover:shadow-xl`.
