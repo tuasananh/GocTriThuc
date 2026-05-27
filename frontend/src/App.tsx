@@ -61,7 +61,9 @@ function App() {
               </Route>
 
               {/* ── Instructor (cần quyền quản lý khóa học) ────────── */}
-              <Route element={<ProtectedRoute requiredPermission={PERMISSION.MANAGE_OWN_COURSES} />}>
+              <Route
+                element={<ProtectedRoute requiredPermission={PERMISSION.MANAGE_OWN_COURSES} />}
+              >
                 <Route element={<MainLayout />}>
                   {/* Thêm các trang instructor ở đây:
                     <Route path={ROUTES.INSTRUCTOR_DASHBOARD} element={<InstructorDashboard />} />
