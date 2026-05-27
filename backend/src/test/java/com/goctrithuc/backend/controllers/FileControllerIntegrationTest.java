@@ -107,13 +107,15 @@ public class FileControllerIntegrationTest extends BaseIntegrationTest {
 
   @Test
   void shouldServeFileWhenFileExistsPublicly() throws Exception {
-    String secureFilename = "1_test_avatar.png";
+    User user =
+        userRepository.save(new User("serve@hust.edu.vn", "Server User", "serveuser", null));
+    String secureFilename = user.getId() + "_test_avatar.png";
     Path targetPath = Paths.get(uploadDir).resolve(secureFilename).toAbsolutePath().normalize();
     Files.createDirectories(targetPath.getParent());
     byte[] pngBytes = new byte[] {(byte) 0x89, 'P', 'N', 'G', '\r', '\n', 0x1a, '\n', 0, 0, 0, 0};
     Files.write(targetPath, pngBytes);
 
-    File fileEntity = fileRepository.save(new File(1L, "local", secureFilename));
+    File fileEntity = fileRepository.save(new File(user.getId(), "local", secureFilename));
 
     mockMvc
         .perform(MockMvcRequestBuilders.get("/api/files/serve/" + fileEntity.getId()))
@@ -134,7 +136,9 @@ public class FileControllerIntegrationTest extends BaseIntegrationTest {
 
   @Test
   void shouldReturn404WhenFileExistsInDbButMissingOnDisk() throws Exception {
-    File fileEntity = fileRepository.save(new File(1L, "local", "nonexistent_file.png"));
+    User user =
+        userRepository.save(new User("serve@hust.edu.vn", "Server User", "serveuser", null));
+    File fileEntity = fileRepository.save(new File(user.getId(), "local", "nonexistent_file.png"));
 
     mockMvc
         .perform(MockMvcRequestBuilders.get("/api/files/serve/" + fileEntity.getId()))
@@ -144,7 +148,10 @@ public class FileControllerIntegrationTest extends BaseIntegrationTest {
 
   @Test
   void shouldRejectPathTraversal() throws Exception {
-    File fileEntity = fileRepository.save(new File(1L, "local", "../traversal_attempt.png"));
+    User user =
+        userRepository.save(new User("serve@hust.edu.vn", "Server User", "serveuser", null));
+    File fileEntity =
+        fileRepository.save(new File(user.getId(), "local", "../traversal_attempt.png"));
 
     mockMvc
         .perform(MockMvcRequestBuilders.get("/api/files/serve/" + fileEntity.getId()))
