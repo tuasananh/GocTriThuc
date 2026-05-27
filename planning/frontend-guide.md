@@ -77,7 +77,7 @@ import axios from 'axios';
 const res = await axios.get('/api/courses');
 ```
 
-**Lý do:** `api` đã có sẵn interceptor xử lý lỗi 401 (redirect login), 403 (toast warning), 500 (toast error).
+**Lý do:** `api` đã có sẵn interceptor xử lý lỗi 401 (redirect login), 403 (toast error), 500 (toast error).
 
 ### 2. IMPORT TYPES — Luôn import từ `@/types`
 
