@@ -1,4 +1,4 @@
-import { CurrentUser } from '@/entities/CurrentUser';
+import { CurrentUser } from '@/types';
 import { createContext, useContext } from 'react';
 
 export type AuthContextType =

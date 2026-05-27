@@ -1,6 +1,7 @@
 import { Navigate, Outlet } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
+import { ROUTES } from '@/lib/routes';
 
 export function GuestRoute() {
   const auth = useAuth();
@@ -14,7 +15,7 @@ export function GuestRoute() {
   }
 
   if (auth.isAuthenticated) {
-    return <Navigate to="/dashboard" replace />;
+    return <Navigate to={ROUTES.DASHBOARD} replace />;
   }
 
   return <Outlet />;

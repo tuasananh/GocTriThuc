@@ -1,7 +1,7 @@
 import { Outlet, Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
-import type { CurrentUser } from '@/entities/CurrentUser';
+import type { CurrentUser } from '@/types';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -13,6 +13,8 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { GocTriThuc } from '@/components/GocTriThuc';
+import { ThemeToggle } from '@/components/ThemeToggle';
+import { ROUTES } from '@/lib/routes';
 
 const UserButtonDropdown = ({
   user,
@@ -27,9 +29,12 @@ const UserButtonDropdown = ({
         <Button variant="ghost" className="px-2 py-5">
           {user.displayName || user.username}
           <Avatar>
-            <AvatarImage src={undefined} alt={user.displayName || user.username} />
+            <AvatarImage
+              src={user.avatarUrl || undefined}
+              alt={user.displayName || user.username}
+            />
             <AvatarFallback>
-              {user.displayName?.charAt(0).toUpperCase() || user.username.charAt(0).toUpperCase()}
+              {(user.displayName || user.username || 'U').charAt(0).toUpperCase()}
             </AvatarFallback>
           </Avatar>
         </Button>
@@ -39,7 +44,7 @@ const UserButtonDropdown = ({
         <DropdownMenuGroup>
           <DropdownMenuLabel>@{user.username}</DropdownMenuLabel>
           <DropdownMenuItem>
-            <Link to="/dashboard">Trang cá nhân</Link>
+            <Link to={ROUTES.DASHBOARD}>Trang cá nhân</Link>
           </DropdownMenuItem>
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
@@ -75,11 +80,12 @@ export function MainLayout() {
             </Link>
           </nav>
           <div className="flex items-center gap-4">
+            <ThemeToggle />
             {auth && auth.isAuthenticated ? (
               <UserButtonDropdown user={auth.user} logout={auth.logout} />
             ) : (
               <Button asChild className="rounded-full px-6">
-                <Link to="/login">Bắt đầu ngay</Link>
+                <Link to={ROUTES.LOGIN}>Bắt đầu ngay</Link>
               </Button>
             )}
           </div>
