@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import axios from 'axios';
+import { api } from '@/lib/api';
+import type { CourseDto, PageResponse } from '@/types';
 import {
   Card,
   CardContent,
@@ -13,32 +14,16 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Clock, Star, PlayCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
-interface Course {
-  id: number;
-  title: string;
-  description: string;
-  thumbnailUrl: string | null;
-  isPublished: boolean;
-  visibility: 'Public' | 'Restricted' | 'Private';
-}
-
 export function CourseCatalog() {
-  const [courses, setCourses] = useState<Course[]>([]);
+  const [courses, setCourses] = useState<CourseDto[]>([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
   useEffect(() => {
     async function fetchCourses() {
       try {
-        const response = await axios.get('/api/courses');
-        const data = response.data;
-        if (Array.isArray(data)) {
-          setCourses(data);
-        } else if (data && Array.isArray(data.content)) {
-          setCourses(data.content);
-        } else {
-          setCourses([]);
-        }
+        const response = await api.get<PageResponse<CourseDto>>('/api/courses');
+        setCourses(response.data.content);
       } catch (err) {
         console.error('Failed to fetch courses:', err);
       } finally {
@@ -51,7 +36,7 @@ export function CourseCatalog() {
   const handleCourseClick = async (courseId: number) => {
     try {
       // Check authentication status first
-      await axios.get('/api/users/me');
+      await api.get('/api/users/me');
       // If user is authenticated, navigate to course player (which doesn't exist yet but let's mock the UI logic)
       navigate(`/courses/${courseId}`);
     } catch {

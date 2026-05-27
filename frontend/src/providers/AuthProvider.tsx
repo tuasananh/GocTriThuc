@@ -2,7 +2,7 @@ import type { AuthContextType } from '@/contexts/AuthContext';
 import AuthContext from '@/contexts/AuthContext';
 import type { CurrentUserResponse } from '@/dtos/CurrentUserResponse';
 import { CurrentUser } from '@/entities/CurrentUser';
-import axios from 'axios';
+import { api } from '@/lib/api';
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
@@ -44,7 +44,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             isAuthenticated: true,
             user,
             logout: async () => {
-              await axios.post('/api/logout');
+              await api.post('/api/logout');
               setAuthValue(unauthenticatedAuthValue);
               navigate('/');
             },
