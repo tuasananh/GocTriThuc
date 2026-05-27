@@ -21,13 +21,16 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   useEffect(() => {
     async function fetchCurrentUser() {
       try {
-        const response = await fetch('/api/users/me');
-        if (!response.ok) {
+        const response = await api.get<CurrentUserResponse>('/api/users/me', {
+          validateStatus: (status) => status >= 200 && status < 500,
+        });
+
+        if (response.status >= 400) {
           setAuthValue(unauthenticatedAuthValue);
           return;
         }
 
-        const data: CurrentUserResponse = await response.json();
+        const data = response.data;
 
         if (data.authenticated === true) {
           const user = new CurrentUser(
