@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { api } from '@/lib/api';
 import type { CourseDto, PageResponse } from '@/types';
+import { ROUTES } from '@/lib/routes';
 import {
   Card,
   CardContent,
@@ -33,16 +34,8 @@ export function CourseCatalog() {
     fetchCourses();
   }, []);
 
-  const handleCourseClick = async (courseId: number) => {
-    try {
-      // Check authentication status first
-      await api.get('/api/users/me');
-      // If user is authenticated, navigate to course player (which doesn't exist yet but let's mock the UI logic)
-      navigate(`/courses/${courseId}`);
-    } catch {
-      // If 401 Unauthorized or any other error, push them to login
-      navigate(`/login?redirect=/courses/${courseId}`);
-    }
+  const handleCourseClick = (courseId: number) => {
+    navigate(ROUTES.COURSE_DETAIL(courseId));
   };
 
   if (loading) {
