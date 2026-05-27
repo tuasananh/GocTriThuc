@@ -5,27 +5,27 @@ import { useAuth } from '@/contexts/AuthContext';
  *
  * Dùng:
  *   import { PERMISSION, usePermission } from '@/lib/permissions';
- *   const canManageCourse = usePermission(PERMISSION.MANAGE_COURSES);
+ *   const canManageCourse = usePermission(PERMISSION.MANAGE_OWN_COURSES);
  *   {canManageCourse && <Button>Tạo khóa học</Button>}
  */
 export const PERMISSION = {
   /** Bit 0: Quyền admin */
   ADMIN: 1n << 0n,
   /** Bit 1: Quản lý khóa học của mình */
-  MANAGE_COURSES: 1n << 1n,
+  MANAGE_OWN_COURSES: 1n << 1n,
   /** Bit 2: Đăng ký khóa học */
-  ENROLL_COURSES: 1n << 2n,
+  ENROLL_COURSE: 1n << 2n,
   /** Bit 3: Quản lý câu hỏi */
-  MANAGE_QUESTIONS: 1n << 3n,
+  MANAGE_OWN_QUESTIONS: 1n << 3n,
   /** Bit 4: Quản lý bài kiểm tra */
-  MANAGE_TESTS: 1n << 4n,
+  MANAGE_OWN_TESTS: 1n << 4n,
   /** Bit 5: Truy cập bài kiểm tra */
   ACCESS_TESTS: 1n << 5n,
 } as const;
 
 // Aliases dễ đọc (khớp với backend Permission constants)
-export const CREATE_COURSE = PERMISSION.MANAGE_COURSES;
-export const CREATE_QUESTION = PERMISSION.MANAGE_QUESTIONS;
+export const CREATE_COURSE = PERMISSION.MANAGE_OWN_COURSES;
+export const CREATE_QUESTION = PERMISSION.MANAGE_OWN_QUESTIONS;
 export const EDIT_ANY_COURSE = PERMISSION.ADMIN;
 
 /**
@@ -35,7 +35,7 @@ export const EDIT_ANY_COURSE = PERMISSION.ADMIN;
  * @returns true nếu user có quyền đó
  *
  * Ví dụ:
- *   const canManageCourse = usePermission(PERMISSION.MANAGE_COURSES);
+ *   const canManageCourse = usePermission(PERMISSION.MANAGE_OWN_COURSES);
  */
 export function usePermission(bit: bigint): boolean {
   const auth = useAuth();
@@ -54,5 +54,5 @@ export function useIsAdmin(): boolean {
  * Hook kiểm tra user có phải instructor (teacher) không.
  */
 export function useIsInstructor(): boolean {
-  return usePermission(PERMISSION.MANAGE_COURSES);
+  return usePermission(PERMISSION.MANAGE_OWN_COURSES);
 }

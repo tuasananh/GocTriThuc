@@ -12,7 +12,7 @@ import { ROUTES } from '@/lib/routes';
  *   </Route>
  *
  * Có thể yêu cầu permission cụ thể (bitmask):
- *   <Route element={<ProtectedRoute requiredPermission={PERMISSION.MANAGE_COURSES} />}>
+ *   <Route element={<ProtectedRoute requiredPermission={PERMISSION.MANAGE_OWN_COURSES} />}>
  *     <Route path="/instructor/*" element={<InstructorLayout />} />
  *   </Route>
  */
