@@ -4,7 +4,7 @@
 
 /** Câu hỏi nhìn từ phía Instructor (bao gồm đáp án đúng) */
 export interface QuestionDto {
-  id: number;
+  id: string;
   statement: string;
   questionType: 'multiple_choice';
   choices: string[];
@@ -16,7 +16,7 @@ export interface QuestionDto {
 
 /** Câu hỏi nhìn từ phía Student (KHÔNG có đáp án đúng) */
 export interface QuestionStudentDto {
-  id: number;
+  id: string;
   statement: string;
   questionType: 'multiple_choice';
   choices: string[];
@@ -42,9 +42,9 @@ export interface TestQuestionDto extends QuestionDto {
 // ============================================================
 
 export interface TestSessionDto {
-  id: number;
-  userId: number;
-  testId: number;
+  id: string;
+  userId: string;
+  testId: string;
   startedAt: string;
   submittedAt: string | null; // null khi đang làm bài
   isDone: boolean;
@@ -53,18 +53,18 @@ export interface TestSessionDto {
 }
 
 export interface TestSessionAnswerDto {
-  questionId: number;
+  questionId: string;
   questionAnswer: number[] | null; // mảng index lựa chọn, ví dụ [0, 2]
 }
 
 export interface TestResultDto {
-  sessionId: number;
+  sessionId: string;
   totalScore: number;
   maxScore: number;
   percent: number;
   duration: number; // seconds
   answers: {
-    questionId: number;
+    questionId: string;
     statement: string;
     choices: string[];
     correctChoices: number[];

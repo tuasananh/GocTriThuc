@@ -8,7 +8,7 @@ export type CourseVisibility = 'Public' | 'Restricted' | 'Private';
 
 /** Thông tin khóa học hiển thị trong danh sách & chi tiết */
 export interface CourseDto {
-  id: number;
+  id: string;
   title: string;
   description: string;
   thumbnailUrl: string | null;
@@ -51,8 +51,8 @@ export interface AccessStatusResponse {
 export type LessonType = 'blog' | 'video' | 'test';
 
 export interface ModuleDto {
-  id: number;
-  courseId: number;
+  id: string;
+  courseId: string;
   title: string;
   order: number;
   lessons: LessonDto[];
@@ -61,11 +61,11 @@ export interface ModuleDto {
 }
 
 export interface LessonDto {
-  id: number;
+  id: string;
   title: string;
   lessonType: LessonType;
   order: number;
-  moduleId: number;
+  moduleId: string;
   isCompleted?: boolean; // có khi lấy theo context enrolled student
   createdAt: string;
   updatedAt: string;
@@ -90,7 +90,7 @@ export interface LessonDetailDto extends LessonDto {
     content: string; // HTML sanitized
   };
   test?: {
-    testId: number;
+    testId: string;
     statement: string;
     timeLimit: number; // seconds
     settings?: Record<string, unknown>; // extensible config (passing_score, max_retakes, etc.)

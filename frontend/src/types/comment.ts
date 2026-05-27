@@ -5,10 +5,10 @@ import type { UserDto } from './user';
 // ============================================================
 
 export interface CommentDto {
-  id: number;
+  id: string;
   content: string;
   author: UserDto;
-  parentId: number | null;
+  parentId: string | null;
   replies: CommentDto[]; // nested (max depth 5 từ server)
   editedAt: string | null; // null nếu chưa chỉnh sửa
   createdAt: string;
@@ -17,12 +17,12 @@ export interface CommentDto {
 
 export interface CreateCommentRequest {
   content: string;
-  parentId?: number | null;
+  parentId?: string | null;
 }
 
 export interface AnnouncementDto {
-  id: number;
-  courseId: number;
+  id: string;
+  courseId: string;
   title: string;
   content: string;
   author: UserDto;

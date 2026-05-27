@@ -5,65 +5,65 @@ import type { ModuleDto, LessonDetailDto } from '@/types';
 
 const mockModules: ModuleDto[] = [
   {
-    id: 101,
-    courseId: 1,
+    id: '101',
+    courseId: '1',
     title: 'Giới thiệu React',
     order: 0,
     createdAt: '2026-05-01T00:00:00Z',
     updatedAt: '2026-05-01T00:00:00Z',
     lessons: [
       {
-        id: 1001,
+        id: '1001',
         title: 'React là gì?',
         lessonType: 'blog',
         order: 0,
-        moduleId: 101,
+        moduleId: '101',
         createdAt: '2026-05-01T00:00:00Z',
         updatedAt: '2026-05-01T00:00:00Z',
       },
       {
-        id: 1002,
+        id: '1002',
         title: 'Cài đặt môi trường',
         lessonType: 'video',
         order: 1,
-        moduleId: 101,
+        moduleId: '101',
         createdAt: '2026-05-01T00:00:00Z',
         updatedAt: '2026-05-01T00:00:00Z',
       },
       {
-        id: 1003,
+        id: '1003',
         title: 'Bài kiểm tra nhập môn',
         lessonType: 'test',
         order: 2,
-        moduleId: 101,
+        moduleId: '101',
         createdAt: '2026-05-01T00:00:00Z',
         updatedAt: '2026-05-01T00:00:00Z',
       },
     ],
   },
   {
-    id: 102,
-    courseId: 1,
+    id: '102',
+    courseId: '1',
     title: 'Components & Props',
     order: 1,
     createdAt: '2026-05-02T00:00:00Z',
     updatedAt: '2026-05-02T00:00:00Z',
     lessons: [
       {
-        id: 1004,
+        id: '1004',
         title: 'Function Components',
         lessonType: 'blog',
         order: 0,
-        moduleId: 102,
+        moduleId: '102',
         createdAt: '2026-05-02T00:00:00Z',
         updatedAt: '2026-05-02T00:00:00Z',
       },
       {
-        id: 1005,
+        id: '1005',
         title: 'Props và State',
         lessonType: 'video',
         order: 1,
-        moduleId: 102,
+        moduleId: '102',
         createdAt: '2026-05-02T00:00:00Z',
         updatedAt: '2026-05-02T00:00:00Z',
       },
@@ -82,9 +82,9 @@ export const moduleHandlers = [
   http.post('/api/courses/:courseId/modules', async ({ request, params }) => {
     await delay(300);
     const body = (await request.json()) as { title: string };
-    const courseId = Number(params.courseId);
+    const courseId = params.courseId as string;
     const newModule: ModuleDto = {
-      id: Date.now(),
+      id: String(Date.now()),
       courseId,
       title: body.title,
       order: mockModules.length,
@@ -99,10 +99,10 @@ export const moduleHandlers = [
   http.post('/api/modules/:moduleId/lessons', async ({ request, params }) => {
     await delay(300);
     const body = (await request.json()) as { title: string; lessonType: string };
-    const moduleId = Number(params.moduleId);
+    const moduleId = params.moduleId as string;
     return HttpResponse.json(
       {
-        id: Date.now(),
+        id: String(Date.now()),
         title: body.title,
         lessonType: body.lessonType,
         order: 0,
@@ -117,13 +117,13 @@ export const moduleHandlers = [
   // ── GET /api/lessons/:id ─────────────────────────────────
   http.get('/api/lessons/:lessonId', async ({ params }) => {
     await delay(200);
-    const id = Number(params.lessonId);
+    const id = params.lessonId as string;
     const detail: LessonDetailDto = {
       id,
       title: 'Bài giảng mẫu',
       lessonType: 'blog',
       order: 0,
-      moduleId: 101,
+      moduleId: '101',
       createdAt: '2026-05-01T00:00:00Z',
       updatedAt: '2026-05-01T00:00:00Z',
       blog: { content: '<h2>Nội dung bài giảng</h2><p>Đây là nội dung blog mẫu.</p>' },

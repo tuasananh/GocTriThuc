@@ -4,7 +4,7 @@
 
 /** Thông tin user rút gọn hiển thị trong cards, comments, etc. */
 export interface UserDto {
-  id: number;
+  id: string;
   displayName: string;
   username: string;
   avatarUrl: string | null;

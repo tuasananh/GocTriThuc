@@ -5,13 +5,13 @@ import type { UserDto } from '@/types';
 // ── Fake Data ─────────────────────────────────────────────────
 
 const mockAuthors: UserDto[] = [
-  { id: 1, displayName: 'Nguyễn Công Vinh', username: 'vinh_nc', avatarUrl: null },
-  { id: 2, displayName: 'Lê Thành Trung', username: 'trung_lt', avatarUrl: null },
-  { id: 3, displayName: 'Trần Tuấn Anh', username: 'anh_tt', avatarUrl: null },
+  { id: '1', displayName: 'Nguyễn Công Vinh', username: 'vinh_nc', avatarUrl: null },
+  { id: '2', displayName: 'Lê Thành Trung', username: 'trung_lt', avatarUrl: null },
+  { id: '3', displayName: 'Trần Tuấn Anh', username: 'anh_tt', avatarUrl: null },
 ];
 
 const mockCourses: CourseDto[] = Array.from({ length: 15 }, (_, i) => ({
-  id: i + 1,
+  id: String(i + 1),
   title: [
     'Nhập Môn Lập Trình React 19',
     'Thiết Kế UX/UI Hiện Đại',
@@ -72,7 +72,7 @@ export const courseHandlers = [
   // ── GET /api/courses/:id ───────────────────────────────────
   http.get('/api/courses/:id', async ({ params }) => {
     await delay(200);
-    const course = mockCourses.find((c) => c.id === Number(params.id));
+    const course = mockCourses.find((c) => c.id === params.id);
     if (!course) return HttpResponse.json(null, { status: 404 });
     return HttpResponse.json(course);
   }),
@@ -82,7 +82,7 @@ export const courseHandlers = [
     await delay(300);
     const body = (await request.json()) as Record<string, unknown>;
     const newCourse: CourseDto = {
-      id: Date.now(),
+      id: String(Date.now()),
       title: (body.title as string) || 'Untitled',
       description: (body.description as string) || '',
       thumbnailUrl: (body.thumbnailUrl as string) || null,

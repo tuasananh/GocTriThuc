@@ -3,7 +3,7 @@
 // ============================================================
 
 export interface FileDto {
-  id: number;
+  id: string;
   providerValue: string; // relative path on server
   mimeType: string | null;
   originalName: string | null;
@@ -12,6 +12,6 @@ export interface FileDto {
 }
 
 /** URL để serve file: /api/files/serve/{id} */
-export function fileServeUrl(fileId: number): string {
+export function fileServeUrl(fileId: string): string {
   return `/api/files/serve/${fileId}`;
 }

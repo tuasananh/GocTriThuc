@@ -11,14 +11,14 @@ export const ROUTES = {
   HOME: '/',
   LOGIN: '/login',
   COURSES: '/courses',
-  COURSE_DETAIL: (id: number | string) => `/courses/${id}`,
+  COURSE_DETAIL: (id: string) => `/courses/${id}`,
 
   // ── Classroom (Enrolled student) ───────────────
-  CLASSROOM: (courseId: number | string) => `/courses/${courseId}/classroom`,
-  LESSON: (courseId: number | string, lessonId: number | string) =>
+  CLASSROOM: (courseId: string) => `/courses/${courseId}/classroom`,
+  LESSON: (courseId: string, lessonId: string) =>
     `/courses/${courseId}/lessons/${lessonId}`,
-  TEST_TAKE: (testId: number | string) => `/tests/${testId}/take`,
-  TEST_RESULT: (sessionId: number | string) => `/tests/sessions/${sessionId}/result`,
+  TEST_TAKE: (testId: string) => `/tests/${testId}/take`,
+  TEST_RESULT: (sessionId: string) => `/tests/sessions/${sessionId}/result`,
 
   // ── Student ────────────────────────────────────
   DASHBOARD: '/dashboard',
@@ -26,9 +26,9 @@ export const ROUTES = {
 
   // ── Instructor ─────────────────────────────────
   INSTRUCTOR_DASHBOARD: '/instructor',
-  INSTRUCTOR_COURSE_EDITOR: (id: number | string) => `/instructor/courses/${id}`,
-  INSTRUCTOR_LESSON_EDITOR: (lessonId: number | string) => `/instructor/lessons/${lessonId}/edit`,
-  INSTRUCTOR_TEST_BUILDER: (lessonId: number | string) => `/instructor/lessons/${lessonId}/test`,
+  INSTRUCTOR_COURSE_EDITOR: (id: string) => `/instructor/courses/${id}`,
+  INSTRUCTOR_LESSON_EDITOR: (lessonId: string) => `/instructor/lessons/${lessonId}/edit`,
+  INSTRUCTOR_TEST_BUILDER: (lessonId: string) => `/instructor/lessons/${lessonId}/test`,
   QUESTION_BANK: '/instructor/questions',
 
   // ── Admin ──────────────────────────────────────
@@ -36,5 +36,5 @@ export const ROUTES = {
   ADMIN_USERS: '/admin/users',
 
   // ── Comments ───────────────────────────────────
-  COMMENT_THREAD: (commentId: number | string) => `/comments/thread/${commentId}`,
+  COMMENT_THREAD: (commentId: string) => `/comments/thread/${commentId}`,
 } as const;

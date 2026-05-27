@@ -3,7 +3,7 @@ import type { QuestionDto } from '@/types';
 
 const mockQuestions: QuestionDto[] = [
   {
-    id: 501,
+    id: '501',
     statement: 'React hook nào dùng để quản lý state?',
     questionType: 'multiple_choice',
     choices: ['useEffect', 'useState', 'useRef', 'useMemo'],
@@ -13,7 +13,7 @@ const mockQuestions: QuestionDto[] = [
     updatedAt: '2026-05-01T00:00:00Z',
   },
   {
-    id: 502,
+    id: '502',
     statement: 'Đâu là cách đúng để truyền data xuống component con?',
     questionType: 'multiple_choice',
     choices: ['Context', 'Props', 'Redux', 'Global variable'],
@@ -23,7 +23,7 @@ const mockQuestions: QuestionDto[] = [
     updatedAt: '2026-05-02T00:00:00Z',
   },
   {
-    id: 503,
+    id: '503',
     statement: 'Chọn các lifecycle hook trong React (chọn nhiều)',
     questionType: 'multiple_choice',
     choices: ['useEffect', 'componentDidMount', 'useLayoutEffect', 'ngOnInit'],
@@ -95,7 +95,7 @@ export const questionHandlers = [
     return HttpResponse.json(
       {
         id: Date.now(),
-        userId: 1,
+        userId: '1',
         testId: Number(params.testId),
         startedAt: new Date().toISOString(),
         submittedAt: null,

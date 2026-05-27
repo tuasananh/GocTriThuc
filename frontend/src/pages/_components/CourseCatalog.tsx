@@ -34,7 +34,7 @@ export function CourseCatalog() {
     fetchCourses();
   }, []);
 
-  const handleCourseClick = (courseId: number) => {
+  const handleCourseClick = (courseId: string) => {
     navigate(ROUTES.COURSE_DETAIL(courseId));
   };
 
