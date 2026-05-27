@@ -26,9 +26,20 @@ function App() {
               {/* ── Public (với MainLayout) ────────────────── */}
               <Route element={<MainLayout />}>
                 <Route path={ROUTES.HOME} element={<LandingPage />} />
+                <Route
+                  path={ROUTES.COURSE_DETAIL(':id')}
+                  element={
+                    <div className="p-8 text-center text-muted-foreground">
+                      <h2 className="text-2xl font-bold mb-4">Course Detail (Đang thi công)</h2>
+                      <p>
+                        Bạn vừa click vào xem chi tiết khóa học. Component này sẽ do team Frontend
+                        phát triển.
+                      </p>
+                    </div>
+                  }
+                />
                 {/* Thêm các trang public khác ở đây:
                   <Route path={ROUTES.COURSES} element={<CourseListPage />} />
-                  <Route path={ROUTES.COURSE_DETAIL(':id')} element={<CourseDetailPage />} />
               */}
               </Route>
 
