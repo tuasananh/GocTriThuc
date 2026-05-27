@@ -1,5 +1,6 @@
 import { useAuth } from '@/contexts/AuthContext';
 import { Navigate, Outlet, useLocation } from 'react-router-dom';
+import { ROUTES } from '@/lib/routes';
 
 /**
  * Route guard: chỉ cho user đã đăng nhập truy cập.
@@ -33,7 +34,8 @@ export function ProtectedRoute({ requiredRole }: { requiredRole?: string }) {
 
   // Chưa đăng nhập → redirect
   if (!auth.isAuthenticated) {
-    return <Navigate to={`/login?redirect=${encodeURIComponent(location.pathname)}`} replace />;
+    const redirectUrl = `${location.pathname}${location.search}${location.hash}`;
+    return <Navigate to={`${ROUTES.LOGIN}?redirect=${encodeURIComponent(redirectUrl)}`} replace />;
   }
 
   // Kiểm tra role (nếu yêu cầu)

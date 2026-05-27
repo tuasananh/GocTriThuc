@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { toast } from 'sonner';
+import { ROUTES } from './routes';
 
 /**
  * Axios instance dùng chung cho toàn app.
@@ -33,8 +34,9 @@ api.interceptors.response.use(
       case 401:
         // Chưa đăng nhập → redirect về login
         // (chỉ redirect nếu không phải đang ở trang login)
-        if (!window.location.pathname.startsWith('/login')) {
-          window.location.href = `/login?redirect=${encodeURIComponent(window.location.pathname)}`;
+        if (!window.location.pathname.startsWith(ROUTES.LOGIN)) {
+          const redirectUrl = `${window.location.pathname}${window.location.search}${window.location.hash}`;
+          window.location.href = `${ROUTES.LOGIN}?redirect=${encodeURIComponent(redirectUrl)}`;
         }
         break;
       case 403:
