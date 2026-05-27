@@ -1,7 +1,6 @@
 import type { AuthContextType } from '@/contexts/AuthContext';
 import AuthContext from '@/contexts/AuthContext';
-import type { CurrentUserResponse } from '@/dtos/CurrentUserResponse';
-import { CurrentUser } from '@/entities/CurrentUser';
+import { CurrentUser, type CurrentUserResponse } from '@/types';
 import { api } from '@/lib/api';
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';

@@ -2,7 +2,8 @@
 //   import type { CourseDto, PageResponse, UserDto } from '@/types';
 
 export type { PageResponse, ApiError } from './api';
-export type { UserDto, UserDetailDto, UpdateUserRequest } from './user';
+export type { UserDto, UserDetailDto, UpdateUserRequest, CurrentUserResponse } from './user';
+export { CurrentUser } from './user';
 export type {
   CourseDto,
   CourseVisibility,

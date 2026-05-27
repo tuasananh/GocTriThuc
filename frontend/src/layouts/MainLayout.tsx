@@ -1,7 +1,7 @@
 import { Outlet, Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
-import type { CurrentUser } from '@/entities/CurrentUser';
+import type { CurrentUser } from '@/types';
 import {
   DropdownMenu,
   DropdownMenuContent,
