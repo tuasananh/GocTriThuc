@@ -336,4 +336,4 @@ pnpm dlx shadcn@latest add <tên-component>
 - [ ] Upload file dùng `POST /api/files/upload`, không dùng dịch vụ ngoài
 - [ ] BlockNote editor: `editable={false}` cho viewer, `editable={true}` cho editor
 - [ ] Commit message theo Conventional Commits: `feat(scope): description`
-- [ ] Chạy `pnpm run lint` và `pnpm run format` trước khi commit
+- [ ] Chạy `pnpm run lint` và `pnpm run format` (tại thư mục `frontend/`) trước khi commit
