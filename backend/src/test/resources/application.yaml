@@ -44,3 +44,4 @@ app:
   frontend:
     # Dummy URI for testing redirection logic
     oauth2-redirect-uri: http://localhost:5173/dashboard
+  upload-dir: /tmp/goctrithuc-test-uploads

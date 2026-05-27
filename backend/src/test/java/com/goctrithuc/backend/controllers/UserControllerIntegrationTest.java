@@ -1,5 +1,6 @@
 package com.goctrithuc.backend.controllers;
 
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.oauth2Login;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
@@ -13,6 +14,7 @@ import com.goctrithuc.backend.entities.UserRole;
 import com.goctrithuc.backend.repositories.RoleRepository;
 import com.goctrithuc.backend.repositories.UserRepository;
 import com.goctrithuc.backend.repositories.UserRoleRepository;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
@@ -39,6 +41,12 @@ public class UserControllerIntegrationTest extends BaseIntegrationTest {
     this.userRepository = userRepository;
     this.userRoleRepository = userRoleRepository;
     this.roleRepository = roleRepository;
+  }
+
+  @AfterEach
+  void cleanUp() {
+    userRoleRepository.deleteAll();
+    userRepository.deleteAll();
   }
 
   @Test
@@ -98,6 +106,7 @@ public class UserControllerIntegrationTest extends BaseIntegrationTest {
             org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch(
                     "/api/users/me")
                 .with(oauth2Login().attributes(attrs -> attrs.put("email", email)))
+                .with(csrf())
                 .contentType(org.springframework.http.MediaType.APPLICATION_JSON)
                 .content(requestBody))
         .andExpect(status().isOk())
@@ -122,6 +131,7 @@ public class UserControllerIntegrationTest extends BaseIntegrationTest {
             org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch(
                     "/api/users/" + user1.getId())
                 .with(oauth2Login().attributes(attrs -> attrs.put("email", user2.getEmail())))
+                .with(csrf())
                 .contentType(org.springframework.http.MediaType.APPLICATION_JSON)
                 .content(requestBody))
         .andExpect(status().isForbidden())
@@ -143,6 +153,7 @@ public class UserControllerIntegrationTest extends BaseIntegrationTest {
             org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch(
                     "/api/users/me")
                 .with(oauth2Login().attributes(attrs -> attrs.put("email", email)))
+                .with(csrf())
                 .contentType(org.springframework.http.MediaType.APPLICATION_JSON)
                 .content(requestBody))
         .andExpect(status().isConflict())
@@ -163,6 +174,7 @@ public class UserControllerIntegrationTest extends BaseIntegrationTest {
             org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch(
                     "/api/users/" + student.getId())
                 .with(oauth2Login().attributes(attrs -> attrs.put("email", email)))
+                .with(csrf())
                 .contentType(org.springframework.http.MediaType.APPLICATION_JSON)
                 .content(requestBody))
         .andExpect(status().isOk())
@@ -190,6 +202,7 @@ public class UserControllerIntegrationTest extends BaseIntegrationTest {
             org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch(
                     "/api/users/" + student.getId())
                 .with(oauth2Login().attributes(attrs -> attrs.put("email", adminEmail)))
+                .with(csrf())
                 .contentType(org.springframework.http.MediaType.APPLICATION_JSON)
                 .content(requestBody))
         .andExpect(status().isForbidden())
@@ -213,6 +226,7 @@ public class UserControllerIntegrationTest extends BaseIntegrationTest {
             org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch(
                     "/api/users/me")
                 .with(oauth2Login().attributes(attrs -> attrs.put("email", email)))
+                .with(csrf())
                 .contentType(org.springframework.http.MediaType.APPLICATION_JSON)
                 .content(requestBody))
         .andExpect(status().isOk())

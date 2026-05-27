@@ -1,5 +1,6 @@
 package com.goctrithuc.backend.controllers;
 
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.oauth2Login;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -71,7 +72,8 @@ public class FileControllerIntegrationTest extends BaseIntegrationTest {
         .perform(
             MockMvcRequestBuilders.multipart("/api/files/upload")
                 .file(mockFile)
-                .with(oauth2Login().attributes(attrs -> attrs.put("email", email))))
+                .with(oauth2Login().attributes(attrs -> attrs.put("email", email)))
+                .with(csrf()))
         .andExpect(status().isCreated())
         .andExpect(jsonPath("$.id").exists())
         .andExpect(jsonPath("$.provider").value("local"))
@@ -96,7 +98,7 @@ public class FileControllerIntegrationTest extends BaseIntegrationTest {
         new MockMultipartFile("file", "avatar.png", "image/png", "dummy-image-bytes".getBytes());
 
     mockMvc
-        .perform(MockMvcRequestBuilders.multipart("/api/files/upload").file(mockFile))
+        .perform(MockMvcRequestBuilders.multipart("/api/files/upload").file(mockFile).with(csrf()))
         .andExpect(status().isUnauthorized())
         .andDo(print());
   }
