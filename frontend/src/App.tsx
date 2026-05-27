@@ -11,6 +11,7 @@ import { TooltipProvider } from '@/components/ui/tooltip';
 import { Toaster } from '@/components/ui/sonner';
 import { lazy, Suspense } from 'react';
 import { ROUTES } from '@/lib/routes';
+import { PERMISSION } from '@/lib/permissions';
 
 const EditorTestPage = lazy(() =>
   import('@/pages/editor-test').then((m) => ({ default: m.EditorTestPage })),
@@ -59,8 +60,8 @@ function App() {
                 </Route>
               </Route>
 
-              {/* ── Instructor (cần role teacher) ────────── */}
-              <Route element={<ProtectedRoute requiredRole="teacher" />}>
+              {/* ── Instructor (cần quyền quản lý khóa học) ────────── */}
+              <Route element={<ProtectedRoute requiredPermission={PERMISSION.MANAGE_COURSES} />}>
                 <Route element={<MainLayout />}>
                   {/* Thêm các trang instructor ở đây:
                     <Route path={ROUTES.INSTRUCTOR_DASHBOARD} element={<InstructorDashboard />} />
@@ -70,8 +71,8 @@ function App() {
                 </Route>
               </Route>
 
-              {/* ── Admin (cần role admin) ────────────────── */}
-              <Route element={<ProtectedRoute requiredRole="admin" />}>
+              {/* ── Admin (cần quyền admin) ────────────────── */}
+              <Route element={<ProtectedRoute requiredPermission={PERMISSION.ADMIN} />}>
                 <Route element={<MainLayout />}>
                   {/* Thêm các trang admin ở đây:
                     <Route path={ROUTES.ADMIN_DASHBOARD} element={<AdminDashboard />} />

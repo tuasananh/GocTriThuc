@@ -11,12 +11,12 @@ import { ROUTES } from '@/lib/routes';
  *     <Route path="/dashboard" element={<Dashboard />} />
  *   </Route>
  *
- * Có thể yêu cầu role cụ thể:
- *   <Route element={<ProtectedRoute requiredRole="teacher" />}>
+ * Có thể yêu cầu permission cụ thể (bitmask):
+ *   <Route element={<ProtectedRoute requiredPermission={PERMISSION.MANAGE_COURSES} />}>
  *     <Route path="/instructor/*" element={<InstructorLayout />} />
  *   </Route>
  */
-export function ProtectedRoute({ requiredRole }: { requiredRole?: string }) {
+export function ProtectedRoute({ requiredPermission }: { requiredPermission?: bigint }) {
   const auth = useAuth();
   const location = useLocation();
 
@@ -38,8 +38,8 @@ export function ProtectedRoute({ requiredRole }: { requiredRole?: string }) {
     return <Navigate to={`${ROUTES.LOGIN}?redirect=${encodeURIComponent(redirectUrl)}`} replace />;
   }
 
-  // Kiểm tra role (nếu yêu cầu)
-  if (requiredRole && !auth.user.roles.includes(requiredRole)) {
+  // Kiểm tra quyền (nếu yêu cầu)
+  if (requiredPermission && (auth.user.permissions & requiredPermission) !== requiredPermission) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="text-center space-y-2">
