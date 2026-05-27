@@ -1,14 +1,19 @@
 # Day 7 — Lesson Player & Completion
 
-**Goal**: Students can watch video lessons (raw YouTube/Vimeo links) and read blog lessons (BlockNote HTML content). Completing a lesson marks it done and updates progress. Expose local file attachments.
-**Done when**: All three lesson types render correctly for enrolled students. "Đánh dấu hoàn thành" button persists to DB.
+**Goal**: Students can watch video lessons (raw YouTube/Vimeo links) and read
+blog lessons (BlockNote HTML content). Completing a lesson marks it done and
+updates progress. Expose local file attachments. **Done when**: All three lesson
+types render correctly for enrolled students. "Đánh dấu hoàn thành" button
+persists to DB.
 
 ---
 
 ## 🔴 Trung (BE Lead)
 
 ### Task 1 — Save video lesson content
+
 `PUT /api/lessons/{id}/video`:
+
 ```java
 @PutMapping("/{id}/video")
 public ResponseEntity<Void> updateVideo(
@@ -34,8 +39,9 @@ public ResponseEntity<Void> updateVideo(
 ```
 
 ### Task 2 — Save blog lesson content (HTML Sanitization Resolution)
-`PUT /api/lessons/{id}/blog`:
-Save HTML string, passing it through jsoup relaxed Safelist first before writing to database.
+
+`PUT /api/lessons/{id}/blog`: Save HTML string, passing it through jsoup relaxed
+Safelist first before writing to database.
 
 ```java
 @PutMapping("/{id}/blog")
@@ -44,10 +50,10 @@ public ResponseEntity<Void> updateBlog(
     @Valid @RequestBody UpdateBlogRequest req,
     Authentication auth) {
   lessonService.assertIsInstructorOfLesson(id, getCurrentUserId(auth));
-  
+
   // HTML Sanitization to block XSS
   String sanitizedHtml = Jsoup.clean(req.content(), Safelist.relaxed());
-  
+
   lessonBlogRepo.findById(id).ifPresentOrElse(b -> {
     b.setContent(sanitizedHtml);
     b.setUpdatedAt(Instant.now());
@@ -64,6 +70,7 @@ public ResponseEntity<Void> updateBlog(
 ```
 
 ### Task 3 — Lesson completion & progress APIs
+
 Standard completion trackers.
 
 ---
@@ -71,28 +78,36 @@ Standard completion trackers.
 ## 🔴 Anh (BE Dev / PM)
 
 ### Task 1 — Local File attachments mapping
-Attach file registry IDs to course and lesson resources. Expose listing endpoints pointing to local disk downloads via `/api/files/serve/{fileId}`.
+
+Attach file registry IDs to course and lesson resources. Expose listing
+endpoints pointing to local disk downloads via `/api/files/serve/{fileId}`.
 
 ---
 
 ## 🔵 Vinh (FE Lead)
 
 ### Lesson Page Container & Video Player
-File: `src/pages/lessons/_components/VideoLessonViewer.tsx`
-Handles raw video links directly.
+
+File: `src/pages/lessons/_components/VideoLessonViewer.tsx` Handles raw video
+links directly.
 
 ```tsx
-export function VideoLessonViewer({ video }: { video: { provider: string; providerValue: string } }) {
+export function VideoLessonViewer({
+  video,
+}: {
+  video: { provider: string; providerValue: string };
+}) {
   // Parse dynamic YouTube/Vimeo urls on the fly
   const extractEmbed = (url: string, provider: string) => {
-    if (provider === 'youtube') {
-      const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+    if (provider === "youtube") {
+      const regExp =
+        /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
       const match = url.match(regExp);
-      const id = (match && match[2].length === 11) ? match[2] : '';
+      const id = match && match[2].length === 11 ? match[2] : "";
       return `https://www.youtube.com/embed/${id}`;
     } else {
       const match = url.match(/vimeo\.com\/(\d+)/);
-      const id = match ? match[1] : '';
+      const id = match ? match[1] : "";
       return `https://player.vimeo.com/video/${id}`;
     }
   };
@@ -112,8 +127,10 @@ export function VideoLessonViewer({ video }: { video: { provider: string; provid
 ## 🔵 Sâm (FE Dev 1)
 
 ### Blog Lesson Viewer (BlockNote Read-Only)
-File: `src/pages/lessons/_components/BlogLessonViewer.tsx`
-Use the `BlockNote` editor's read-only mode to render rich text blocks with high-fidelity formatting by parsing the stored HTML string into BlockNote blocks.
+
+File: `src/pages/lessons/_components/BlogLessonViewer.tsx` Use the `BlockNote`
+editor's read-only mode to render rich text blocks with high-fidelity formatting
+by parsing the stored HTML string into BlockNote blocks.
 
 ```tsx
 import { useEffect } from "react";
@@ -162,12 +179,14 @@ export function BlogLessonViewer({ blog }: { blog: { content: string } }) {
 ## 🔵 Tuấn (FE Dev 2)
 
 ### Resources Downloads Shelf
-File: `src/pages/lessons/_components/LessonResourceList.tsx`
-Exposes file attachment links pointing to `/api/files/serve/{id}` local server endpoints.
+
+File: `src/pages/lessons/_components/LessonResourceList.tsx` Exposes file
+attachment links pointing to `/api/files/serve/{id}` local server endpoints.
 
 ---
 
 ## ✅ End-of-Day Checklist
+
 - [ ] Jsoup sanitizes incoming HTML strings correctly before writing.
 - [ ] BlockNote read-only renders HTML rich text blocks with premium styling.
 - [ ] Local file attachments serve correctly.

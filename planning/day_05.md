@@ -1,14 +1,18 @@
 # Day 5 — Course Detail & Enrollment
 
-**Goal**: Students can view course details and enroll. Enrolled students see the module/lesson list. Restricted course requests are sent.
-**Done when**: Enroll button changes state (none → enrolled / requested), module sidebar appears for enrolled users.
+**Goal**: Students can view course details and enroll. Enrolled students see the
+module/lesson list. Restricted course requests are sent. **Done when**: Enroll
+button changes state (none → enrolled / requested), module sidebar appears for
+enrolled users.
 
 ---
 
 ## 🔴 Trung (BE Lead)
 
 ### Task 1 — Enrollment entity & endpoints
+
 `EnrollmentEntity.java` (composite PK `(user_id, course_id)`):
+
 ```java
 @Entity @Table(name = "enrollments")
 public class EnrollmentEntity {
@@ -22,6 +26,7 @@ public record EnrollmentId(Long userId, Long courseId) implements Serializable {
 ```
 
 `POST /api/courses/{id}/enroll`:
+
 ```java
 @PostMapping("/{id}/enroll")
 @PreAuthorize("isAuthenticated()")
@@ -45,7 +50,10 @@ public ResponseEntity<Void> enroll(@PathVariable Long id, Authentication auth) {
 ```
 
 ### Task 2 — Access requests (Separate Table Resolution)
-File: `com/goctrithuc/courses/CourseAccessRequestEntity.java` (mapped to `course_access_requests`). Keeps `enrollments` clean and requires no status enum columns.
+
+File: `com/goctrithuc/courses/CourseAccessRequestEntity.java` (mapped to
+`course_access_requests`). Keeps `enrollments` clean and requires no status enum
+columns.
 
 ```java
 @Entity
@@ -58,11 +66,15 @@ public class CourseAccessRequestEntity {
 }
 ```
 
-- `POST /api/courses/{id}/access-requests` — creates a record in `course_access_requests`.
-- `DELETE /api/access-requests/{id}` — withdraws/declines request by deleting the record.
-- `POST /api/access-requests/{id}/approve` — moves request to `enrollments` and deletes request.
+- `POST /api/courses/{id}/access-requests` — creates a record in
+  `course_access_requests`.
+- `DELETE /api/courses/{courseId}/access-requests/{userId}` — withdraws/declines
+  request by deleting the record.
+- `POST /api/courses/{courseId}/access-requests/{userId}/approve` — moves
+  request to `enrollments` and deletes request.
 
 `GET /api/courses/{id}/access-status`:
+
 ```java
 @GetMapping("/{id}/access-status")
 @PreAuthorize("isAuthenticated()")
@@ -78,6 +90,7 @@ public ResponseEntity<Map<String, String>> accessStatus(
 ```
 
 ### Task 3 — `GET /api/courses/{id}/modules` (with lessons, enrolled-gated)
+
 Ensure this matches module outlines.
 
 ---
@@ -85,9 +98,11 @@ Ensure this matches module outlines.
 ## 🔴 Anh (BE Dev / PM)
 
 ### Task 1 — ModuleEntity & LessonEntity (read-only for Day 5)
+
 Implement simple Up/Down ordering columns.
 
 ### Task 2 — Integration tests for enrollment
+
 - Student enrolls in public course → 201
 - Student requests restricted access → record saved in `course_access_requests`
 - Student tries to enroll in Private course → 403
@@ -97,6 +112,7 @@ Implement simple Up/Down ordering columns.
 ## 🔵 Vinh (FE Lead)
 
 ### Task 1 — Course Detail page header
+
 Update enroll logic to connect to local database access-request services.
 
 ---
@@ -104,6 +120,7 @@ Update enroll logic to connect to local database access-request services.
 ## 🔵 Sâm (FE Dev 1)
 
 ### Task 1 — `ModuleSidebar` component
+
 Expose outlines and completes lessons with checkmarks.
 
 ---
@@ -111,11 +128,15 @@ Expose outlines and completes lessons with checkmarks.
 ## 🔵 Tuấn (FE Dev 2)
 
 ### Task 1 — `RestrictedAccessBanner`
+
 Handle access requests banner displays.
 
 ---
 
 ## ✅ End-of-Day Checklist
-- [ ] Student enrolls in Public course → status changes to "enrolled" → modules outline loaded.
-- [ ] Student requests Restricted course → status changes to "requested" in `course_access_requests` table.
+
+- [ ] Student enrolls in Public course → status changes to "enrolled" → modules
+      outline loaded.
+- [ ] Student requests Restricted course → status changes to "requested" in
+      `course_access_requests` table.
 - [ ] Private course returns 403 for non-author/admin.
