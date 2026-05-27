@@ -65,4 +65,15 @@ public class FileService {
         .findById(id)
         .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "File not found"));
   }
+
+  public Path resolveFilePath(String providerValue) {
+    Path filePath = this.uploadLocation.resolve(providerValue).normalize().toAbsolutePath();
+    if (!filePath.startsWith(this.uploadLocation)) {
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid file path");
+    }
+    if (!Files.exists(filePath)) {
+      throw new ResponseStatusException(HttpStatus.NOT_FOUND, "File not found on disk");
+    }
+    return filePath;
+  }
 }

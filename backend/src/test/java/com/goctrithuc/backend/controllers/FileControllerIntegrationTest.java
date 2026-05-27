@@ -3,6 +3,8 @@ package com.goctrithuc.backend.controllers;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.oauth2Login;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -100,6 +102,52 @@ public class FileControllerIntegrationTest extends BaseIntegrationTest {
     mockMvc
         .perform(MockMvcRequestBuilders.multipart("/api/files/upload").file(mockFile).with(csrf()))
         .andExpect(status().isUnauthorized())
+        .andDo(print());
+  }
+
+  @Test
+  void shouldServeFileWhenFileExistsPublicly() throws Exception {
+    String secureFilename = "1_test_avatar.png";
+    Path targetPath = Paths.get(uploadDir).resolve(secureFilename).toAbsolutePath().normalize();
+    Files.createDirectories(targetPath.getParent());
+    Files.write(targetPath, "dummy-image-bytes".getBytes());
+
+    File fileEntity = fileRepository.save(new File(1L, "local", secureFilename));
+
+    mockMvc
+        .perform(MockMvcRequestBuilders.get("/api/files/serve/" + fileEntity.getId()))
+        .andExpect(status().isOk())
+        .andExpect(header().string("Content-Type", "image/png"))
+        .andExpect(header().string("Cache-Control", "public, max-age=31536000"))
+        .andExpect(content().bytes("dummy-image-bytes".getBytes()))
+        .andDo(print());
+  }
+
+  @Test
+  void shouldReturn404WhenFileDoesNotExistInDb() throws Exception {
+    mockMvc
+        .perform(MockMvcRequestBuilders.get("/api/files/serve/9999"))
+        .andExpect(status().isNotFound())
+        .andDo(print());
+  }
+
+  @Test
+  void shouldReturn404WhenFileExistsInDbButMissingOnDisk() throws Exception {
+    File fileEntity = fileRepository.save(new File(1L, "local", "nonexistent_file.png"));
+
+    mockMvc
+        .perform(MockMvcRequestBuilders.get("/api/files/serve/" + fileEntity.getId()))
+        .andExpect(status().isNotFound())
+        .andDo(print());
+  }
+
+  @Test
+  void shouldRejectPathTraversal() throws Exception {
+    File fileEntity = fileRepository.save(new File(1L, "local", "../traversal_attempt.png"));
+
+    mockMvc
+        .perform(MockMvcRequestBuilders.get("/api/files/serve/" + fileEntity.getId()))
+        .andExpect(status().isBadRequest())
         .andDo(print());
   }
 }
