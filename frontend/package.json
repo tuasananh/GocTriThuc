@@ -15,7 +15,7 @@
     "@blocknote/code-block": "^0.50.0",
     "@blocknote/core": "^0.50.0",
     "@blocknote/react": "^0.50.0",
-    "@blocknote/shadcn": "^0.50.0",
+    "@blocknote/shadcn": "^0.51.3",
     "@fontsource-variable/inter": "^5.2.8",
     "@tailwindcss/vite": "^4.3.0",
     "axios": "^1.16.1",
