@@ -27,6 +27,13 @@ public class FileService {
   private final FileRepository fileRepository;
   private final Path uploadLocation;
   private final Tika tika = new Tika();
+  // The allowlist accepts every image/* subtype, which includes image/svg+xml. Uploaded SVGs can
+  // contain script/active content and are served back with their content type by serveFile, so a
+  // user can upload an executable SVG and expose it from the app origin. Restrict the image
+  // allowlist to safe raster types (for example PNG/JPEG/WebP/GIF) or serve SVGs only as downloads
+  // with a safe content disposition.
+  //
+  // This issue may be resolved in v2, it is out of scope for now.
   private final List<String> mimeAllowlist =
       List.of("image/", "video/", "application/pdf", "text/plain", "application/zip");
 
@@ -78,7 +85,16 @@ public class FileService {
           HttpStatus.BAD_REQUEST, "File type not allowed: " + detectedMimeType);
     }
 
-    String originalFilename = StringUtils.cleanPath(file.getOriginalFilename());
+    String rawFilename = file.getOriginalFilename();
+    if (rawFilename == null || rawFilename.isBlank()) {
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Filename is required");
+    }
+
+    String originalFilename = StringUtils.cleanPath(rawFilename);
+    if (originalFilename.isBlank()) {
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid filename");
+    }
+
     if (originalFilename.contains("..")) {
       throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid file path sequence");
     }
