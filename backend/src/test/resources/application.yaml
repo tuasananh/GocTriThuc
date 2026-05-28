@@ -2,6 +2,10 @@ server:
   port: 0 # Uses a random available port for tests to avoid "Address already in use"
 
 spring:
+  servlet:
+    multipart:
+      max-file-size: 50MB
+      max-request-size: 50MB
   config:
     # Disable the .env import for tests so we don't rely on local machine secrets
     import: ""
@@ -44,3 +48,4 @@ app:
   frontend:
     # Dummy URI for testing redirection logic
     oauth2-redirect-uri: http://localhost:5173/dashboard
+  upload-dir: /tmp/goctrithuc-test-uploads

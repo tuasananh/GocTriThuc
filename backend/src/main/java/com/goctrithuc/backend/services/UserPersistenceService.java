@@ -1,6 +1,7 @@
 package com.goctrithuc.backend.services;
 
 import com.goctrithuc.backend.common.util.StringUtil;
+import com.goctrithuc.backend.dtos.UpdateUserRequest;
 import com.goctrithuc.backend.entities.Role;
 import com.goctrithuc.backend.entities.User;
 import com.goctrithuc.backend.entities.UserProvider;
@@ -10,8 +11,10 @@ import com.goctrithuc.backend.repositories.UserProviderRepository;
 import com.goctrithuc.backend.repositories.UserRepository;
 import com.goctrithuc.backend.repositories.UserRoleRepository;
 import java.util.Optional;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
 @Service
 public class UserPersistenceService {
@@ -77,6 +80,60 @@ public class UserPersistenceService {
 
     if (!userRoleRepository.existsByIdUserIdAndIdRoleName(user.getId(), studentRole.getName())) {
       userRoleRepository.save(new UserRole(user, studentRole));
+    }
+  }
+
+  @Transactional
+  public User updateProfileAuthorized(
+      String currentUserEmail, Long targetUserId, UpdateUserRequest req) {
+    User currentUser =
+        userRepository
+            .findByEmailWithRoles(currentUserEmail)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+
+    User targetUser = userRepository.findById(targetUserId).orElse(null);
+
+    boolean isAdmin =
+        currentUser.getUserRoles() != null
+            && currentUser.getUserRoles().stream()
+                .map(UserRole::getRole)
+                .anyMatch(
+                    role ->
+                        "admin".equalsIgnoreCase(role.getName())
+                            || (role.getPermissions() != null
+                                && (role.getPermissions() & 0x01L) != 0L));
+
+    if (targetUser == null || (!currentUser.getId().equals(targetUserId) && !isAdmin)) {
+      throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found");
+    }
+
+    applyUpdates(targetUser, req);
+    return userRepository.save(targetUser);
+  }
+
+  @Transactional
+  public User updateCurrentUserProfile(String email, UpdateUserRequest req) {
+    User user =
+        userRepository
+            .findByEmail(email)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+
+    applyUpdates(user, req);
+    return userRepository.save(user);
+  }
+
+  private void applyUpdates(User user, UpdateUserRequest req) {
+    if (req.username() != null && !req.username().equals(user.getUsername())) {
+      if (userRepository.existsByUsername(req.username())) {
+        throw new ResponseStatusException(HttpStatus.CONFLICT, "Username already taken");
+      }
+      user.setUsername(req.username());
+    }
+    if (req.displayName() != null) {
+      user.setDisplayName(req.displayName());
+    }
+    if (req.avatarUrl() != null) {
+      user.setAvatarUrl(req.avatarUrl());
     }
   }
 }

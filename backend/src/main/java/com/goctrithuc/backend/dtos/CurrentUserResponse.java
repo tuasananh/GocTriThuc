@@ -10,6 +10,7 @@ import java.util.List;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public record CurrentUserResponse(
     boolean authenticated,
+    Long id,
     String displayName,
     String email,
     String avatarUrl,
@@ -18,11 +19,11 @@ public record CurrentUserResponse(
     @JsonFormat(shape = JsonFormat.Shape.STRING) Long permissions,
     String error) {
   public static CurrentUserResponse unauthenticated() {
-    return new CurrentUserResponse(false, null, null, null, null, null, null, null);
+    return new CurrentUserResponse(false, null, null, null, null, null, null, null, null);
   }
 
   public static CurrentUserResponse error(String error) {
-    return new CurrentUserResponse(false, null, null, null, null, null, null, error);
+    return new CurrentUserResponse(false, null, null, null, null, null, null, null, error);
   }
 
   public static CurrentUserResponse authenticated(User user) {
@@ -36,6 +37,7 @@ public record CurrentUserResponse(
 
     return new CurrentUserResponse(
         true,
+        user.getId(),
         user.getDisplayName(),
         user.getEmail(),
         user.getAvatarUrl(),

@@ -20,30 +20,44 @@ File:
 @RequestMapping("/api/users")
 public class UserController {
 
-  private final UserService userService;
+  private final UserRepository userRepository;
+  private final UserRoleRepository userRoleRepository;
+  private final UserPersistenceService userPersistenceService;
+
+  @GetMapping("/me")
+  public ResponseEntity<CurrentUserResponse> getCurrentUser(
+      @AuthenticationPrincipal OAuth2User principal) {
+    if (principal == null) {
+      return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+          .body(CurrentUserResponse.unauthenticated());
+    }
+    // ... logic getCurrentUser ...
+  }
 
   @GetMapping("/{id}")
-  public ResponseEntity<UserResponse> getUser(@PathVariable Long id) {
-    return userService.findById(id)
-        .map(UserResponse::from)
+  public ResponseEntity<PublicUserResponse> getUser(@PathVariable Long id) {
+    return userRepository
+        .findById(id)
+        .map(PublicUserResponse::from)
         .map(ResponseEntity::ok)
         .orElse(ResponseEntity.notFound().build());
   }
 
+  @PatchMapping("/me")
+  public ResponseEntity<PublicUserResponse> updateCurrentUser(
+      @Valid @RequestBody UpdateUserRequest req, @AuthenticationPrincipal OAuth2User principal) {
+    if (principal == null) {
+      return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+    }
+    // ... logic updateCurrentUser ...
+  }
   @PatchMapping("/{id}")
-  public ResponseEntity<UserResponse> updateUser(
+  public ResponseEntity<PublicUserResponse> updateUser(
       @PathVariable Long id,
       @Valid @RequestBody UpdateUserRequest req,
-      Authentication auth) {
-    Long currentUserId = getCurrentUserId(auth);
-    boolean isAdmin = permissionService.hasPermission(currentUserId, Permission.ADMIN);
-    // Return 404 (not 403) when ID doesn't match — prevents user ID enumeration.
-    // Admins may update any user's profile regardless of ID.
-    if (!currentUserId.equals(id) && !isAdmin) {
-      return ResponseEntity.notFound().build();
-    }
-    UserEntity updated = userService.updateProfile(id, req);
-    return ResponseEntity.ok(UserResponse.from(updated));
+      @AuthenticationPrincipal OAuth2User principal) {
+    // Only the user themselves (or Admin in future) can update their profile
+    // ... logic check ownership and update ...
   }
 }
 ```
@@ -59,24 +73,37 @@ public record UpdateUserRequest(
     String avatarUrl) {}
 ```
 
-`UserService.updateProfile`:
-
+`UserPersistenceService.java`:
 ```java
-@Transactional
-public UserEntity updateProfile(Long id, UpdateUserRequest req) {
-  UserEntity user = userRepo.findById(id)
-      .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+@Service
+public class UserPersistenceService {
 
-  if (req.username() != null && !req.username().equals(user.getUsername())) {
-    if (userRepo.existsByUsername(req.username())) {
-      throw new ResponseStatusException(HttpStatus.CONFLICT, "Username already taken");
+  @Transactional
+  public User updateCurrentUserProfile(String email, UpdateUserRequest req) {
+    User user = userRepository.findByEmail(email)
+        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+
+    if (req.username() != null && !req.username().equals(user.getUsername())) {
+      if (userRepository.existsByUsername(req.username())) {
+        throw new ResponseStatusException(HttpStatus.CONFLICT, "Username already taken");
+      }
+      user.setUsername(req.username());
     }
-    user.setUsername(req.username());
+    if (req.displayName() != null) {
+      user.setDisplayName(req.displayName());
+    }
+    if (req.avatarUrl() != null) {
+      user.setAvatarUrl(req.avatarUrl());
+    }
+    return userRepository.save(user);
   }
-  if (req.displayName() != null) user.setDisplayName(req.displayName());
-  if (req.avatarUrl() != null) user.setAvatarUrl(req.avatarUrl());
-  user.setUpdatedAt(Instant.now());
-  return userRepo.save(user);
+
+  @Transactional
+  public User updateProfile(Long id, UpdateUserRequest req) {
+    User user = userRepository.findById(id)
+        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+    // ... logic update profile ...
+  }
 }
 ```
 

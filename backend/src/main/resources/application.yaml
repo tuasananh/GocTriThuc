@@ -1,7 +1,11 @@
 server:
-  port: ${APP_PORT:8080}
+  port: ${APP_PORT}
 
 spring:
+  servlet:
+    multipart:
+      max-file-size: 50MB
+      max-request-size: 50MB
   config:
     # Tell Spring to import your root .env file
     import: optional:file:../.env[.properties]
@@ -10,7 +14,7 @@ spring:
     name: backend
 
   datasource:
-    url: jdbc:postgresql://localhost:${POSTGRES_PORT:5432}/goctrithuc
+    url: jdbc:postgresql://localhost:${POSTGRES_PORT}/goctrithuc
     username: ${POSTGRES_USER}
     password: ${POSTGRES_PASSWORD}
 
@@ -39,4 +43,5 @@ spring:
 
 app:
   frontend:
-    oauth2-redirect-uri: http://localhost:${FRONTEND_PORT:5173}/dashboard
+    oauth2-redirect-uri: http://localhost:${FRONTEND_PORT}/dashboard
+  upload-dir: ${UPLOAD_DIR}

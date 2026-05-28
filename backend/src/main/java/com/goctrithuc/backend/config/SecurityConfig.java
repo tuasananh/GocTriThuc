@@ -50,6 +50,10 @@ public class SecurityConfig {
                     .permitAll()
                     .requestMatchers(HttpMethod.GET, "/api/users/me")
                     .permitAll()
+                    .requestMatchers(HttpMethod.GET, "/api/users/{id}")
+                    .permitAll()
+                    .requestMatchers(HttpMethod.GET, "/api/files/serve/{id}")
+                    .permitAll()
                     .anyRequest()
                     .authenticated())
         .exceptionHandling(
