@@ -250,6 +250,10 @@ Previously enrolled students retain access.
 - `GET /api/courses`: Paginated. Returns only `Public` and `Restricted` courses
   to unauthenticated/student users. Admins see all.
 - Supports search by title and filter by visibility.
+- Sortable fields are restricted to `title`, `createdAt`, `updatedAt`, and
+  `id`. Sorting on any other field (e.g. `settings`) returns `400 Bad
+  Request` — this protects against malformed queries against the JSONB
+  column and other non-indexed attributes.
 
 #### F2.5 Enrollment
 

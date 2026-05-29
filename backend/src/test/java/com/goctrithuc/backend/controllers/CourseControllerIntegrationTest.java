@@ -647,6 +647,14 @@ public class CourseControllerIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  void shouldReturn400ForInvalidSortField() throws Exception {
+    mockMvc
+        .perform(get("/api/courses?sort=settings,asc"))
+        .andExpect(status().isBadRequest())
+        .andDo(print());
+  }
+
+  @Test
   void shouldReturn415ForUnsupportedContentType() throws Exception {
     mockMvc
         .perform(

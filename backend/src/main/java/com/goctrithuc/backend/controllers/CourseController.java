@@ -7,6 +7,7 @@ import com.goctrithuc.backend.entities.Course;
 import com.goctrithuc.backend.entities.CourseVisibility;
 import com.goctrithuc.backend.services.CourseService;
 import jakarta.validation.Valid;
+import java.util.Set;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
@@ -16,10 +17,14 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 @RestController
 @RequestMapping("/api/courses")
 public class CourseController {
+
+  private static final Set<String> ALLOWED_SORT_FIELDS =
+      Set.of("title", "createdAt", "updatedAt", "id");
 
   private final CourseService courseService;
 
@@ -35,9 +40,26 @@ public class CourseController {
       @RequestParam(value = "own", required = false) Boolean own,
       @PageableDefault(size = 10) Pageable pageable) {
 
+    validateSort(pageable);
     Page<Course> courses = courseService.listCourses(principal, search, visibility, own, pageable);
     Page<CourseResponse> response = courses.map(CourseResponse::from);
     return ResponseEntity.ok(response);
+  }
+
+  private static void validateSort(Pageable pageable) {
+    pageable
+        .getSort()
+        .forEach(
+            order -> {
+              if (!ALLOWED_SORT_FIELDS.contains(order.getProperty())) {
+                throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Invalid sort field: "
+                        + order.getProperty()
+                        + ". Allowed: "
+                        + ALLOWED_SORT_FIELDS);
+              }
+            });
   }
 
   @GetMapping("/{id}")
