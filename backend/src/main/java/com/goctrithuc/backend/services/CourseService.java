@@ -1,6 +1,5 @@
 package com.goctrithuc.backend.services;
 
-import com.goctrithuc.backend.common.PermissionConstants;
 import com.goctrithuc.backend.dtos.CreateCourseRequest;
 import com.goctrithuc.backend.dtos.UpdateCourseRequest;
 import com.goctrithuc.backend.entities.Course;
@@ -111,12 +110,6 @@ public class CourseService {
     }
 
     User author = getAuthenticatedUser(principal);
-
-    // Two-layer capability check (redundant but safe)
-    if (!permissionService.hasPermission(principal, PermissionConstants.MANAGE_OWN_COURSES)) {
-      throw new ResponseStatusException(
-          HttpStatus.FORBIDDEN, "User does not have course creation permission");
-    }
 
     // Handle defaults
     String title =
