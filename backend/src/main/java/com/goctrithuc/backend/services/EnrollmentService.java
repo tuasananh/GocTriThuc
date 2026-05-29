@@ -1,5 +1,6 @@
 package com.goctrithuc.backend.services;
 
+import com.goctrithuc.backend.dtos.AccessStatus;
 import com.goctrithuc.backend.entities.Course;
 import com.goctrithuc.backend.entities.CourseVisibility;
 import com.goctrithuc.backend.entities.EnrollmentEntity;
@@ -41,6 +42,11 @@ public class EnrollmentService {
             .orElseThrow(
                 () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Course not found"));
 
+    if (!course.isPublished()) {
+      throw new ResponseStatusException(
+          HttpStatus.FORBIDDEN, "Cannot enroll in an unpublished course");
+    }
+
     if (course.getVisibility() == CourseVisibility.PRIVATE) {
       throw new ResponseStatusException(
           HttpStatus.FORBIDDEN, "Private courses cannot be enrolled in directly");
@@ -76,13 +82,18 @@ public class EnrollmentService {
   }
 
   @Transactional(readOnly = true)
-  public String getAccessStatus(Long userId, Long courseId) {
-    if (enrollmentRepo.existsById(new EnrollmentId(userId, courseId))) {
-      return "enrolled";
+  public AccessStatus getAccessStatus(Long userId, Long courseId) {
+    if (isEnrolled(userId, courseId)) {
+      return AccessStatus.ENROLLED;
     }
     if (accessRequestRepo.existsByUserIdAndCourseId(userId, courseId)) {
-      return "requested";
+      return AccessStatus.REQUESTED;
     }
-    return "none";
+    return AccessStatus.NONE;
+  }
+
+  @Transactional(readOnly = true)
+  public boolean isEnrolled(Long userId, Long courseId) {
+    return enrollmentRepo.existsById(new EnrollmentId(userId, courseId));
   }
 }

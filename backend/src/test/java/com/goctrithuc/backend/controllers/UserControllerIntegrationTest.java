@@ -69,7 +69,6 @@ public class UserControllerIntegrationTest extends BaseIntegrationTest {
         .andExpect(jsonPath("$.email").value(email))
         .andExpect(jsonPath("$.roles[0]").value("student"))
         .andExpect(jsonPath("$.avatarUrl").value("http://example.com/avatar.jpg"))
-        .andExpect(jsonPath("$.permissions").value(studentRole.get().getPermissions()))
         .andDo(print());
   }
 

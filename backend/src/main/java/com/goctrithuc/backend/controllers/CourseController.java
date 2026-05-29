@@ -1,5 +1,6 @@
 package com.goctrithuc.backend.controllers;
 
+import com.goctrithuc.backend.common.AuthUtils;
 import com.goctrithuc.backend.dtos.*;
 import com.goctrithuc.backend.entities.Course;
 import com.goctrithuc.backend.entities.CourseVisibility;
@@ -146,8 +147,8 @@ public class CourseController {
   @PreAuthorize("isAuthenticated()")
   public ResponseEntity<AccessStatusResponse> accessStatus(
       @PathVariable Long id, @AuthenticationPrincipal OAuth2User principal) {
-    Long userId = getCurrentUserId(principal);
-    String status = enrollmentService.getAccessStatus(userId, id);
+    Long userId = AuthUtils.getCurrentUserId(principal, userRepository);
+    AccessStatus status = enrollmentService.getAccessStatus(userId, id);
     return ResponseEntity.ok(new AccessStatusResponse(status));
   }
 
@@ -155,7 +156,7 @@ public class CourseController {
   @PreAuthorize("isAuthenticated()")
   public ResponseEntity<Void> enroll(
       @PathVariable Long id, @AuthenticationPrincipal OAuth2User principal) {
-    enrollmentService.enroll(getCurrentUserId(principal), id);
+    enrollmentService.enroll(AuthUtils.getCurrentUserId(principal, userRepository), id);
     return ResponseEntity.status(HttpStatus.CREATED).build();
   }
 
@@ -163,7 +164,7 @@ public class CourseController {
   @PreAuthorize("isAuthenticated()")
   public ResponseEntity<Void> unenroll(
       @PathVariable Long id, @AuthenticationPrincipal OAuth2User principal) {
-    enrollmentService.unenroll(getCurrentUserId(principal), id);
+    enrollmentService.unenroll(AuthUtils.getCurrentUserId(principal, userRepository), id);
     return ResponseEntity.noContent().build();
   }
 
@@ -173,7 +174,7 @@ public class CourseController {
   @PreAuthorize("isAuthenticated()")
   public ResponseEntity<Void> requestAccess(
       @PathVariable Long id, @AuthenticationPrincipal OAuth2User principal) {
-    accessRequestService.requestAccess(getCurrentUserId(principal), id);
+    accessRequestService.requestAccess(AuthUtils.getCurrentUserId(principal, userRepository), id);
     return ResponseEntity.status(HttpStatus.CREATED).build();
   }
 
@@ -213,9 +214,9 @@ public class CourseController {
   @PreAuthorize("isAuthenticated()")
   public ResponseEntity<List<ModuleResponse>> getModules(
       @PathVariable Long id, @AuthenticationPrincipal OAuth2User principal) {
-    Long userId = getCurrentUserId(principal);
+    Long userId = AuthUtils.getCurrentUserId(principal, userRepository);
     boolean isAdmin = permissionService.isAdmin(principal);
-    boolean isEnrolled = enrollmentService.getAccessStatus(userId, id).equals("enrolled");
+    boolean isEnrolled = enrollmentService.isEnrolled(userId, id);
     boolean isAuthor = courseRepository.existsByIdAndAuthorId(id, userId);
     if (!isEnrolled && !isAuthor && !isAdmin) {
       throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Access denied to course curriculum");
@@ -229,28 +230,7 @@ public class CourseController {
   @PreAuthorize("isAuthenticated()")
   public ResponseEntity<CourseProgressResponse> getProgress(
       @PathVariable Long id, @AuthenticationPrincipal OAuth2User principal) {
-    Long userId = getCurrentUserId(principal);
+    Long userId = AuthUtils.getCurrentUserId(principal, userRepository);
     return ResponseEntity.ok(lessonCompletionService.getProgress(userId, id));
-  }
-
-  // === Helper Methods ===
-
-  private Long getCurrentUserId(OAuth2User principal) {
-    if (principal == null) {
-      throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Authentication required");
-    }
-    Object emailObj = principal.getAttribute("email");
-    if (emailObj == null) {
-      throw new ResponseStatusException(
-          HttpStatus.BAD_REQUEST, "Email missing in OAuth2 user attributes");
-    }
-    String email = emailObj.toString();
-    return userRepository
-        .findByEmail(email)
-        .orElseThrow(
-            () ->
-                new ResponseStatusException(
-                    HttpStatus.NOT_FOUND, "Authenticated user not found in database"))
-        .getId();
   }
 }

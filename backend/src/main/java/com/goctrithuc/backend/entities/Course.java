@@ -45,7 +45,7 @@ public class Course {
   private ZonedDateTime updatedAt;
 
   @OneToMany(mappedBy = "course", cascade = CascadeType.ALL, orphanRemoval = true)
-  @OrderBy("\"order\" ASC")
+  @OrderBy("order ASC")
   private List<ModuleEntity> modules = new ArrayList<>();
 
   protected Course() {}

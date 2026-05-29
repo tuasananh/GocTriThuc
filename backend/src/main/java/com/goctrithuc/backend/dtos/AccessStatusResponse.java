@@ -1,3 +1,3 @@
 package com.goctrithuc.backend.dtos;
 
-public record AccessStatusResponse(String status) {}
+public record AccessStatusResponse(AccessStatus status) {}

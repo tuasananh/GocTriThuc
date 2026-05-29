@@ -78,8 +78,8 @@ public class FileControllerIntegrationTest extends BaseIntegrationTest {
                 .with(csrf()))
         .andExpect(status().isCreated())
         .andExpect(jsonPath("$.id").exists())
-        .andExpect(jsonPath("$.provider").value("local"))
-        .andExpect(jsonPath("$.providerValue").exists())
+        .andExpect(jsonPath("$.filename").exists())
+        .andExpect(jsonPath("$.url").exists())
         .andDo(print());
 
     // Verify metadata saved in database
@@ -118,7 +118,9 @@ public class FileControllerIntegrationTest extends BaseIntegrationTest {
     File fileEntity = fileRepository.save(new File(user.getId(), "local", secureFilename));
 
     mockMvc
-        .perform(MockMvcRequestBuilders.get("/api/files/serve/" + fileEntity.getId()))
+        .perform(
+            MockMvcRequestBuilders.get("/api/files/serve/" + fileEntity.getId())
+                .with(oauth2Login().attributes(attrs -> attrs.put("email", "serve@hust.edu.vn"))))
         .andExpect(status().isOk())
         .andExpect(header().string("Content-Type", "image/png"))
         .andExpect(header().string("Cache-Control", "public, max-age=31536000"))
@@ -129,7 +131,9 @@ public class FileControllerIntegrationTest extends BaseIntegrationTest {
   @Test
   void shouldReturn404WhenFileDoesNotExistInDb() throws Exception {
     mockMvc
-        .perform(MockMvcRequestBuilders.get("/api/files/serve/9999"))
+        .perform(
+            MockMvcRequestBuilders.get("/api/files/serve/9999")
+                .with(oauth2Login().attributes(attrs -> attrs.put("email", "serve@hust.edu.vn"))))
         .andExpect(status().isNotFound())
         .andDo(print());
   }
@@ -141,7 +145,9 @@ public class FileControllerIntegrationTest extends BaseIntegrationTest {
     File fileEntity = fileRepository.save(new File(user.getId(), "local", "nonexistent_file.png"));
 
     mockMvc
-        .perform(MockMvcRequestBuilders.get("/api/files/serve/" + fileEntity.getId()))
+        .perform(
+            MockMvcRequestBuilders.get("/api/files/serve/" + fileEntity.getId())
+                .with(oauth2Login().attributes(attrs -> attrs.put("email", "serve@hust.edu.vn"))))
         .andExpect(status().isNotFound())
         .andDo(print());
   }
@@ -154,7 +160,9 @@ public class FileControllerIntegrationTest extends BaseIntegrationTest {
         fileRepository.save(new File(user.getId(), "local", "../traversal_attempt.png"));
 
     mockMvc
-        .perform(MockMvcRequestBuilders.get("/api/files/serve/" + fileEntity.getId()))
+        .perform(
+            MockMvcRequestBuilders.get("/api/files/serve/" + fileEntity.getId())
+                .with(oauth2Login().attributes(attrs -> attrs.put("email", "serve@hust.edu.vn"))))
         .andExpect(status().isBadRequest())
         .andDo(print());
   }

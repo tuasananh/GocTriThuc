@@ -96,7 +96,7 @@ public class CourseService {
     if (course.getVisibility() == CourseVisibility.PRIVATE) {
       // Check if current user is the author or admin
       if (principal == null) {
-        throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Access denied");
+        throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Course not found");
       }
       User user = getAuthenticatedUser(principal);
       boolean isAdmin = permissionService.isAdminFromUser(user);

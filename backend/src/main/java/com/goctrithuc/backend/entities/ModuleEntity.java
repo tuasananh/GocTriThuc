@@ -24,7 +24,7 @@ public class ModuleEntity {
   private Integer order;
 
   @OneToMany(mappedBy = "module", cascade = CascadeType.ALL, orphanRemoval = true)
-  @OrderBy("\"order\" ASC")
+  @OrderBy("order ASC")
   private List<LessonEntity> lessons = new ArrayList<>();
 
   @Column(name = "created_at", nullable = false, insertable = false, updatable = false)

@@ -64,6 +64,10 @@ public class LessonCompletionService {
 
   @Transactional(readOnly = true)
   public CourseProgressResponse getProgress(Long userId, Long courseId) {
+    if (!enrollmentRepo.existsById(new EnrollmentId(userId, courseId))) {
+      throw new ResponseStatusException(
+          HttpStatus.FORBIDDEN, "User is not enrolled in this course");
+    }
     long totalLessons = lessonRepo.countByModuleCourseId(courseId);
     long completedLessons = completionRepo.countByUserIdAndCourseId(userId, courseId);
     int percent = totalLessons == 0 ? 0 : (int) (completedLessons * 100 / totalLessons);

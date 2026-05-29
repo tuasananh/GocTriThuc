@@ -599,7 +599,7 @@ public class CourseControllerIntegrationTest extends BaseIntegrationTest {
 
     mockMvc
         .perform(get("/api/courses/" + privateCourse.getId()))
-        .andExpect(status().isForbidden())
+        .andExpect(status().isNotFound())
         .andDo(print());
   }
 
