@@ -6,6 +6,7 @@ import com.goctrithuc.backend.dtos.UpdateCourseRequest;
 import com.goctrithuc.backend.entities.Course;
 import com.goctrithuc.backend.entities.CourseVisibility;
 import com.goctrithuc.backend.services.CourseService;
+import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
@@ -51,7 +52,7 @@ public class CourseController {
   @PreAuthorize(
       "@permissionService.hasPermission(#principal, T(com.goctrithuc.backend.common.PermissionConstants).MANAGE_OWN_COURSES)")
   public ResponseEntity<CourseResponse> createCourse(
-      @RequestBody(required = false) CreateCourseRequest request,
+      @Valid @RequestBody(required = false) CreateCourseRequest request,
       @AuthenticationPrincipal OAuth2User principal) {
 
     // If body is empty, pass empty request to service to trigger defaults
@@ -66,7 +67,7 @@ public class CourseController {
       "@permissionService.hasPermission(#principal, T(com.goctrithuc.backend.common.PermissionConstants).MANAGE_OWN_COURSES)")
   public ResponseEntity<CourseResponse> updateCourse(
       @PathVariable Long id,
-      @RequestBody UpdateCourseRequest request,
+      @Valid @RequestBody UpdateCourseRequest request,
       @AuthenticationPrincipal OAuth2User principal) {
 
     Course course = courseService.updateCourse(id, request, principal);
@@ -78,7 +79,7 @@ public class CourseController {
       "@permissionService.hasPermission(#principal, T(com.goctrithuc.backend.common.PermissionConstants).MANAGE_OWN_COURSES)")
   public ResponseEntity<CourseResponse> patchCourse(
       @PathVariable Long id,
-      @RequestBody UpdateCourseRequest request,
+      @Valid @RequestBody UpdateCourseRequest request,
       @AuthenticationPrincipal OAuth2User principal) {
 
     Course course = courseService.updateCourse(id, request, principal);

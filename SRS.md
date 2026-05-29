@@ -226,9 +226,13 @@ Previously enrolled students retain access.
 
 - Only users with the `MANAGE_OWN_COURSES` permission bit can create courses.
 - New courses default to `Private` and `is_published = false`.
-- Fields: `title` (required), `description` (text, optional), `thumbnail_url`
-  (text, optional), `visibility`, `settings` (jsonb, optional — extensible
-  config bag for future course-level options).
+- Fields: `title` (required, max 200 chars), `description` (text, optional,
+  max 10 000 chars), `thumbnail_url` (text, optional, max 500 chars),
+  `visibility`, `settings` (jsonb, optional — extensible config bag for
+  future course-level options).
+- Length constraints above also apply to update payloads
+  (`PUT/PATCH /api/courses/{id}`). Violations return `400 Bad Request` with
+  per-field error details from the validation handler.
 
 #### F2.3 Course Editing & Deletion
 
