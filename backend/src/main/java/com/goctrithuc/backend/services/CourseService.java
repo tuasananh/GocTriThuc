@@ -7,11 +7,13 @@ import com.goctrithuc.backend.entities.Course;
 import com.goctrithuc.backend.entities.CourseVisibility;
 import com.goctrithuc.backend.entities.User;
 import com.goctrithuc.backend.repositories.CourseRepository;
+import com.goctrithuc.backend.repositories.CourseSpecifications;
 import com.goctrithuc.backend.repositories.UserRepository;
 import java.util.Arrays;
 import java.util.List;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
@@ -44,71 +46,39 @@ public class CourseService {
 
     boolean hasOwnParam = Boolean.TRUE.equals(own);
 
-    // If own = true, user must be authenticated
-    if (hasOwnParam) {
-      if (principal == null) {
-        throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Authentication required");
-      }
-      User user = getAuthenticatedUser(principal);
-      Long authorId = user.getId();
-
-      if (search != null && !search.isBlank()) {
-        if (visibility != null) {
-          return courseRepository.findByTitleContainingIgnoreCaseAndVisibilityAndAuthorId(
-              search, visibility, authorId, pageable);
-        }
-        return courseRepository.findByTitleContainingIgnoreCaseAndAuthorId(
-            search, authorId, pageable);
-      } else {
-        if (visibility != null) {
-          return courseRepository.findByVisibilityAndAuthorId(visibility, authorId, pageable);
-        }
-        return courseRepository.findByAuthorId(authorId, pageable);
-      }
+    if (hasOwnParam && principal == null) {
+      throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Authentication required");
     }
 
-    // Checking if user is Admin
     boolean isAdmin = permissionService.isAdmin(principal);
-
-    if (isAdmin) {
-      // Admin sees everything
-      if (search != null && !search.isBlank()) {
-        if (visibility != null) {
-          return courseRepository.findByTitleContainingIgnoreCaseAndVisibility(
-              search, visibility, pageable);
-        }
-        return courseRepository.findByTitleContainingIgnoreCase(search, pageable);
-      } else {
-        if (visibility != null) {
-          return courseRepository.findByVisibility(visibility, pageable);
-        }
-        return courseRepository.findAll(pageable);
-      }
-    }
-
-    // Student or Guest can only see Public and Restricted courses
     List<CourseVisibility> guestVisibilities =
         Arrays.asList(CourseVisibility.Public, CourseVisibility.Restricted);
 
-    if (visibility != null) {
-      if (!guestVisibilities.contains(visibility)) {
-        // Guest/Student cannot query Private courses
-        throw new ResponseStatusException(
-            HttpStatus.FORBIDDEN, "Access denied to requested visibility");
-      }
-      if (search != null && !search.isBlank()) {
-        return courseRepository.findByTitleContainingIgnoreCaseAndVisibility(
-            search, visibility, pageable);
-      }
-      return courseRepository.findByVisibility(visibility, pageable);
+    // Students/guests cannot directly query Private courses (own=true bypasses this since
+    // they're filtering to their own authored courses).
+    if (visibility != null && !hasOwnParam && !isAdmin && !guestVisibilities.contains(visibility)) {
+      throw new ResponseStatusException(
+          HttpStatus.FORBIDDEN, "Access denied to requested visibility");
     }
+
+    Specification<Course> spec = (root, query, cb) -> cb.conjunction();
 
     if (search != null && !search.isBlank()) {
-      return courseRepository.findByTitleContainingIgnoreCaseAndVisibilityIn(
-          search, guestVisibilities, pageable);
+      spec = spec.and(CourseSpecifications.titleContains(search));
     }
 
-    return courseRepository.findByVisibilityIn(guestVisibilities, pageable);
+    if (hasOwnParam) {
+      Long authorId = getAuthenticatedUser(principal).getId();
+      spec = spec.and(CourseSpecifications.authorIdEquals(authorId));
+    }
+
+    if (visibility != null) {
+      spec = spec.and(CourseSpecifications.visibilityEquals(visibility));
+    } else if (!hasOwnParam && !isAdmin) {
+      spec = spec.and(CourseSpecifications.visibilityIn(guestVisibilities));
+    }
+
+    return courseRepository.findAll(spec, pageable);
   }
 
   @Transactional(readOnly = true)
