@@ -624,4 +624,38 @@ public class CourseControllerIntegrationTest extends BaseIntegrationTest {
         .andExpect(jsonPath("$.settings.maxStudents").value(50))
         .andDo(print());
   }
+
+  @Test
+  void shouldReturn400ForInvalidEnumQueryParam() throws Exception {
+    mockMvc
+        .perform(get("/api/courses?visibility=Banana"))
+        .andExpect(status().isBadRequest())
+        .andDo(print());
+  }
+
+  @Test
+  void shouldReturn400ForMalformedJsonBody() throws Exception {
+    mockMvc
+        .perform(
+            post("/api/courses")
+                .with(oauth2Login().attributes(attrs -> attrs.put("email", teacherA.getEmail())))
+                .with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{not json"))
+        .andExpect(status().isBadRequest())
+        .andDo(print());
+  }
+
+  @Test
+  void shouldReturn415ForUnsupportedContentType() throws Exception {
+    mockMvc
+        .perform(
+            post("/api/courses")
+                .with(oauth2Login().attributes(attrs -> attrs.put("email", teacherA.getEmail())))
+                .with(csrf())
+                .contentType(MediaType.TEXT_PLAIN)
+                .content("hi"))
+        .andExpect(status().isUnsupportedMediaType())
+        .andDo(print());
+  }
 }
