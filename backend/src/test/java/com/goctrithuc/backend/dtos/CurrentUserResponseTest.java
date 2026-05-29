@@ -22,6 +22,7 @@ class CurrentUserResponseTest {
     assertNull(response.avatarUrl());
     assertNull(response.username());
     assertNull(response.roles());
+    assertNull(response.permissions());
     assertNull(response.error());
   }
 
@@ -35,6 +36,7 @@ class CurrentUserResponseTest {
     assertNull(response.id());
     assertEquals(errorMessage, response.error());
     assertNull(response.displayName());
+    assertNull(response.permissions());
   }
 
   @Test
@@ -64,5 +66,8 @@ class CurrentUserResponseTest {
     assertEquals(2, response.roles().size());
     assertTrue(response.roles().contains("student"));
     assertTrue(response.roles().contains("editor"));
+
+    // Permissions: 1L | 2L = 3L
+    assertEquals(3L, response.permissions());
   }
 }
