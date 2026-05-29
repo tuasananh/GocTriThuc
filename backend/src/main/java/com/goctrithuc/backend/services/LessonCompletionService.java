@@ -63,8 +63,9 @@ public class LessonCompletionService {
   }
 
   @Transactional(readOnly = true)
-  public CourseProgressResponse getProgress(Long userId, Long courseId) {
-    if (!enrollmentRepo.existsById(new EnrollmentId(userId, courseId))) {
+  public CourseProgressResponse getProgress(
+      Long userId, Long courseId, boolean bypassEnrollmentCheck) {
+    if (!bypassEnrollmentCheck && !enrollmentRepo.existsById(new EnrollmentId(userId, courseId))) {
       throw new ResponseStatusException(
           HttpStatus.FORBIDDEN, "User is not enrolled in this course");
     }

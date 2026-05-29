@@ -50,6 +50,8 @@ public class SecurityConfig {
                         "/icons.svg",
                         "/assets/**")
                     .permitAll()
+                    .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html")
+                    .permitAll()
                     .requestMatchers(HttpMethod.GET, "/api/users/me")
                     .permitAll()
                     .requestMatchers(HttpMethod.GET, "/api/users/{id}")

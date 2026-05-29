@@ -231,6 +231,16 @@ public class CourseController {
   public ResponseEntity<CourseProgressResponse> getProgress(
       @PathVariable Long id, @AuthenticationPrincipal OAuth2User principal) {
     Long userId = AuthUtils.getCurrentUserId(principal, userRepository);
-    return ResponseEntity.ok(lessonCompletionService.getProgress(userId, id));
+    boolean isAdmin = permissionService.isAdmin(principal);
+    boolean isAuthor = courseRepository.existsByIdAndAuthorId(id, userId);
+    boolean isEnrolled = enrollmentService.isEnrolled(userId, id);
+
+    if (!isEnrolled && !isAuthor && !isAdmin) {
+      throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Access denied to course progress");
+    }
+
+    boolean bypassEnrollmentCheck = isAuthor || isAdmin;
+    return ResponseEntity.ok(
+        lessonCompletionService.getProgress(userId, id, bypassEnrollmentCheck));
   }
 }

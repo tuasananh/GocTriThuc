@@ -1,5 +1,10 @@
 CREATE TYPE lesson_type AS ENUM ('video', 'blog', 'test');
 
+CREATE CAST (varchar AS lesson_type) WITH INOUT AS IMPLICIT;
+CREATE CAST (lesson_type AS varchar) WITH INOUT AS IMPLICIT;
+CREATE CAST (text AS lesson_type) WITH INOUT AS IMPLICIT;
+CREATE CAST (lesson_type AS text) WITH INOUT AS IMPLICIT;
+
 CREATE TABLE lessons (
   id          BIGINT PRIMARY KEY DEFAULT generate_snowflake_id(),
   module_id   BIGINT NOT NULL,

@@ -8,3 +8,9 @@ spring:
 app:
   frontend:
     oauth2-redirect-uri: /dashboard
+
+springdoc:
+  api-docs:
+    enabled: false
+  swagger-ui:
+    enabled: false
