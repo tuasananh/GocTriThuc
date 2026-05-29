@@ -1,5 +1,6 @@
 package com.goctrithuc.backend.controllers;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.isA;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.oauth2Login;
@@ -230,7 +231,7 @@ public class CourseControllerIntegrationTest extends BaseIntegrationTest {
         .andExpect(status().isNoContent())
         .andDo(print());
 
-    assert courseRepository.findById(c.getId()).isEmpty();
+    assertThat(courseRepository.findById(c.getId())).isEmpty();
   }
 
   @Test
@@ -337,7 +338,7 @@ public class CourseControllerIntegrationTest extends BaseIntegrationTest {
         .andExpect(status().isNoContent())
         .andDo(print());
 
-    assert courseRepository.findById(c.getId()).isEmpty();
+    assertThat(courseRepository.findById(c.getId())).isEmpty();
   }
 
   @Test
