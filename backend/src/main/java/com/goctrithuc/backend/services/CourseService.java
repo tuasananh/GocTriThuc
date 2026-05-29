@@ -93,7 +93,7 @@ public class CourseService {
             .orElseThrow(
                 () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Course not found"));
 
-    if (course.getVisibility() == CourseVisibility.PRIVATE) {
+    if (course.getVisibility() == CourseVisibility.PRIVATE || !course.isPublished()) {
       // Check if current user is the author or admin
       if (principal == null) {
         throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Course not found");
