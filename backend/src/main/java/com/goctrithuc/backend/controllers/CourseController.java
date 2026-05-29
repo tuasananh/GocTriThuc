@@ -38,7 +38,7 @@ public class CourseController {
       @RequestParam(value = "search", required = false) String search,
       @RequestParam(value = "visibility", required = false) CourseVisibility visibility,
       @RequestParam(value = "own", required = false) Boolean own,
-      @PageableDefault(size = 10) Pageable pageable) {
+      @PageableDefault() Pageable pageable) {
 
     validateSort(pageable);
     Page<Course> courses = courseService.listCourses(principal, search, visibility, own, pageable);
