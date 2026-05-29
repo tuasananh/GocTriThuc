@@ -1,5 +1,7 @@
 package com.goctrithuc.backend.services;
 
+import com.goctrithuc.backend.common.PermissionConstants;
+import com.goctrithuc.backend.common.RoleConstants;
 import com.goctrithuc.backend.common.util.StringUtil;
 import com.goctrithuc.backend.dtos.UpdateUserRequest;
 import com.goctrithuc.backend.entities.Role;
@@ -19,7 +21,7 @@ import org.springframework.web.server.ResponseStatusException;
 @Service
 public class UserPersistenceService {
 
-  private static final String DEFAULT_ROLE_NAME = "student";
+  private static final String DEFAULT_ROLE_NAME = RoleConstants.STUDENT;
 
   private final UserRepository userRepository;
   private final UserProviderRepository userProviderRepository;
@@ -99,9 +101,9 @@ public class UserPersistenceService {
                 .map(UserRole::getRole)
                 .anyMatch(
                     role ->
-                        "admin".equalsIgnoreCase(role.getName())
+                        RoleConstants.ADMIN.equalsIgnoreCase(role.getName())
                             || (role.getPermissions() != null
-                                && (role.getPermissions() & 0x01L) != 0L));
+                                && (role.getPermissions() & PermissionConstants.ADMIN) != 0L));
 
     if (targetUser == null || (!currentUser.getId().equals(targetUserId) && !isAdmin)) {
       throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found");

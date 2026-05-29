@@ -5,6 +5,7 @@ import com.goctrithuc.backend.entities.File;
 import com.goctrithuc.backend.entities.User;
 import com.goctrithuc.backend.repositories.UserRepository;
 import com.goctrithuc.backend.services.FileService;
+import com.goctrithuc.backend.services.PermissionService;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -13,6 +14,7 @@ import org.springframework.core.io.UrlResource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -30,10 +32,13 @@ public class FileController {
 
   private final FileService fileService;
   private final UserRepository userRepository;
+  private final PermissionService permissionService;
 
-  public FileController(FileService fileService, UserRepository userRepository) {
+  public FileController(
+      FileService fileService, UserRepository userRepository, PermissionService permissionService) {
     this.fileService = fileService;
     this.userRepository = userRepository;
+    this.permissionService = permissionService;
   }
 
   @PostMapping("/upload")
@@ -64,8 +69,34 @@ public class FileController {
   }
 
   @GetMapping("/serve/{id}")
-  public ResponseEntity<Resource> serveFile(@PathVariable Long id) {
+  public ResponseEntity<Resource> serveFile(@PathVariable Long id, Authentication authentication) {
+    if (authentication == null || !(authentication.getPrincipal() instanceof OAuth2User)) {
+      throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "User must be logged in");
+    }
+
+    OAuth2User principal = (OAuth2User) authentication.getPrincipal();
+    Object emailObj = principal.getAttribute("email");
+    if (emailObj == null) {
+      throw new ResponseStatusException(
+          HttpStatus.UNAUTHORIZED, "Authenticated principal does not have an email");
+    }
+
+    User currentUser =
+        userRepository
+            .findByEmail(emailObj.toString())
+            .orElseThrow(
+                () ->
+                    new ResponseStatusException(
+                        HttpStatus.NOT_FOUND, "User not found in database"));
+
     File fileEntity = fileService.findById(id);
+
+    boolean isAdmin = permissionService.isAdminFromUser(currentUser);
+
+    if (!fileEntity.getAuthorId().equals(currentUser.getId()) && !isAdmin) {
+      throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Access denied");
+    }
+
     Path filePath = fileService.resolveFilePath(fileEntity.getProviderValue());
 
     String contentType;

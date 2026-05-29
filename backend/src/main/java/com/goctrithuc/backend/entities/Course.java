@@ -2,6 +2,8 @@ package com.goctrithuc.backend.entities;
 
 import jakarta.persistence.*;
 import java.time.ZonedDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
@@ -41,6 +43,10 @@ public class Course {
 
   @Column(name = "updated_at", nullable = false, insertable = false)
   private ZonedDateTime updatedAt;
+
+  @OneToMany(mappedBy = "course", cascade = CascadeType.ALL, orphanRemoval = true)
+  @OrderBy("\"order\" ASC")
+  private List<ModuleEntity> modules = new ArrayList<>();
 
   protected Course() {}
 
@@ -127,5 +133,13 @@ public class Course {
 
   public ZonedDateTime getUpdatedAt() {
     return updatedAt;
+  }
+
+  public List<ModuleEntity> getModules() {
+    return modules;
+  }
+
+  public void setModules(List<ModuleEntity> modules) {
+    this.modules = modules;
   }
 }
