@@ -3,6 +3,7 @@ import { MainLayout } from '@/layouts/MainLayout';
 import { LandingPage } from '@/pages';
 import { LoginPage } from '@/pages/login';
 import { Dashboard } from '@/pages/dashboard';
+import { CourseListPage } from '@/pages/courses';
 import { GuestRoute } from '@/components/GuestRoute';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { AuthProvider } from './providers/AuthProvider';
@@ -39,9 +40,7 @@ function App() {
                     </div>
                   }
                 />
-                {/* Thêm các trang public khác ở đây:
-                  <Route path={ROUTES.COURSES} element={<CourseListPage />} />
-              */}
+                <Route path={ROUTES.COURSES} element={<CourseListPage />} />
               </Route>
 
               {/* ── Guest Only (redirect nếu đã đăng nhập) ── */}
