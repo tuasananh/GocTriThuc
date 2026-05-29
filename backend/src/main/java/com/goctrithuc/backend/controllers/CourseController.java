@@ -49,7 +49,7 @@ public class CourseController {
 
   @PostMapping
   @PreAuthorize(
-      "@permissionService.hasPermission(#principal, 2)") // 2 is MANAGE_OWN_COURSES (0x02L)
+      "@permissionService.hasPermission(#principal, T(com.goctrithuc.backend.common.PermissionConstants).MANAGE_OWN_COURSES)")
   public ResponseEntity<CourseResponse> createCourse(
       @RequestBody(required = false) CreateCourseRequest request,
       @AuthenticationPrincipal OAuth2User principal) {
@@ -62,7 +62,8 @@ public class CourseController {
   }
 
   @PutMapping("/{id}")
-  @PreAuthorize("@permissionService.hasPermission(#principal, 2)")
+  @PreAuthorize(
+      "@permissionService.hasPermission(#principal, T(com.goctrithuc.backend.common.PermissionConstants).MANAGE_OWN_COURSES)")
   public ResponseEntity<CourseResponse> updateCourse(
       @PathVariable Long id,
       @RequestBody UpdateCourseRequest request,
@@ -73,7 +74,8 @@ public class CourseController {
   }
 
   @PatchMapping("/{id}")
-  @PreAuthorize("@permissionService.hasPermission(#principal, 2)")
+  @PreAuthorize(
+      "@permissionService.hasPermission(#principal, T(com.goctrithuc.backend.common.PermissionConstants).MANAGE_OWN_COURSES)")
   public ResponseEntity<CourseResponse> patchCourse(
       @PathVariable Long id,
       @RequestBody UpdateCourseRequest request,
@@ -84,7 +86,8 @@ public class CourseController {
   }
 
   @DeleteMapping("/{id}")
-  @PreAuthorize("@permissionService.hasPermission(#principal, 2)")
+  @PreAuthorize(
+      "@permissionService.hasPermission(#principal, T(com.goctrithuc.backend.common.PermissionConstants).MANAGE_OWN_COURSES)")
   public ResponseEntity<Void> deleteCourse(
       @PathVariable Long id, @AuthenticationPrincipal OAuth2User principal) {
 
