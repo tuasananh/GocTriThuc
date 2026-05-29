@@ -242,7 +242,7 @@ GET /api/courses/{id}/modules
 
 ### Task 1 — Course Listing page
 
-File: `src/pages/courses/CourseListPage.tsx`
+File: `src/pages/courses/index.tsx`
 
 ```tsx
 export function CourseListPage() {
