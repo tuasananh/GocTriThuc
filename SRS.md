@@ -226,9 +226,13 @@ Previously enrolled students retain access.
 
 - Only users with the `MANAGE_OWN_COURSES` permission bit can create courses.
 - New courses default to `Private` and `is_published = false`.
-- Fields: `title` (required), `description` (text, optional), `thumbnail_url`
-  (text, optional), `visibility`, `settings` (jsonb, optional — extensible
-  config bag for future course-level options).
+- Fields: `title` (required, max 200 chars), `description` (text, optional,
+  max 10 000 chars), `thumbnail_url` (text, optional, max 500 chars),
+  `visibility`, `settings` (jsonb, optional — extensible config bag for
+  future course-level options).
+- Length constraints above also apply to update payloads
+  (`PUT/PATCH /api/courses/{id}`). Violations return `400 Bad Request` with
+  per-field error details from the validation handler.
 
 #### F2.3 Course Editing & Deletion
 
@@ -246,6 +250,10 @@ Previously enrolled students retain access.
 - `GET /api/courses`: Paginated. Returns only `Public` and `Restricted` courses
   to unauthenticated/student users. Admins see all.
 - Supports search by title and filter by visibility.
+- Sortable fields are restricted to `title`, `createdAt`, `updatedAt`, and
+  `id`. Sorting on any other field (e.g. `settings`) returns `400 Bad
+  Request` — this protects against malformed queries against the JSONB
+  column and other non-indexed attributes.
 
 #### F2.5 Enrollment
 
@@ -692,7 +700,7 @@ questions
 | Question subtypes                                  | Table-per-type (shared `id` FK to `questions`); `question_type` enum discriminates                                                                                                                                                                   |
 | Nested comments                                    | Self-referential `parent_id` with `ON DELETE CASCADE`; no closure table (suitable for v1 depth)                                                                                                                                                      |
 | Access control                                     | `course_access_requests` is ephemeral — row deleted on both approve and reject                                                                                                                                                                       |
-| Test settings                                      | `jsonb` — mapped in Java using the third-party Hypersistence Utils library (`JsonBinaryType`) to avoid JPA driver mapping exceptions while keeping standard Java `Map` structures.                                                                   |
+| Test settings                                      | `jsonb` — mapped in Java using a custom AttributeConverter with Jackson ObjectMapper. This lightweight approach avoids external dependencies for simple read/write config bags.                                                                   |
 | File storage                                       | Local disk, `provider = 'local'`, path in `provider_value`; served via streaming endpoint                                                                                                                                                            |
 | Timestamps                                         | All tables use `timestamptz NOT NULL DEFAULT NOW()`                                                                                                                                                                                                  |
 | `updated_at` trigger                               | A shared PostgreSQL `update_updated_at_column()` function, attached via per-table `tr_*` `BEFORE UPDATE` triggers, auto-updates `updated_at` at the DB level regardless of how rows are modified (JPA or raw SQL).                                   |
