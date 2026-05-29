@@ -34,13 +34,13 @@ public record CourseResponse(
   }
 
   private static String computeStatus(boolean isPublished, CourseVisibility visibility) {
-    if (!isPublished && visibility == CourseVisibility.Private) {
+    if (!isPublished && visibility == CourseVisibility.PRIVATE) {
       return "draft";
     }
     if (!isPublished) {
       return "coming_soon";
     }
-    if (visibility == CourseVisibility.Private) {
+    if (visibility == CourseVisibility.PRIVATE) {
       return "published_hidden";
     }
     return "live";

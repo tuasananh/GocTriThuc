@@ -1,10 +1,17 @@
+CREATE TYPE course_visibility AS ENUM ('public', 'restricted', 'private');
+
+CREATE CAST (varchar AS course_visibility) WITH INOUT AS IMPLICIT;
+CREATE CAST (course_visibility AS varchar) WITH INOUT AS IMPLICIT;
+CREATE CAST (text AS course_visibility) WITH INOUT AS IMPLICIT;
+CREATE CAST (course_visibility AS text) WITH INOUT AS IMPLICIT;
+
 CREATE TABLE courses (
     id BIGINT PRIMARY KEY DEFAULT generate_snowflake_id(),
     title TEXT NOT NULL,
     description TEXT,
     thumbnail_url TEXT,
     is_published BOOLEAN NOT NULL DEFAULT FALSE,
-    visibility VARCHAR(20) NOT NULL DEFAULT 'Private' CHECK (visibility IN ('Public', 'Restricted', 'Private')),
+    visibility course_visibility NOT NULL DEFAULT 'private',
     author_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     settings JSONB,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),

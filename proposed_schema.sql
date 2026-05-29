@@ -5,7 +5,12 @@ CREATE SCHEMA IF NOT EXISTS "public";
 -- ============================================================
 
 -- course_visibility: controls who can see/enroll in a course
-CREATE TYPE "course_visibility" AS ENUM ('Public', 'Restricted', 'Private');
+CREATE TYPE "course_visibility" AS ENUM ('public', 'restricted', 'private');
+
+CREATE CAST (varchar AS "course_visibility") WITH INOUT AS IMPLICIT;
+CREATE CAST ("course_visibility" AS varchar) WITH INOUT AS IMPLICIT;
+CREATE CAST (text AS "course_visibility") WITH INOUT AS IMPLICIT;
+CREATE CAST ("course_visibility" AS text) WITH INOUT AS IMPLICIT;
 
 -- lesson_type: the kind of content a lesson holds
 CREATE TYPE "lesson_type" AS ENUM ('blog', 'video', 'test');
@@ -93,7 +98,7 @@ CREATE TABLE "public"."courses" (
     "description"   text,
     "thumbnail_url" text,
     "is_published"  boolean          NOT NULL DEFAULT FALSE,
-    "visibility"    course_visibility NOT NULL DEFAULT 'Private',
+    "visibility"    course_visibility NOT NULL DEFAULT 'private',
     "author_id"     bigint           NOT NULL,
     "settings"      jsonb,
     "created_at"    timestamptz      NOT NULL DEFAULT NOW(),

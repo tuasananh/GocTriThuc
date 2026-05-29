@@ -51,7 +51,7 @@ public class CourseService {
 
     boolean isAdmin = permissionService.isAdmin(principal);
     List<CourseVisibility> guestVisibilities =
-        Arrays.asList(CourseVisibility.Public, CourseVisibility.Restricted);
+        Arrays.asList(CourseVisibility.PUBLIC, CourseVisibility.RESTRICTED);
 
     // Students/guests cannot directly query Private courses (own=true bypasses this since
     // they're filtering to their own authored courses).
@@ -88,7 +88,7 @@ public class CourseService {
             .orElseThrow(
                 () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Course not found"));
 
-    if (course.getVisibility() == CourseVisibility.Private) {
+    if (course.getVisibility() == CourseVisibility.PRIVATE) {
       // Check if current user is the author or admin
       if (principal == null) {
         throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Access denied");
@@ -96,7 +96,8 @@ public class CourseService {
       User user = getAuthenticatedUser(principal);
       boolean isAdmin = permissionService.isAdmin(principal);
       if (!course.getAuthor().getId().equals(user.getId()) && !isAdmin) {
-        throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Access denied");
+        // Return 404 instead of 403 to avoid leaking information about existence of the course
+        throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Course not found");
       }
     }
 
@@ -116,7 +117,7 @@ public class CourseService {
         (request.title() == null || request.title().isBlank()) ? "Khóa học mới" : request.title();
     String description = request.description() == null ? "" : request.description();
     CourseVisibility visibility =
-        request.visibility() == null ? CourseVisibility.Private : request.visibility();
+        request.visibility() == null ? CourseVisibility.PRIVATE : request.visibility();
     boolean isPublished = false;
 
     Course course =

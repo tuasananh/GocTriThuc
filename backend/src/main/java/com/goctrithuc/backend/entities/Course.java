@@ -25,8 +25,8 @@ public class Course {
   @Column(name = "is_published", nullable = false)
   private boolean isPublished;
 
-  @Column(nullable = false)
-  @Enumerated(EnumType.STRING)
+  @Column(nullable = false, columnDefinition = "course_visibility")
+  @Convert(converter = CourseVisibilityJpaConverter.class)
   private CourseVisibility visibility;
 
   @ManyToOne(fetch = FetchType.LAZY)

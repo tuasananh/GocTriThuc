@@ -9,4 +9,9 @@ public record CreateCourseRequest(
     @Size(max = 10000) String description,
     @Size(max = 500) String thumbnailUrl,
     CourseVisibility visibility,
-    Map<String, Object> settings) {}
+    Map<String, Object> settings) {
+
+  public CreateCourseRequest() {
+    this(null, null, null, null, null);
+  }
+}

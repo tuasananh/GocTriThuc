@@ -78,8 +78,7 @@ public class CourseController {
       @AuthenticationPrincipal OAuth2User principal) {
 
     // If body is empty, pass empty request to service to trigger defaults
-    CreateCourseRequest req =
-        request != null ? request : new CreateCourseRequest(null, null, null, null, null);
+    CreateCourseRequest req = request != null ? request : new CreateCourseRequest();
     Course course = courseService.createCourse(req, principal);
     return ResponseEntity.status(HttpStatus.CREATED).body(CourseResponse.from(course));
   }

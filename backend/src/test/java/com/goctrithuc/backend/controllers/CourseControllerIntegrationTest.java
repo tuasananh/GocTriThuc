@@ -96,13 +96,13 @@ public class CourseControllerIntegrationTest extends BaseIntegrationTest {
   void shouldAllowGuestToAccessPublicAndRestrictedCoursesInListing() throws Exception {
     // Create courses
     courseRepository.save(
-        new Course("Public Course", "Desc", null, true, CourseVisibility.Public, teacherA, null));
+        new Course("Public Course", "Desc", null, true, CourseVisibility.PUBLIC, teacherA, null));
     courseRepository.save(
         new Course(
-            "Restricted Course", "Desc", null, true, CourseVisibility.Restricted, teacherA, null));
+            "Restricted Course", "Desc", null, true, CourseVisibility.RESTRICTED, teacherA, null));
     courseRepository.save(
         new Course(
-            "Private Course", "Desc", null, false, CourseVisibility.Private, teacherA, null));
+            "Private Course", "Desc", null, false, CourseVisibility.PRIVATE, teacherA, null));
 
     mockMvc
         .perform(get("/api/courses?sort=title,asc"))
@@ -116,6 +116,27 @@ public class CourseControllerIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  void shouldAllowGuestToAccessRestrictedCoursesInSearch() throws Exception {
+    // Create courses
+    courseRepository.save(
+        new Course("Public Course", "Desc", null, true, CourseVisibility.PUBLIC, teacherA, null));
+    courseRepository.save(
+        new Course(
+            "Restricted Course", "Desc", null, true, CourseVisibility.RESTRICTED, teacherA, null));
+    courseRepository.save(
+        new Course(
+            "Private Course", "Desc", null, false, CourseVisibility.PRIVATE, teacherA, null));
+
+    mockMvc
+        .perform(get("/api/courses?visibility=restricted"))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.content.length()").value(1))
+        .andExpect(jsonPath("$.content[0].title").value("Restricted Course"))
+        .andExpect(jsonPath("$.content[0].status").value("live"))
+        .andDo(print());
+  }
+
+  @Test
   void shouldAllowGuestToViewPublicCourseDetail() throws Exception {
     Course publicCourse =
         courseRepository.save(
@@ -124,7 +145,7 @@ public class CourseControllerIntegrationTest extends BaseIntegrationTest {
                 "Desc",
                 null,
                 true,
-                CourseVisibility.Public,
+                CourseVisibility.PUBLIC,
                 teacherA,
                 null));
 
@@ -138,7 +159,7 @@ public class CourseControllerIntegrationTest extends BaseIntegrationTest {
         .andExpect(jsonPath("$.author.id").value(isA(String.class)))
         .andExpect(jsonPath("$.author.id").value(teacherA.getId().toString()))
         .andExpect(jsonPath("$.title").value("Public Course Detailed"))
-        .andExpect(jsonPath("$.visibility").value("Public"))
+        .andExpect(jsonPath("$.visibility").value("public"))
         .andExpect(jsonPath("$.status").value("live"))
         .andDo(print());
   }
@@ -154,7 +175,7 @@ public class CourseControllerIntegrationTest extends BaseIntegrationTest {
                 .contentType(MediaType.APPLICATION_JSON))
         .andExpect(status().isCreated())
         .andExpect(jsonPath("$.title").value("Khóa học mới"))
-        .andExpect(jsonPath("$.visibility").value("Private"))
+        .andExpect(jsonPath("$.visibility").value("private"))
         .andExpect(jsonPath("$.status").value("draft"))
         .andExpect(jsonPath("$.author.displayName").value("Teacher A"))
         .andDo(print());
@@ -169,7 +190,7 @@ public class CourseControllerIntegrationTest extends BaseIntegrationTest {
             "Design Patterns 101",
             "Introduction to design patterns",
             "http://thumbnail.com/pic.png",
-            CourseVisibility.Public,
+            CourseVisibility.PUBLIC,
             settings);
 
     mockMvc
@@ -181,7 +202,7 @@ public class CourseControllerIntegrationTest extends BaseIntegrationTest {
                 .content(objectMapper.writeValueAsString(req)))
         .andExpect(status().isCreated())
         .andExpect(jsonPath("$.title").value("Design Patterns 101"))
-        .andExpect(jsonPath("$.visibility").value("Public"))
+        .andExpect(jsonPath("$.visibility").value("public"))
         .andExpect(
             jsonPath("$.status").value("coming_soon")) // because isPublished defaults to false
         .andExpect(jsonPath("$.settings.allowSelfEnroll").value(true))
@@ -192,14 +213,14 @@ public class CourseControllerIntegrationTest extends BaseIntegrationTest {
   void shouldAllowAuthorToUpdateCourseViaPut() throws Exception {
     Course c =
         courseRepository.save(
-            new Course("Old Title", "Desc", null, false, CourseVisibility.Private, teacherA, null));
+            new Course("Old Title", "Desc", null, false, CourseVisibility.PRIVATE, teacherA, null));
 
     UpdateCourseRequest req =
         new UpdateCourseRequest(
             "New Title Via PUT",
             "New Desc",
             "http://newthumb.png",
-            CourseVisibility.Public,
+            CourseVisibility.PUBLIC,
             true,
             null);
 
@@ -212,7 +233,7 @@ public class CourseControllerIntegrationTest extends BaseIntegrationTest {
                 .content(objectMapper.writeValueAsString(req)))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.title").value("New Title Via PUT"))
-        .andExpect(jsonPath("$.visibility").value("Public"))
+        .andExpect(jsonPath("$.visibility").value("public"))
         .andExpect(jsonPath("$.status").value("live")) // isPublished=true + Public -> "live"
         .andDo(print());
   }
@@ -221,7 +242,7 @@ public class CourseControllerIntegrationTest extends BaseIntegrationTest {
   void shouldAllowAuthorToDeleteCourse() throws Exception {
     Course c =
         courseRepository.save(
-            new Course("Delete Me", "Desc", null, false, CourseVisibility.Private, teacherA, null));
+            new Course("Delete Me", "Desc", null, false, CourseVisibility.PRIVATE, teacherA, null));
 
     mockMvc
         .perform(
@@ -251,14 +272,14 @@ public class CourseControllerIntegrationTest extends BaseIntegrationTest {
     Course privateCourse =
         courseRepository.save(
             new Course(
-                "Private Course", "Desc", null, false, CourseVisibility.Private, teacherA, null));
+                "Private Course", "Desc", null, false, CourseVisibility.PRIVATE, teacherA, null));
 
     mockMvc
         .perform(
             get("/api/courses/" + privateCourse.getId())
                 .with(
                     oauth2Login().attributes(attrs -> attrs.put("email", studentUser.getEmail()))))
-        .andExpect(status().isForbidden())
+        .andExpect(status().isNotFound())
         .andDo(print());
   }
 
@@ -266,7 +287,7 @@ public class CourseControllerIntegrationTest extends BaseIntegrationTest {
   void shouldRejectNonAuthorToUpdateCourse() throws Exception {
     Course c =
         courseRepository.save(
-            new Course("Title", "Desc", null, false, CourseVisibility.Private, teacherA, null));
+            new Course("Title", "Desc", null, false, CourseVisibility.PRIVATE, teacherA, null));
     UpdateCourseRequest req = new UpdateCourseRequest("Hacked Title", null, null, null, null, null);
 
     mockMvc
@@ -284,7 +305,7 @@ public class CourseControllerIntegrationTest extends BaseIntegrationTest {
   void shouldRejectNonAuthorToDeleteCourse() throws Exception {
     Course c =
         courseRepository.save(
-            new Course("Title", "Desc", null, false, CourseVisibility.Private, teacherA, null));
+            new Course("Title", "Desc", null, false, CourseVisibility.PRIVATE, teacherA, null));
 
     mockMvc
         .perform(
@@ -300,7 +321,7 @@ public class CourseControllerIntegrationTest extends BaseIntegrationTest {
     Course c =
         courseRepository.save(
             new Course(
-                "Teacher Course", "Desc", null, false, CourseVisibility.Private, teacherA, null));
+                "Teacher Course", "Desc", null, false, CourseVisibility.PRIVATE, teacherA, null));
 
     UpdateCourseRequest req =
         new UpdateCourseRequest("Admin Overwrite", null, null, null, null, null);
@@ -326,7 +347,7 @@ public class CourseControllerIntegrationTest extends BaseIntegrationTest {
                 "Desc",
                 null,
                 false,
-                CourseVisibility.Private,
+                CourseVisibility.PRIVATE,
                 teacherA,
                 null));
 
@@ -346,7 +367,7 @@ public class CourseControllerIntegrationTest extends BaseIntegrationTest {
     Course draft =
         courseRepository.save(
             new Course(
-                "Draft Course", "Desc", null, false, CourseVisibility.Private, teacherA, null));
+                "Draft Course", "Desc", null, false, CourseVisibility.PRIVATE, teacherA, null));
     Course comingSoon =
         courseRepository.save(
             new Course(
@@ -354,7 +375,7 @@ public class CourseControllerIntegrationTest extends BaseIntegrationTest {
                 "Desc",
                 null,
                 false,
-                CourseVisibility.Public,
+                CourseVisibility.PUBLIC,
                 teacherA,
                 null));
     Course publishedHidden =
@@ -364,12 +385,12 @@ public class CourseControllerIntegrationTest extends BaseIntegrationTest {
                 "Desc",
                 null,
                 true,
-                CourseVisibility.Private,
+                CourseVisibility.PRIVATE,
                 teacherA,
                 null));
     Course live =
         courseRepository.save(
-            new Course("Live Course", "Desc", null, true, CourseVisibility.Public, teacherA, null));
+            new Course("Live Course", "Desc", null, true, CourseVisibility.PUBLIC, teacherA, null));
 
     mockMvc
         .perform(
@@ -405,7 +426,7 @@ public class CourseControllerIntegrationTest extends BaseIntegrationTest {
                 "Original Desc",
                 "http://original.png",
                 false,
-                CourseVisibility.Private,
+                CourseVisibility.PRIVATE,
                 teacherA,
                 null));
 
@@ -430,9 +451,9 @@ public class CourseControllerIntegrationTest extends BaseIntegrationTest {
   void shouldSearchCoursesByTitle() throws Exception {
     courseRepository.save(
         new Course(
-            "Java Programming", "Desc", null, true, CourseVisibility.Public, teacherA, null));
+            "Java Programming", "Desc", null, true, CourseVisibility.PUBLIC, teacherA, null));
     courseRepository.save(
-        new Course("Python Basics", "Desc", null, true, CourseVisibility.Public, teacherA, null));
+        new Course("Python Basics", "Desc", null, true, CourseVisibility.PUBLIC, teacherA, null));
 
     mockMvc
         .perform(get("/api/courses?search=java"))
@@ -445,12 +466,12 @@ public class CourseControllerIntegrationTest extends BaseIntegrationTest {
   @Test
   void shouldFilterCoursesByVisibility() throws Exception {
     courseRepository.save(
-        new Course("Course A", "Desc", null, true, CourseVisibility.Public, teacherA, null));
+        new Course("Course A", "Desc", null, true, CourseVisibility.PUBLIC, teacherA, null));
     courseRepository.save(
-        new Course("Course B", "Desc", null, true, CourseVisibility.Restricted, teacherA, null));
+        new Course("Course B", "Desc", null, true, CourseVisibility.RESTRICTED, teacherA, null));
 
     mockMvc
-        .perform(get("/api/courses?visibility=Restricted"))
+        .perform(get("/api/courses?visibility=restricted"))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.content.length()").value(1))
         .andExpect(jsonPath("$.content[0].title").value("Course B"))
@@ -461,10 +482,10 @@ public class CourseControllerIntegrationTest extends BaseIntegrationTest {
   void shouldFilterOwnCoursesForTeacher() throws Exception {
     courseRepository.save(
         new Course(
-            "Teacher A Course", "Desc", null, true, CourseVisibility.Public, teacherA, null));
+            "Teacher A Course", "Desc", null, true, CourseVisibility.PUBLIC, teacherA, null));
     courseRepository.save(
         new Course(
-            "Teacher B Course", "Desc", null, true, CourseVisibility.Public, teacherB, null));
+            "Teacher B Course", "Desc", null, true, CourseVisibility.PUBLIC, teacherB, null));
 
     mockMvc
         .perform(
@@ -479,11 +500,11 @@ public class CourseControllerIntegrationTest extends BaseIntegrationTest {
   @Test
   void shouldPaginateCourseListing() throws Exception {
     courseRepository.save(
-        new Course("Course 1", "Desc", null, true, CourseVisibility.Public, teacherA, null));
+        new Course("Course 1", "Desc", null, true, CourseVisibility.PUBLIC, teacherA, null));
     courseRepository.save(
-        new Course("Course 2", "Desc", null, true, CourseVisibility.Public, teacherA, null));
+        new Course("Course 2", "Desc", null, true, CourseVisibility.PUBLIC, teacherA, null));
     courseRepository.save(
-        new Course("Course 3", "Desc", null, true, CourseVisibility.Public, teacherA, null));
+        new Course("Course 3", "Desc", null, true, CourseVisibility.PUBLIC, teacherA, null));
 
     mockMvc
         .perform(get("/api/courses?page=0&size=2&sort=title,asc"))
@@ -498,13 +519,13 @@ public class CourseControllerIntegrationTest extends BaseIntegrationTest {
   @Test
   void shouldAllowAdminToSeeAllVisibilityTypesInListing() throws Exception {
     courseRepository.save(
-        new Course("Public Course", "Desc", null, true, CourseVisibility.Public, teacherA, null));
+        new Course("Public Course", "Desc", null, true, CourseVisibility.PUBLIC, teacherA, null));
     courseRepository.save(
         new Course(
-            "Restricted Course", "Desc", null, true, CourseVisibility.Restricted, teacherA, null));
+            "Restricted Course", "Desc", null, true, CourseVisibility.RESTRICTED, teacherA, null));
     courseRepository.save(
         new Course(
-            "Private Course", "Desc", null, false, CourseVisibility.Private, teacherA, null));
+            "Private Course", "Desc", null, false, CourseVisibility.PRIVATE, teacherA, null));
 
     mockMvc
         .perform(
@@ -572,7 +593,7 @@ public class CourseControllerIntegrationTest extends BaseIntegrationTest {
                 "Desc",
                 null,
                 false,
-                CourseVisibility.Private,
+                CourseVisibility.PRIVATE,
                 teacherA,
                 null));
 
@@ -597,7 +618,7 @@ public class CourseControllerIntegrationTest extends BaseIntegrationTest {
     settings.put("maxStudents", 50);
 
     CreateCourseRequest req =
-        new CreateCourseRequest("Settings Course", "Desc", null, CourseVisibility.Public, settings);
+        new CreateCourseRequest("Settings Course", "Desc", null, CourseVisibility.PUBLIC, settings);
 
     String responseString =
         mockMvc
