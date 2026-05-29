@@ -48,7 +48,7 @@ public class CourseControllerIntegrationTest extends BaseIntegrationTest {
 
   @Autowired
   public CourseControllerIntegrationTest(
-      MockMvc mockMvc,
+      @SuppressWarnings("SpringJavaInjectionPointsAutowiringInspection") MockMvc mockMvc,
       UserRepository userRepository,
       UserRoleRepository userRoleRepository,
       RoleRepository roleRepository,
