@@ -52,7 +52,9 @@ export function CourseCard({ course }: { course: CourseDto }) {
                 alt={course.author.displayName || course.author.username}
               />
               <AvatarFallback className="text-xs">
-                {(course.author.displayName || course.author.username || 'U').charAt(0).toUpperCase()}
+                {(course.author.displayName || course.author.username || 'U')
+                  .charAt(0)
+                  .toUpperCase()}
               </AvatarFallback>
             </Avatar>
             <span className="text-xs text-muted-foreground">{course.author.displayName}</span>
