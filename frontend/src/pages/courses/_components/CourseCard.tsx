@@ -33,7 +33,7 @@ export function CourseCard({ course }: { course: CourseDto }) {
 
         <CardContent className="p-4">
           <div className="mb-2 flex items-center justify-between">
-            <Badge {...visibilityBadge}>{visibilityBadge.label}</Badge>
+            <Badge variant={visibilityBadge.variant}>{visibilityBadge.label}</Badge>
             {!course.isPublished && (
               <Badge variant="outline" className="text-amber-600">
                 Bản nháp
