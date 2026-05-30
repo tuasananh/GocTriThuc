@@ -19,15 +19,24 @@ export function CourseListPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
   const [page, setPage] = useState(0);
   const [visibility, setVisibility] = useState<'public' | 'restricted'>('public');
+
+  // Debounce search query
+  useEffect(() => {
+    const t = setTimeout(() => {
+      setDebouncedSearch(search);
+    }, 300);
+    return () => clearTimeout(t);
+  }, [search]);
 
   const fetchCourses = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
       const res = await api.get<PageResponse<CourseDto>>('/api/courses', {
-        params: { search: search || undefined, page, size: 12, visibility },
+        params: { search: debouncedSearch || undefined, page, size: 12, visibility },
       });
       setCourses(res.data);
     } catch {
@@ -35,11 +44,13 @@ export function CourseListPage() {
     } finally {
       setLoading(false);
     }
-  }, [search, page, visibility]);
+  }, [debouncedSearch, page, visibility]);
 
-  // Debounce search
+  // Fetch courses when debounced search query, page, or visibility changes
   useEffect(() => {
-    const t = setTimeout(fetchCourses, 300);
+    const t = setTimeout(() => {
+      fetchCourses();
+    }, 0);
     return () => clearTimeout(t);
   }, [fetchCourses]);
 
