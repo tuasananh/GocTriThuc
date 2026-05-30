@@ -80,6 +80,7 @@ export function CourseListPage() {
           />
           <Input
             id="input-course-search"
+            aria-label="Tìm kiếm khóa học"
             placeholder="Tìm kiếm khóa học..."
             className="pl-9"
             value={search}
