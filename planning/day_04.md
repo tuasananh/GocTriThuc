@@ -250,8 +250,8 @@ export function CourseListPage() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(0);
-  const [visibility, setVisibility] = useState<"Public" | "Restricted">(
-    "Public",
+  const [visibility, setVisibility] = useState<"public" | "restricted">(
+    "public",
   );
 
   const fetchCourses = useCallback(async () => {
@@ -308,11 +308,11 @@ export function CourseListPage() {
         </div>
         <Tabs
           value={visibility}
-          onValueChange={(v) => setVisibility(v as "Public" | "Restricted")}
+          onValueChange={(v) => setVisibility(v as "public" | "restricted")}
         >
           <TabsList>
-            <TabsTrigger value="Public">Công khai</TabsTrigger>
-            <TabsTrigger value="Restricted">Giới hạn</TabsTrigger>
+            <TabsTrigger value="public">Công khai</TabsTrigger>
+            <TabsTrigger value="restricted">Giới hạn</TabsTrigger>
           </TabsList>
         </Tabs>
       </div>
@@ -372,9 +372,9 @@ File: `src/pages/courses/_components/CourseCard.tsx`
 ```tsx
 export function CourseCard({ course }: { course: CourseDto }) {
   const visibilityBadge = {
-    Public: { label: "Công khai", variant: "secondary" as const },
-    Restricted: { label: "Giới hạn", variant: "outline" as const },
-    Private: { label: "Riêng tư", variant: "destructive" as const },
+    public: { label: "Công khai", variant: "secondary" as const },
+    restricted: { label: "Giới hạn", variant: "outline" as const },
+    private: { label: "Riêng tư", variant: "destructive" as const },
   }[course.visibility];
 
   return (
@@ -444,7 +444,7 @@ const mockCourses = Array.from({ length: 9 }, (_, i) => ({
   description: "Mô tả khóa học này rất thú vị và bổ ích.",
   thumbnailUrl: null,
   isPublished: i % 3 !== 0,
-  visibility: "Public",
+  visibility: "public",
   author: {
     id: 1,
     displayName: "Nguyễn Công Vinh",
@@ -509,8 +509,8 @@ export function CreateCourseModal({
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [visibility, setVisibility] = useState<
-    "Public" | "Restricted" | "Private"
-  >("Public");
+    "public" | "restricted" | "private"
+  >("public");
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -574,20 +574,20 @@ export function CreateCourseModal({
             <Select
               value={visibility}
               onValueChange={(v) =>
-                setVisibility(v as "Public" | "Restricted" | "Private")
+                setVisibility(v as "public" | "restricted" | "private")
               }
             >
               <SelectTrigger id="course-visibility">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="Public">
+                <SelectItem value="public">
                   Công khai — ai cũng có thể đăng ký
                 </SelectItem>
-                <SelectItem value="Restricted">
+                <SelectItem value="restricted">
                   Giới hạn — cần được duyệt
                 </SelectItem>
-                <SelectItem value="Private">Riêng tư — chỉ bạn thấy</SelectItem>
+                <SelectItem value="private">Riêng tư — chỉ bạn thấy</SelectItem>
               </SelectContent>
             </Select>
           </div>
