@@ -78,7 +78,7 @@ export function CourseListPage() {
             }}
           />
         </div>
-        <Tabs value={visibility} onValueChange={(v) => setVisibility(v as 'Public' | 'Restricted')}>
+        <Tabs value={visibility} onValueChange={(v) => { setVisibility(v as 'Public' | 'Restricted'); setPage(0); }}>
           <TabsList>
             <TabsTrigger value="Public">Công khai</TabsTrigger>
             <TabsTrigger value="Restricted">Giới hạn</TabsTrigger>
