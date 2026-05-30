@@ -115,7 +115,7 @@ public class EnrollmentIntegrationTest extends BaseIntegrationTest {
             post("/api/courses/" + unpublishedCourse.getId() + "/enroll")
                 .with(oauth2Login().attributes(attrs -> attrs.put("email", studentUser.getEmail())))
                 .with(csrf()))
-        .andExpect(status().isForbidden())
+        .andExpect(status().isNotFound())
         .andDo(print());
   }
 
@@ -137,7 +137,7 @@ public class EnrollmentIntegrationTest extends BaseIntegrationTest {
             post("/api/courses/" + privateCourse.getId() + "/enroll")
                 .with(oauth2Login().attributes(attrs -> attrs.put("email", studentUser.getEmail())))
                 .with(csrf()))
-        .andExpect(status().isForbidden())
+        .andExpect(status().isNotFound())
         .andDo(print());
   }
 

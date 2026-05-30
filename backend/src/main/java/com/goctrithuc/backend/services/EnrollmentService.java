@@ -43,13 +43,11 @@ public class EnrollmentService {
                 () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Course not found"));
 
     if (!course.isPublished()) {
-      throw new ResponseStatusException(
-          HttpStatus.FORBIDDEN, "Cannot enroll in an unpublished course");
+      throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Course not found");
     }
 
     if (course.getVisibility() == CourseVisibility.PRIVATE) {
-      throw new ResponseStatusException(
-          HttpStatus.FORBIDDEN, "Private courses cannot be enrolled in directly");
+      throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Course not found");
     }
 
     if (course.getVisibility() == CourseVisibility.RESTRICTED) {

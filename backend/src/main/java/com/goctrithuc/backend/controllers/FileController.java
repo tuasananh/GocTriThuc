@@ -5,7 +5,6 @@ import com.goctrithuc.backend.entities.File;
 import com.goctrithuc.backend.entities.User;
 import com.goctrithuc.backend.repositories.UserRepository;
 import com.goctrithuc.backend.services.FileService;
-import com.goctrithuc.backend.services.PermissionService;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -31,13 +30,10 @@ public class FileController {
 
   private final FileService fileService;
   private final UserRepository userRepository;
-  private final PermissionService permissionService;
 
-  public FileController(
-      FileService fileService, UserRepository userRepository, PermissionService permissionService) {
+  public FileController(FileService fileService, UserRepository userRepository) {
     this.fileService = fileService;
     this.userRepository = userRepository;
-    this.permissionService = permissionService;
   }
 
   @PostMapping("/upload")

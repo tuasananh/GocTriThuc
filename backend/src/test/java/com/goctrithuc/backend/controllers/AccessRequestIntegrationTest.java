@@ -120,7 +120,7 @@ public class AccessRequestIntegrationTest extends BaseIntegrationTest {
             post("/api/courses/" + unpublishedRestricted.getId() + "/access-requests")
                 .with(oauth2Login().attributes(attrs -> attrs.put("email", studentUser.getEmail())))
                 .with(csrf()))
-        .andExpect(status().isForbidden())
+        .andExpect(status().isNotFound())
         .andDo(print());
   }
 

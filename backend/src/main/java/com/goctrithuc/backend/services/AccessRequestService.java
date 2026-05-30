@@ -46,8 +46,7 @@ public class AccessRequestService {
                 () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Course not found"));
 
     if (!course.isPublished()) {
-      throw new ResponseStatusException(
-          HttpStatus.FORBIDDEN, "Cannot request access to an unpublished course");
+      throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Course not found");
     }
 
     if (course.getVisibility() != CourseVisibility.RESTRICTED) {

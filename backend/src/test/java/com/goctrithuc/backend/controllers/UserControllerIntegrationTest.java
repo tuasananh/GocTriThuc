@@ -141,7 +141,7 @@ public class UserControllerIntegrationTest extends BaseIntegrationTest {
   @Test
   void shouldRejectProfileUpdateWhenUsernameIsTaken() throws Exception {
     String email = "user3@hust.edu.vn";
-    User user3 = userRepository.save(new User(email, "User Three", "userthree", null));
+    userRepository.save(new User(email, "User Three", "userthree", null));
     userRepository.save(new User("taken@hust.edu.vn", "Taken User", "takenusername", null));
 
     UpdateUserRequest request = new UpdateUserRequest("User Three", "takenusername", null);

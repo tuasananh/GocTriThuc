@@ -1,6 +1,5 @@
 package com.goctrithuc.backend.services;
 
-import com.goctrithuc.backend.common.PermissionConstants;
 import com.goctrithuc.backend.common.RoleConstants;
 import com.goctrithuc.backend.common.util.StringUtil;
 import com.goctrithuc.backend.dtos.UpdateUserRequest;
@@ -27,16 +26,19 @@ public class UserPersistenceService {
   private final UserProviderRepository userProviderRepository;
   private final RoleRepository roleRepository;
   private final UserRoleRepository userRoleRepository;
+  private final PermissionService permissionService;
 
   public UserPersistenceService(
       UserRepository userRepository,
       UserProviderRepository userProviderRepository,
       RoleRepository roleRepository,
-      UserRoleRepository userRoleRepository) {
+      UserRoleRepository userRoleRepository,
+      PermissionService permissionService) {
     this.userRepository = userRepository;
     this.userProviderRepository = userProviderRepository;
     this.roleRepository = roleRepository;
     this.userRoleRepository = userRoleRepository;
+    this.permissionService = permissionService;
   }
 
   @Transactional
@@ -95,15 +97,7 @@ public class UserPersistenceService {
 
     User targetUser = userRepository.findById(targetUserId).orElse(null);
 
-    boolean isAdmin =
-        currentUser.getUserRoles() != null
-            && currentUser.getUserRoles().stream()
-                .map(UserRole::getRole)
-                .anyMatch(
-                    role ->
-                        RoleConstants.ADMIN.equalsIgnoreCase(role.getName())
-                            || (role.getPermissions() != null
-                                && (role.getPermissions() & PermissionConstants.ADMIN) != 0L));
+    boolean isAdmin = permissionService.isAdminFromUser(currentUser);
 
     if (targetUser == null || (!currentUser.getId().equals(targetUserId) && !isAdmin)) {
       throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found");
