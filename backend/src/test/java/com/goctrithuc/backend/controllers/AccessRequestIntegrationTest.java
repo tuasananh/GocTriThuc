@@ -29,6 +29,7 @@ public class AccessRequestIntegrationTest extends BaseIntegrationTest {
   private final CourseAccessRequestRepository courseAccessRequestRepository;
 
   private User teacherA;
+  private User teacherB;
   private User studentUser;
 
   @Autowired
@@ -60,6 +61,10 @@ public class AccessRequestIntegrationTest extends BaseIntegrationTest {
     teacherA = userRepository.save(new User("teachera@hust.edu.vn", "Teacher A", "teachera", null));
     userRoleRepository.save(
         new UserRole(teacherA, roleRepository.findByName("teacher").orElseThrow()));
+
+    teacherB = userRepository.save(new User("teacherb@hust.edu.vn", "Teacher B", "teacherb", null));
+    userRoleRepository.save(
+        new UserRole(teacherB, roleRepository.findByName("teacher").orElseThrow()));
 
     studentUser = userRepository.save(new User("student@hust.edu.vn", "Student", "student", null));
     userRoleRepository.save(
@@ -198,5 +203,85 @@ public class AccessRequestIntegrationTest extends BaseIntegrationTest {
             courseAccessRequestRepository.existsByUserIdAndCourseId(
                 studentUser.getId(), restrictedCourse.getId()))
         .isFalse();
+  }
+
+  @Test
+  void shouldRejectNonAuthorTeacherFromViewingAccessRequests() throws Exception {
+    Course restrictedCourse =
+        courseRepository.save(
+            new Course(
+                "Restricted Course",
+                "Desc",
+                null,
+                true,
+                CourseVisibility.RESTRICTED,
+                teacherA,
+                null));
+
+    mockMvc
+        .perform(
+            get("/api/courses/" + restrictedCourse.getId() + "/access-requests")
+                .with(oauth2Login().attributes(attrs -> attrs.put("email", teacherB.getEmail())))
+                .with(csrf()))
+        .andExpect(status().isForbidden())
+        .andDo(print());
+  }
+
+  @Test
+  void shouldRejectNonAuthorTeacherFromApprovingAccessRequest() throws Exception {
+    Course restrictedCourse =
+        courseRepository.save(
+            new Course(
+                "Restricted Course",
+                "Desc",
+                null,
+                true,
+                CourseVisibility.RESTRICTED,
+                teacherA,
+                null));
+
+    courseAccessRequestRepository.save(
+        new CourseAccessRequestEntity(studentUser, restrictedCourse));
+
+    mockMvc
+        .perform(
+            post("/api/courses/"
+                    + restrictedCourse.getId()
+                    + "/access-requests/"
+                    + studentUser.getId()
+                    + "/approve")
+                .with(oauth2Login().attributes(attrs -> attrs.put("email", teacherB.getEmail())))
+                .with(csrf()))
+        .andExpect(status().isForbidden())
+        .andDo(print());
+  }
+
+  @Test
+  void shouldRejectNonAuthorTeacherFromRejectingAccessRequest() throws Exception {
+    Course restrictedCourse =
+        courseRepository.save(
+            new Course(
+                "Restricted Course",
+                "Desc",
+                null,
+                true,
+                CourseVisibility.RESTRICTED,
+                teacherA,
+                null));
+
+    courseAccessRequestRepository.save(
+        new CourseAccessRequestEntity(studentUser, restrictedCourse));
+
+    mockMvc
+        .perform(
+            delete(
+                    "/api/courses/"
+                        + restrictedCourse.getId()
+                        + "/access-requests/"
+                        + studentUser.getId())
+                .with(oauth2Login().attributes(attrs -> attrs.put("email", teacherB.getEmail())))
+                .with(csrf()))
+        .andExpect(status().isForbidden())
+        .andDo(print());
   }
 }

@@ -183,6 +183,12 @@ public class CourseController {
       "@permissionService.hasPermission(#principal, T(com.goctrithuc.backend.common.PermissionConstants).MANAGE_OWN_COURSES)")
   public ResponseEntity<List<AccessRequestResponse>> getAccessRequests(
       @PathVariable Long id, @AuthenticationPrincipal OAuth2User principal) {
+    Long currentUserId = AuthUtils.getCurrentUserId(principal, userRepository);
+    boolean isAdmin = permissionService.isAdmin(principal);
+    boolean isAuthor = courseRepository.existsByIdAndAuthorId(id, currentUserId);
+    if (!isAuthor && !isAdmin) {
+      throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Access denied to access requests");
+    }
     return ResponseEntity.ok(accessRequestService.getAccessRequests(id));
   }
 
@@ -193,6 +199,13 @@ public class CourseController {
       @PathVariable Long courseId,
       @PathVariable Long userId,
       @AuthenticationPrincipal OAuth2User principal) {
+    Long currentUserId = AuthUtils.getCurrentUserId(principal, userRepository);
+    boolean isAdmin = permissionService.isAdmin(principal);
+    boolean isAuthor = courseRepository.existsByIdAndAuthorId(courseId, currentUserId);
+    if (!isAuthor && !isAdmin) {
+      throw new ResponseStatusException(
+          HttpStatus.FORBIDDEN, "Access denied to approve access request");
+    }
     accessRequestService.approveAccessRequest(courseId, userId);
     return ResponseEntity.status(HttpStatus.CREATED).build();
   }
@@ -204,6 +217,13 @@ public class CourseController {
       @PathVariable Long courseId,
       @PathVariable Long userId,
       @AuthenticationPrincipal OAuth2User principal) {
+    Long currentUserId = AuthUtils.getCurrentUserId(principal, userRepository);
+    boolean isAdmin = permissionService.isAdmin(principal);
+    boolean isAuthor = courseRepository.existsByIdAndAuthorId(courseId, currentUserId);
+    if (!isAuthor && !isAdmin) {
+      throw new ResponseStatusException(
+          HttpStatus.FORBIDDEN, "Access denied to reject access request");
+    }
     accessRequestService.rejectAccessRequest(courseId, userId);
     return ResponseEntity.noContent().build();
   }
