@@ -47,8 +47,13 @@ export function CourseCard({ course }: { course: CourseDto }) {
 
           <div className="mt-3 flex items-center gap-2">
             <Avatar className="h-6 w-6">
-              <AvatarImage src={course.author.avatarUrl ?? undefined} />
-              <AvatarFallback className="text-xs">{course.author.displayName[0]}</AvatarFallback>
+              <AvatarImage
+                src={course.author.avatarUrl ?? undefined}
+                alt={course.author.displayName || course.author.username}
+              />
+              <AvatarFallback className="text-xs">
+                {(course.author.displayName || course.author.username || 'U').charAt(0).toUpperCase()}
+              </AvatarFallback>
             </Avatar>
             <span className="text-xs text-muted-foreground">{course.author.displayName}</span>
           </div>
