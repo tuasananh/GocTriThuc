@@ -4,11 +4,8 @@
 
 export interface FileDto {
   id: string;
-  providerValue: string; // relative path on server
-  mimeType: string | null;
-  originalName: string | null;
-  sizeBytes: number | null;
-  createdAt: string;
+  filename: string;
+  url: string;
 }
 
 /** URL để serve file: /api/files/serve/{id} */

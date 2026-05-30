@@ -8,11 +8,8 @@ export const fileHandlers = [
     return HttpResponse.json(
       {
         id: mockFileId,
-        providerValue: `uploads/mock-${mockFileId}.jpg`,
-        mimeType: 'image/jpeg',
-        originalName: `mock-${mockFileId}.jpg`,
-        sizeBytes: 51200, // 50KB
-        createdAt: new Date().toISOString(),
+        filename: `mock-${mockFileId}.jpg`,
+        url: `/api/files/serve/${mockFileId}`,
       },
       { status: 201 },
     );
