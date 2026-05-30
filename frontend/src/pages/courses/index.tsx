@@ -4,6 +4,7 @@ import { PageShell } from '@/components/PageShell';
 import { SectionHeader } from '@/components/SectionHeader';
 import { SkeletonCard } from '@/components/SkeletonCard';
 import { EmptyState } from '@/components/EmptyState';
+import { ErrorState } from '@/components/ErrorState';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -16,17 +17,21 @@ import { CourseCard } from './_components/CourseCard';
 export function CourseListPage() {
   const [courses, setCourses] = useState<PageResponse<CourseDto> | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(0);
   const [visibility, setVisibility] = useState<'Public' | 'Restricted'>('Public');
 
   const fetchCourses = useCallback(async () => {
     setLoading(true);
+    setError(null);
     try {
       const res = await api.get<PageResponse<CourseDto>>('/api/courses', {
         params: { search: search || undefined, page, size: 12, visibility },
       });
       setCourses(res.data);
+    } catch {
+      setError('Không thể tải danh sách khóa học. Vui lòng thử lại.');
     } finally {
       setLoading(false);
     }
@@ -82,7 +87,9 @@ export function CourseListPage() {
       </div>
 
       {/* Grid */}
-      {loading ? (
+      {error ? (
+        <ErrorState message={error} onRetry={fetchCourses} />
+      ) : loading ? (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {Array.from({ length: 8 }).map((_, i) => (
             <SkeletonCard key={i} />
