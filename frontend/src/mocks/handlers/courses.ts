@@ -33,7 +33,7 @@ const mockCourses: CourseDto[] = Array.from({ length: 15 }, (_, i) => ({
     'Khóa học chất lượng cao với nội dung thực tiễn, bài tập phong phú và hỗ trợ từ giảng viên.',
   thumbnailUrl: null,
   isPublished: i < 12,
-  visibility: i < 10 ? 'Public' : i < 13 ? 'Restricted' : 'Private',
+  visibility: i < 10 ? 'public' : i < 13 ? 'restricted' : 'private',
   author: mockAuthors[i % mockAuthors.length],
   createdAt: new Date(2026, 4, 1 + i).toISOString(),
   updatedAt: new Date(2026, 4, 20 + (i % 5)).toISOString(),
@@ -47,7 +47,7 @@ export const courseHandlers = [
     const page = Number(url.searchParams.get('page') ?? 0);
     const size = Number(url.searchParams.get('size') ?? 12);
     const search = url.searchParams.get('search') ?? '';
-    const visibility = url.searchParams.get('visibility') ?? 'Public';
+    const visibility = url.searchParams.get('visibility') ?? 'public';
 
     let filtered = mockCourses.filter((c) => c.visibility === visibility && c.isPublished);
     if (search) {
@@ -87,7 +87,7 @@ export const courseHandlers = [
       description: (body.description as string) || '',
       thumbnailUrl: (body.thumbnailUrl as string) || null,
       isPublished: false,
-      visibility: (body.visibility as CourseDto['visibility']) || 'Public',
+      visibility: (body.visibility as CourseDto['visibility']) || 'public',
       author: mockAuthors[0],
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
