@@ -112,7 +112,12 @@ export function CourseListPage() {
       {/* Pagination */}
       {courses && courses.totalPages > 1 && (
         <div className="mt-8 flex justify-center gap-2">
-          <Button variant="outline" disabled={page === 0} onClick={() => setPage((p) => p - 1)}>
+          <Button
+            variant="outline"
+            aria-label="Trang trước"
+            disabled={page === 0}
+            onClick={() => setPage((p) => p - 1)}
+          >
             ←
           </Button>
           <span className="flex items-center px-4 text-sm text-muted-foreground">
@@ -120,6 +125,7 @@ export function CourseListPage() {
           </span>
           <Button
             variant="outline"
+            aria-label="Trang sau"
             disabled={page >= courses.totalPages - 1}
             onClick={() => setPage((p) => p + 1)}
           >
