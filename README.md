@@ -50,6 +50,13 @@ cd backend
 ./mvnw spring-boot:run
 ```
 
+#### Tài liệu API (Swagger UI / OpenAPI)
+Dự án được tích hợp tự động tài liệu API phục vụ phát triển (nhất là cho team Frontend):
+- **Swagger UI**: [http://localhost:8080/swagger-ui/index.html](http://localhost:8080/swagger-ui/index.html) (Giao diện tương tác chạy thử API trực quan).
+- **OpenAPI JSON**: [http://localhost:8080/v3/api-docs](http://localhost:8080/v3/api-docs) (Đặc tả JSON dùng cho các công cụ Postman hoặc tự động sinh client code).
+
+*Lưu ý bảo mật*: Tài liệu API này chỉ hoạt động ở môi trường phát triển local và sẽ **tự động bị vô hiệu hóa hoàn toàn trên môi trường Production** (thông qua cấu hình `application-prod.yaml`) để tránh rò rỉ cấu trúc hệ thống.
+
 ### 3. Chạy Frontend (Vite + React)
 
 Di chuyển vào thư mục `frontend`, cài đặt dependencies và khởi chạy môi trường

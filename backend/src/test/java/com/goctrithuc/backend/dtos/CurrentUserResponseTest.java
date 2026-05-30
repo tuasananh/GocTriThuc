@@ -36,6 +36,7 @@ class CurrentUserResponseTest {
     assertNull(response.id());
     assertEquals(errorMessage, response.error());
     assertNull(response.displayName());
+    assertNull(response.permissions());
   }
 
   @Test

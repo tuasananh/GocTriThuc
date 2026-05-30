@@ -12,7 +12,7 @@ CREATE TABLE courses (
     thumbnail_url TEXT,
     is_published BOOLEAN NOT NULL DEFAULT FALSE,
     visibility course_visibility NOT NULL DEFAULT 'private',
-    author_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    author_id BIGINT NOT NULL REFERENCES users(id) ON DELETE RESTRICT,
     settings JSONB,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()

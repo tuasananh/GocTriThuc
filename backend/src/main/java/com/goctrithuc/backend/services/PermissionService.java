@@ -75,4 +75,9 @@ public class PermissionService {
         .map(role -> role.getPermissions() == null ? 0L : role.getPermissions())
         .reduce(0L, (current, rolePerm) -> current | rolePerm);
   }
+
+  public boolean isAdminFromUser(User user) {
+    long permissions = resolvePermissions(user);
+    return (permissions & PermissionConstants.ADMIN) != 0;
+  }
 }

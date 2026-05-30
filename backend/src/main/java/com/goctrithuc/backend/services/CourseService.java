@@ -49,7 +49,12 @@ public class CourseService {
       throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Authentication required");
     }
 
-    boolean isAdmin = permissionService.isAdmin(principal);
+    User currentUser = null;
+    boolean isAdmin = false;
+    if (principal != null) {
+      currentUser = getAuthenticatedUser(principal);
+      isAdmin = permissionService.isAdminFromUser(currentUser);
+    }
     List<CourseVisibility> guestVisibilities =
         Arrays.asList(CourseVisibility.PUBLIC, CourseVisibility.RESTRICTED);
 
@@ -67,7 +72,7 @@ public class CourseService {
     }
 
     if (hasOwnParam) {
-      Long authorId = getAuthenticatedUser(principal).getId();
+      Long authorId = currentUser.getId();
       spec = spec.and(CourseSpecifications.authorIdEquals(authorId));
     }
 
@@ -91,10 +96,10 @@ public class CourseService {
     if (course.getVisibility() == CourseVisibility.PRIVATE) {
       // Check if current user is the author or admin
       if (principal == null) {
-        throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Access denied");
+        throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Course not found");
       }
       User user = getAuthenticatedUser(principal);
-      boolean isAdmin = permissionService.isAdmin(principal);
+      boolean isAdmin = permissionService.isAdminFromUser(user);
       if (!course.getAuthor().getId().equals(user.getId()) && !isAdmin) {
         // Return 404 instead of 403 to avoid leaking information about existence of the course
         throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Course not found");
@@ -146,7 +151,7 @@ public class CourseService {
                 () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Course not found"));
 
     User user = getAuthenticatedUser(principal);
-    boolean isAdmin = permissionService.isAdmin(principal);
+    boolean isAdmin = permissionService.isAdminFromUser(user);
 
     // Ownership layer check
     if (!course.getAuthor().getId().equals(user.getId()) && !isAdmin) {
@@ -189,7 +194,7 @@ public class CourseService {
                 () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Course not found"));
 
     User user = getAuthenticatedUser(principal);
-    boolean isAdmin = permissionService.isAdmin(principal);
+    boolean isAdmin = permissionService.isAdminFromUser(user);
 
     // Ownership layer check
     if (!course.getAuthor().getId().equals(user.getId()) && !isAdmin) {

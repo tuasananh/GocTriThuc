@@ -66,6 +66,7 @@ public class FileController {
   @GetMapping("/serve/{id}")
   public ResponseEntity<Resource> serveFile(@PathVariable Long id) {
     File fileEntity = fileService.findById(id);
+
     Path filePath = fileService.resolveFilePath(fileEntity.getProviderValue());
 
     String contentType;

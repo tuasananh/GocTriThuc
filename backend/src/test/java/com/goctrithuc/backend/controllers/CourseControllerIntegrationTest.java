@@ -13,14 +13,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.goctrithuc.backend.BaseIntegrationTest;
 import com.goctrithuc.backend.dtos.CreateCourseRequest;
 import com.goctrithuc.backend.dtos.UpdateCourseRequest;
-import com.goctrithuc.backend.entities.Course;
-import com.goctrithuc.backend.entities.CourseVisibility;
-import com.goctrithuc.backend.entities.User;
-import com.goctrithuc.backend.entities.UserRole;
-import com.goctrithuc.backend.repositories.CourseRepository;
-import com.goctrithuc.backend.repositories.RoleRepository;
-import com.goctrithuc.backend.repositories.UserRepository;
-import com.goctrithuc.backend.repositories.UserRoleRepository;
+import com.goctrithuc.backend.entities.*;
+import com.goctrithuc.backend.repositories.*;
 import java.util.HashMap;
 import java.util.Map;
 import org.junit.jupiter.api.AfterEach;
@@ -599,7 +593,7 @@ public class CourseControllerIntegrationTest extends BaseIntegrationTest {
 
     mockMvc
         .perform(get("/api/courses/" + privateCourse.getId()))
-        .andExpect(status().isForbidden())
+        .andExpect(status().isNotFound())
         .andDo(print());
   }
 
