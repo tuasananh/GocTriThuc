@@ -20,7 +20,7 @@ export function CourseListPage() {
   const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(0);
-  const [visibility, setVisibility] = useState<'Public' | 'Restricted'>('Public');
+  const [visibility, setVisibility] = useState<'public' | 'restricted'>('public');
 
   const fetchCourses = useCallback(async () => {
     setLoading(true);
@@ -78,16 +78,10 @@ export function CourseListPage() {
             }}
           />
         </div>
-        <Tabs
-          value={visibility}
-          onValueChange={(v) => {
-            setVisibility(v as 'Public' | 'Restricted');
-            setPage(0);
-          }}
-        >
+        <Tabs value={visibility} onValueChange={(v) => { setVisibility(v as 'public' | 'restricted'); setPage(0); }}>
           <TabsList>
-            <TabsTrigger value="Public">Công khai</TabsTrigger>
-            <TabsTrigger value="Restricted">Giới hạn</TabsTrigger>
+            <TabsTrigger value="public">Công khai</TabsTrigger>
+            <TabsTrigger value="restricted">Giới hạn</TabsTrigger>
           </TabsList>
         </Tabs>
       </div>

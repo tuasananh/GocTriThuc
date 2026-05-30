@@ -8,10 +8,10 @@ import type { CourseDto } from '@/types';
 
 export function CourseCard({ course }: { course: CourseDto }) {
   const visibilityBadge = {
-    Public: { label: 'Công khai', variant: 'secondary' as const },
-    Restricted: { label: 'Giới hạn', variant: 'outline' as const },
-    Private: { label: 'Riêng tư', variant: 'destructive' as const },
-  }[course.visibility];
+    public: { label: 'Công khai', variant: 'secondary' as const },
+    restricted: { label: 'Giới hạn', variant: 'outline' as const },
+    private: { label: 'Riêng tư', variant: 'destructive' as const },
+  }[course.visibility] ?? { label: course.visibility, variant: 'outline' as const };
 
   return (
     <Link to={ROUTES.COURSE_DETAIL(course.id)} className="group block">
