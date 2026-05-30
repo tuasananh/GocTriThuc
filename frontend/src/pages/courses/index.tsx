@@ -52,8 +52,8 @@ export function CourseListPage() {
         description="Tìm kiếm và đăng ký các khóa học phù hợp với bạn"
         action={
           canCreateCourse && (
-            // TODO(Tuấn): onClick={() => setShowCreate(true)} sau khi thêm state
-            <Button id="btn-create-course">
+            // TODO(Tuấn): remove disabled and add onClick={() => setShowCreate(true)} sau khi thêm state
+            <Button id="btn-create-course" disabled title="Chức năng đang được phát triển">
               <Plus size={16} className="mr-1" /> Tạo khóa học
             </Button>
           )
