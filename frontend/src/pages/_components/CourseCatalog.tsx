@@ -69,10 +69,20 @@ export function CourseCatalog() {
             />
             <div className="absolute top-4 left-4 flex gap-2">
               <Badge
-                variant={course.visibility === 'public' ? 'default' : 'secondary'}
+                variant={
+                  course.visibility === 'public'
+                    ? 'default'
+                    : course.visibility === 'restricted'
+                      ? 'secondary'
+                      : 'destructive'
+                }
                 className="shadow-sm backdrop-blur-md bg-background/90 text-foreground border-0"
               >
-                {course.visibility === 'public' ? 'Công khai' : 'Riêng tư'}
+                {course.visibility === 'public'
+                  ? 'Công khai'
+                  : course.visibility === 'restricted'
+                    ? 'Giới hạn'
+                    : 'Riêng tư'}
               </Badge>
             </div>
           </div>
