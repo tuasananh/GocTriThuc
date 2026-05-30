@@ -78,8 +78,8 @@ public class FileControllerIntegrationTest extends BaseIntegrationTest {
                 .with(csrf()))
         .andExpect(status().isCreated())
         .andExpect(jsonPath("$.id").exists())
-        .andExpect(jsonPath("$.provider").value("local"))
-        .andExpect(jsonPath("$.providerValue").exists())
+        .andExpect(jsonPath("$.filename").exists())
+        .andExpect(jsonPath("$.url").exists())
         .andDo(print());
 
     // Verify metadata saved in database

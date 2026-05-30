@@ -15,7 +15,7 @@ class FileResponseTest {
 
     assertNotNull(response);
     assertEquals(file.getId(), response.id());
-    assertEquals(file.getProvider(), response.provider());
-    assertEquals(file.getProviderValue(), response.providerValue());
+    assertEquals(file.getProviderValue(), response.filename());
+    assertEquals("/api/files/serve/" + file.getId(), response.url());
   }
 }

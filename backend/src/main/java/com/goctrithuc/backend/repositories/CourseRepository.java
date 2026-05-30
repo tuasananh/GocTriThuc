@@ -18,6 +18,8 @@ public interface CourseRepository
   @EntityGraph(attributePaths = {"author"})
   Optional<Course> findWithAuthorById(Long id);
 
+  boolean existsByIdAndAuthorId(Long id, Long authorId);
+
   @Override
   @EntityGraph(attributePaths = {"author"})
   @NonNull Page<Course> findAll(@NonNull Specification<Course> spec, @NonNull Pageable pageable);
