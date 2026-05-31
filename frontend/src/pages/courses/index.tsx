@@ -46,13 +46,14 @@ export function CourseListPage() {
     }
   }, [debouncedSearch, page, visibility]);
 
-  // Fetch courses when debounced search query, page, or visibility changes
+  // Avoid fetching with stale search while debounce is still pending
   useEffect(() => {
+    if (search !== debouncedSearch) return;
     const t = setTimeout(() => {
       fetchCourses();
     }, 0);
     return () => clearTimeout(t);
-  }, [fetchCourses]);
+  }, [fetchCourses, search, debouncedSearch]);
 
   const canCreateCourse = usePermission(PERMISSION.MANAGE_OWN_COURSES);
 
