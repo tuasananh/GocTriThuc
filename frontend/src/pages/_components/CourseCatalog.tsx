@@ -15,6 +15,15 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Clock, Star, PlayCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
+const VISIBILITY_CONFIG: Record<
+  CourseDto['visibility'],
+  { label: string; variant: 'default' | 'secondary' | 'destructive' }
+> = {
+  public: { label: 'Công khai', variant: 'default' },
+  restricted: { label: 'Giới hạn', variant: 'secondary' },
+  private: { label: 'Riêng tư', variant: 'destructive' },
+};
+
 export function CourseCatalog() {
   const [courses, setCourses] = useState<CourseDto[]>([]);
   const [loading, setLoading] = useState(true);
@@ -69,20 +78,10 @@ export function CourseCatalog() {
             />
             <div className="absolute top-4 left-4 flex gap-2">
               <Badge
-                variant={
-                  course.visibility === 'public'
-                    ? 'default'
-                    : course.visibility === 'restricted'
-                      ? 'secondary'
-                      : 'destructive'
-                }
+                variant={VISIBILITY_CONFIG[course.visibility].variant}
                 className="shadow-sm backdrop-blur-md bg-background/90 text-foreground border-0"
               >
-                {course.visibility === 'public'
-                  ? 'Công khai'
-                  : course.visibility === 'restricted'
-                    ? 'Giới hạn'
-                    : 'Riêng tư'}
+                {VISIBILITY_CONFIG[course.visibility].label}
               </Badge>
             </div>
           </div>
