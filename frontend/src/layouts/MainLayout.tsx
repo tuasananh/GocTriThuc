@@ -69,7 +69,7 @@ export function MainLayout() {
             <GocTriThuc withLogo className="text-lg font-semibold" />
           </Link>
           <nav className="hidden md:flex gap-6 text-sm font-medium text-muted-foreground">
-            <Link to="/" className="hover:text-foreground transition-colors">
+            <Link to={ROUTES.COURSES} className="hover:text-foreground transition-colors">
               Khóa học
             </Link>
             <Link to="#" className="hover:text-foreground transition-colors">

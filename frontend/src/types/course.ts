@@ -4,7 +4,7 @@ import type { UserDto } from './user';
 // Course DTOs
 // ============================================================
 
-export type CourseVisibility = 'Public' | 'Restricted' | 'Private';
+export type CourseVisibility = 'public' | 'restricted' | 'private';
 
 /** Thông tin khóa học hiển thị trong danh sách & chi tiết */
 export interface CourseDto {
