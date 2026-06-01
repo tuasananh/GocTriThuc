@@ -57,7 +57,7 @@ public class LessonService {
       throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Access denied");
     }
 
-    int nextOrder = lessonRepo.countByModuleId(moduleId);
+    int nextOrder = lessonRepo.findNextOrderByModuleId(moduleId);
     LessonEntity lesson = new LessonEntity(module, req.title(), req.lessonType(), nextOrder);
     LessonEntity saved = lessonRepo.save(lesson);
 

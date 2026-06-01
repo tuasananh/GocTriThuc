@@ -48,7 +48,7 @@ public class ModuleService {
           HttpStatus.FORBIDDEN, "Only course author or admin can add modules");
     }
 
-    int nextOrder = moduleRepo.countByCourseId(courseId);
+    int nextOrder = moduleRepo.findNextOrderByCourseId(courseId);
     ModuleEntity m = new ModuleEntity(course, req.title(), nextOrder);
     ModuleEntity saved = moduleRepo.save(m);
     return new ModuleResponse(saved.getId(), saved.getTitle(), saved.getOrder(), new ArrayList<>());

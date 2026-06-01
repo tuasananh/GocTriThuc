@@ -1,5 +1,5 @@
 package com.goctrithuc.backend.dtos;
 
-import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 
-public record UpdateLessonBlogRequest(@NotBlank(message = "Content is required") String content) {}
+public record UpdateLessonBlogRequest(@NotNull(message = "Content is required") String content) {}
