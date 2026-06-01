@@ -301,6 +301,8 @@ public class LessonService {
       next.setOrder(currentOrder);
       lessonRepo.save(lesson);
       lessonRepo.save(next);
+    } else {
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Direction must be 'up' or 'down'");
     }
   }
 }

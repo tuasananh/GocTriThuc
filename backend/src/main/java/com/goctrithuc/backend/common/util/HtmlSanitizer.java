@@ -5,17 +5,17 @@ import org.jsoup.nodes.Document;
 import org.jsoup.safety.Cleaner;
 import org.jsoup.safety.Safelist;
 
-public class HtmlSanitizer {
+public final class HtmlSanitizer {
 
+  private HtmlSanitizer() {}
   private static final Safelist CUSTOM_SAFELIST =
       Safelist.relaxed()
           .addTags("span", "div", "section")
           .addAttributes(":all", "class", "style", "id")
           .addAttributes(
               ":all", "data-content-type", "data-id", "data-level", "data-text-alignment")
-          .addEnforcedAttribute("a", "rel", "nofollow")
+          .addEnforcedAttribute("a", "rel", "nofollow noopener noreferrer")
           .preserveRelativeLinks(true);
-
   public static String sanitize(String rawHtml) {
     if (rawHtml == null) {
       return null;

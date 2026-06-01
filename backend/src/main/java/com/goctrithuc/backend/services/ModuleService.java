@@ -149,6 +149,8 @@ public class ModuleService {
       next.setOrder(currentOrder);
       moduleRepo.save(m);
       moduleRepo.save(next);
+    } else {
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Direction must be 'up' or 'down'");
     }
   }
 }
