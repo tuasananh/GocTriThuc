@@ -80,4 +80,9 @@ public class PermissionService {
     long permissions = resolvePermissions(user);
     return (permissions & PermissionConstants.ADMIN) != 0;
   }
+
+  @Transactional(readOnly = true)
+  public boolean isAdmin(Long userId) {
+    return userRepository.findById(userId).map(this::isAdminFromUser).orElse(false);
+  }
 }
