@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { api } from '@/lib/api';
@@ -11,7 +11,9 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { BookOpen, UserPlus, LogIn, Lock, PlayCircle, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
-
+import { ErrorState } from '@/components/ErrorState';
+import { PERMISSION } from '@/lib/permissions';
+import { isAxiosError } from 'axios';
 export function CourseDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -21,38 +23,50 @@ export function CourseDetailPage() {
   const [accessStatus, setAccessStatus] = useState<AccessStatus>('none');
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<{ type: 'not_found' | 'network'; message: string } | null>(
+    null,
+  );
 
   const isAuthenticated = auth?.isAuthenticated ?? false;
   const user = auth?.isAuthenticated ? auth.user : null;
 
-  useEffect(() => {
-    async function fetchData() {
-      if (!id) return;
-      setLoading(true);
-      setError(null);
-      try {
-        const [courseRes, statusRes] = await Promise.all([
-          api.get<CourseDto>(`/api/courses/${id}`),
-          isAuthenticated
-            ? api.get<AccessStatusResponse>(`/api/courses/${id}/access-status`)
-            : Promise.resolve({ data: { status: 'none' as AccessStatus } }),
-        ]);
+  const fetchData = useCallback(async () => {
+    if (!id) return;
+    setLoading(true);
+    setError(null);
+    try {
+      const [courseRes, statusRes] = await Promise.all([
+        api.get<CourseDto>(`/api/courses/${id}`),
+        isAuthenticated
+          ? api.get<AccessStatusResponse>(`/api/courses/${id}/access-status`)
+          : Promise.resolve({ data: { status: 'none' as AccessStatus } }),
+      ]);
 
-        setCourse(courseRes.data);
-        setAccessStatus(statusRes.data.status);
-      } catch (err) {
-        console.error('Failed to load course details', err);
-        setError(
-          'Không thể tải thông tin khóa học. Khóa học có thể không tồn tại hoặc bạn không có quyền truy cập.',
-        );
-      } finally {
-        setLoading(false);
+      setCourse(courseRes.data);
+      setAccessStatus(statusRes.data.status);
+    } catch (err: unknown) {
+      console.error('Failed to load course details', err);
+      const status = isAxiosError(err) ? err.response?.status : null;
+      if (status === 404) {
+        setError({
+          type: 'not_found',
+          message: 'Khóa học không tồn tại hoặc đã bị xóa.',
+        });
+      } else {
+        setError({
+          type: 'network',
+          message: 'Không thể tải thông tin khóa học. Vui lòng kiểm tra kết nối mạng.',
+        });
       }
+    } finally {
+      setLoading(false);
     }
-
-    fetchData();
   }, [id, isAuthenticated]);
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    fetchData();
+  }, [fetchData]);
 
   const handleEnrollAction = async () => {
     if (!isAuthenticated) {
@@ -107,12 +121,22 @@ export function CourseDetailPage() {
   }
 
   if (error || !course) {
+    if (error?.type === 'network') {
+      return (
+        <PageShell>
+          <div className="mt-20 max-w-lg mx-auto">
+            <ErrorState message={error.message} onRetry={fetchData} />
+          </div>
+        </PageShell>
+      );
+    }
+
     return (
       <PageShell>
         <div className="mt-20 text-center flex flex-col items-center">
           <BookOpen size={48} className="text-muted-foreground mb-4 opacity-50" />
           <h2 className="text-2xl font-semibold mb-2">Không tìm thấy khóa học</h2>
-          <p className="text-muted-foreground">{error}</p>
+          <p className="text-muted-foreground">{error?.message || 'Khóa học không tồn tại.'}</p>
           <Button className="mt-6" onClick={() => navigate(ROUTES.COURSES)}>
             Quay lại danh sách
           </Button>
@@ -177,7 +201,9 @@ export function CourseDetailPage() {
                   Đăng nhập để học
                 </Button>
               ) : accessStatus === 'enrolled' ||
-                (user?.permissions ?? 0n) >= 8n /* Is Admin/Author check approx */ ? (
+                ((user?.permissions ?? 0n) & PERMISSION.ADMIN) === PERMISSION.ADMIN ||
+                ((user?.permissions ?? 0n) & PERMISSION.MANAGE_OWN_COURSES) ===
+                  PERMISSION.MANAGE_OWN_COURSES ? (
                 <Button
                   size="lg"
                   className="rounded-xl px-8"
