@@ -12,4 +12,6 @@ public interface LessonRepository extends JpaRepository<LessonEntity, Long> {
   boolean existsByIdAndModuleId(Long id, Long moduleId);
 
   long countByModuleCourseId(Long courseId);
+
+  int countByModuleId(Long moduleId);
 }

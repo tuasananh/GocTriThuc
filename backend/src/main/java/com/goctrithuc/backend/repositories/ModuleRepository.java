@@ -12,4 +12,6 @@ public interface ModuleRepository extends JpaRepository<ModuleEntity, Long> {
   List<ModuleEntity> findByCourseIdOrderByOrderAsc(Long courseId);
 
   boolean existsByIdAndCourseId(Long id, Long courseId);
+
+  int countByCourseId(Long courseId);
 }
