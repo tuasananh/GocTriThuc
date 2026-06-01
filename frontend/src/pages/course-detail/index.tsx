@@ -15,13 +15,16 @@ import { toast } from 'sonner';
 export function CourseDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { isAuthenticated, user } = useAuth();
+  const auth = useAuth();
 
   const [course, setCourse] = useState<CourseDto | null>(null);
   const [accessStatus, setAccessStatus] = useState<AccessStatus>('none');
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const isAuthenticated = auth?.isAuthenticated ?? false;
+  const user = auth?.isAuthenticated ? auth.user : null;
 
   useEffect(() => {
     async function fetchData() {
