@@ -174,7 +174,7 @@ export function CourseDetailPage() {
                   Đăng nhập để học
                 </Button>
               ) : accessStatus === 'enrolled' ||
-                user?.permissions >= 8n /* Is Admin/Author check approx */ ? (
+                (user?.permissions ?? 0n) >= 8n /* Is Admin/Author check approx */ ? (
                 <Button
                   size="lg"
                   className="rounded-xl px-8"
