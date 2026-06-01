@@ -12,12 +12,14 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { BookOpen, UserPlus, LogIn, Lock, PlayCircle, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { ErrorState } from '@/components/ErrorState';
-import { PERMISSION } from '@/lib/permissions';
+import { useIsAdmin } from '@/lib/permissions';
 import { isAxiosError } from 'axios';
+
 export function CourseDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const auth = useAuth();
+  const isAdmin = useIsAdmin();
 
   const [course, setCourse] = useState<CourseDto | null>(null);
   const [accessStatus, setAccessStatus] = useState<AccessStatus>('none');
@@ -151,6 +153,8 @@ export function CourseDetailPage() {
     private: { label: 'Riêng tư', variant: 'destructive' as const },
   }[course.visibility] ?? { label: course.visibility, variant: 'outline' as const };
 
+  const isAuthor = user?.id === course?.author.id;
+
   return (
     <PageShell>
       {/* Course Header Hero Section */}
@@ -200,10 +204,7 @@ export function CourseDetailPage() {
                   <LogIn className="mr-2 h-5 w-5" />
                   Đăng nhập để học
                 </Button>
-              ) : accessStatus === 'enrolled' ||
-                ((user?.permissions ?? 0n) & PERMISSION.ADMIN) === PERMISSION.ADMIN ||
-                ((user?.permissions ?? 0n) & PERMISSION.MANAGE_OWN_COURSES) ===
-                  PERMISSION.MANAGE_OWN_COURSES ? (
+              ) : accessStatus === 'enrolled' || isAdmin || isAuthor ? (
                 <Button
                   size="lg"
                   className="rounded-xl px-8"
