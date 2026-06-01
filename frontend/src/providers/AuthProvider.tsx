@@ -34,6 +34,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
         if (data.authenticated === true) {
           const user = new CurrentUser(
+            data.id,
             data.displayName,
             data.email,
             data.avatarUrl,

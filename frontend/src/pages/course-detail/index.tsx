@@ -40,12 +40,15 @@ export function CourseDetailPage() {
       const [courseRes, statusRes] = await Promise.all([
         api.get<CourseDto>(`/api/courses/${id}`),
         isAuthenticated
-          ? api.get<AccessStatusResponse>(`/api/courses/${id}/access-status`)
+          ? api.get<AccessStatusResponse>(`/api/courses/${id}/access-status`).catch((err) => {
+              console.warn('Failed to fetch access status, falling back to none:', err);
+              return { data: { status: 'none' as AccessStatus } };
+            })
           : Promise.resolve({ data: { status: 'none' as AccessStatus } }),
       ]);
 
       setCourse(courseRes.data);
-      setAccessStatus(statusRes.data.status);
+      setAccessStatus(statusRes.data?.status || 'none');
     } catch (err: unknown) {
       console.error('Failed to load course details', err);
       const status = isAxiosError(err) ? err.response?.status : null;
@@ -153,8 +156,7 @@ export function CourseDetailPage() {
     private: { label: 'Riêng tư', variant: 'destructive' as const },
   }[course.visibility] ?? { label: course.visibility, variant: 'outline' as const };
 
-  const isAuthor =
-    user?.username && course?.author.username && user.username === course.author.username;
+  const isAuthor = user?.id && course?.author.id && user.id === course.author.id;
 
   return (
     <PageShell>
