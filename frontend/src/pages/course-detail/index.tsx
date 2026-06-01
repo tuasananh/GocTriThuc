@@ -153,7 +153,8 @@ export function CourseDetailPage() {
     private: { label: 'Riêng tư', variant: 'destructive' as const },
   }[course.visibility] ?? { label: course.visibility, variant: 'outline' as const };
 
-  const isAuthor = user?.id === course?.author.id;
+  const isAuthor =
+    user?.username && course?.author.username && user.username === course.author.username;
 
   return (
     <PageShell>
