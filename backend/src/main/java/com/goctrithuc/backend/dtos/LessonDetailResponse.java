@@ -1,6 +1,7 @@
 package com.goctrithuc.backend.dtos;
 
 import com.goctrithuc.backend.entities.LessonType;
+import java.util.List;
 
 public record LessonDetailResponse(
     Long id,
@@ -10,4 +11,6 @@ public record LessonDetailResponse(
     Integer order,
     LessonVideoResponse video,
     LessonBlogResponse blog,
-    LessonTestResponse test) {}
+    LessonTestResponse test,
+    Boolean completed,
+    List<FileResponse> resources) {}

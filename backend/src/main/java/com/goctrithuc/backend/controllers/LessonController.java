@@ -7,6 +7,7 @@ import com.goctrithuc.backend.services.LessonCompletionService;
 import com.goctrithuc.backend.services.LessonService;
 import com.goctrithuc.backend.services.PermissionService;
 import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -130,5 +131,18 @@ public class LessonController {
     Long userId = AuthUtils.getCurrentUserId(principal, userRepository);
     lessonService.updateLessonTest(id, req, userId);
     return ResponseEntity.noContent().build();
+  }
+
+  // POST /api/lessons/{id}/resources - Attach resource to lesson
+  @PostMapping("/{id}/resources")
+  @PreAuthorize(
+      "@permissionService.hasPermission(#principal, T(com.goctrithuc.backend.common.PermissionConstants).MANAGE_OWN_COURSES)")
+  public ResponseEntity<Void> attachResource(
+      @PathVariable Long id,
+      @Valid @RequestBody AttachResourceRequest req,
+      @AuthenticationPrincipal OAuth2User principal) {
+    Long userId = AuthUtils.getCurrentUserId(principal, userRepository);
+    lessonService.attachResource(id, req.fileId(), userId);
+    return ResponseEntity.status(HttpStatus.CREATED).build();
   }
 }

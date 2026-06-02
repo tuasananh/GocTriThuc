@@ -90,8 +90,19 @@ public class FileController {
           HttpStatus.INTERNAL_SERVER_ERROR, "File path URL is malformed", e);
     }
 
+    String originalName =
+        fileEntity.getOriginalName() != null
+            ? fileEntity.getOriginalName()
+            : fileEntity.getProviderValue();
+    String filenameEncoded =
+        org.springframework.web.util.UriUtils.encode(
+            originalName, java.nio.charset.StandardCharsets.UTF_8);
+    String resContentType =
+        fileEntity.getMimeType() != null ? fileEntity.getMimeType() : contentType;
+
     return ResponseEntity.ok()
-        .header(HttpHeaders.CONTENT_TYPE, contentType)
+        .header(HttpHeaders.CONTENT_TYPE, resContentType)
+        .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename*=UTF-8''" + filenameEncoded)
         .header(HttpHeaders.CACHE_CONTROL, "public, max-age=31536000")
         .body(resource);
   }

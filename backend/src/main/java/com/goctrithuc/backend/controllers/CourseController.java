@@ -94,7 +94,20 @@ public class CourseController {
       @PathVariable Long id, @AuthenticationPrincipal OAuth2User principal) {
 
     Course course = courseService.getCourseById(id, principal);
-    return ResponseEntity.ok(CourseResponse.from(course));
+    List<FileResponse> resources = List.of();
+
+    if (principal != null) {
+      Long userId = AuthUtils.getCurrentUserId(principal, userRepository);
+      boolean isAdmin = permissionService.isAdmin(principal);
+      boolean isAuthor = course.getAuthor() != null && course.getAuthor().getId().equals(userId);
+      boolean isEnrolled = enrollmentService.isEnrolled(userId, id);
+
+      if (isEnrolled || isAuthor || isAdmin) {
+        resources = courseService.getCourseResources(id);
+      }
+    }
+
+    return ResponseEntity.ok(CourseResponse.from(course, resources));
   }
 
   @PostMapping
@@ -244,7 +257,7 @@ public class CourseController {
     if (!isEnrolled && !isAuthor && !isAdmin) {
       throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Access denied to course curriculum");
     }
-    return ResponseEntity.ok(curriculumService.getModulesWithLessons(id));
+    return ResponseEntity.ok(curriculumService.getModulesWithLessons(id, userId));
   }
 
   // === Progress Endpoints ===
@@ -278,5 +291,17 @@ public class CourseController {
     Long userId = AuthUtils.getCurrentUserId(principal, userRepository);
     ModuleResponse res = moduleService.createModule(id, req, userId);
     return ResponseEntity.status(HttpStatus.CREATED).body(res);
+  }
+
+  // POST /api/courses/{id}/resources - Attach resource to course
+  @PostMapping("/{id}/resources")
+  @PreAuthorize(
+      "@permissionService.hasPermission(#principal, T(com.goctrithuc.backend.common.PermissionConstants).MANAGE_OWN_COURSES)")
+  public ResponseEntity<Void> attachResource(
+      @PathVariable Long id,
+      @Valid @RequestBody AttachResourceRequest req,
+      @AuthenticationPrincipal OAuth2User principal) {
+    courseService.attachResource(id, req.fileId(), principal);
+    return ResponseEntity.status(HttpStatus.CREATED).build();
   }
 }
