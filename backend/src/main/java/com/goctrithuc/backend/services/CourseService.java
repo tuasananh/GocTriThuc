@@ -25,14 +25,21 @@ public class CourseService {
   private final CourseRepository courseRepository;
   private final UserRepository userRepository;
   private final PermissionService permissionService;
+  private final com.goctrithuc.backend.repositories.CourseResourceRepository
+      courseResourceRepository;
+  private final com.goctrithuc.backend.repositories.FileRepository fileRepository;
 
   public CourseService(
       CourseRepository courseRepository,
       UserRepository userRepository,
-      PermissionService permissionService) {
+      PermissionService permissionService,
+      com.goctrithuc.backend.repositories.CourseResourceRepository courseResourceRepository,
+      com.goctrithuc.backend.repositories.FileRepository fileRepository) {
     this.courseRepository = courseRepository;
     this.userRepository = userRepository;
     this.permissionService = permissionService;
+    this.courseResourceRepository = courseResourceRepository;
+    this.fileRepository = fileRepository;
   }
 
   @Transactional(readOnly = true)
@@ -217,5 +224,47 @@ public class CourseService {
             () ->
                 new ResponseStatusException(
                     HttpStatus.NOT_FOUND, "Authenticated user not found in database"));
+  }
+
+  @Transactional(readOnly = true)
+  public List<com.goctrithuc.backend.dtos.FileResponse> getCourseResources(Long courseId) {
+    return courseResourceRepository.findByCourseId(courseId).stream()
+        .map(r -> com.goctrithuc.backend.dtos.FileResponse.from(r.getFile()))
+        .toList();
+  }
+
+  @Transactional
+  public void attachResource(Long courseId, Long fileId, OAuth2User principal) {
+    if (principal == null) {
+      throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Authentication required");
+    }
+    Course course =
+        courseRepository
+            .findWithAuthorById(courseId)
+            .orElseThrow(
+                () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Course not found"));
+
+    User user = getAuthenticatedUser(principal);
+    boolean isAdmin = permissionService.isAdminFromUser(user);
+
+    if (!course.getAuthor().getId().equals(user.getId()) && !isAdmin) {
+      throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Access denied");
+    }
+
+    com.goctrithuc.backend.entities.File file =
+        fileRepository
+            .findById(fileId)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "File not found"));
+
+    if (!file.getAuthorId().equals(user.getId()) && !isAdmin) {
+      throw new ResponseStatusException(
+          HttpStatus.FORBIDDEN, "You do not own this file and cannot attach it");
+    }
+
+    if (!courseResourceRepository.existsByCourseIdAndFileId(courseId, fileId)) {
+      com.goctrithuc.backend.entities.CourseResourceEntity cr =
+          new com.goctrithuc.backend.entities.CourseResourceEntity(course, file);
+      courseResourceRepository.save(cr);
+    }
   }
 }
