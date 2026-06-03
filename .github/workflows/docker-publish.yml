@@ -65,7 +65,7 @@ jobs:
         run: echo "repo=$(echo ${{ github.repository }} | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
 
       - name: Build and Push unified Docker Image
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v7
         with:
           context: ./backend
           # The Dockerfile in /backend will now pick up the fat .jar packaged in step 4
