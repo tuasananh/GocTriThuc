@@ -81,7 +81,7 @@ export function CourseEditorPage() {
     );
   }
 
-  if (auth.isAuthenticated && course.author.id !== auth.user.id) {
+  if (auth && auth.isAuthenticated && course.author.id !== auth.user.id) {
     return (
       <PageShell>
         <ErrorState
