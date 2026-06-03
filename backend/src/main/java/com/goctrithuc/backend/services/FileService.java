@@ -3,6 +3,7 @@ package com.goctrithuc.backend.services;
 import com.goctrithuc.backend.entities.File;
 import com.goctrithuc.backend.repositories.FileRepository;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -71,6 +72,38 @@ public class FileService {
       throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid file path");
     }
 
+    String detectedMimeType;
+    try (InputStream is = file.getInputStream()) {
+      detectedMimeType = tika.detect(is);
+    } catch (IOException e) {
+      throw new ResponseStatusException(
+          HttpStatus.INTERNAL_SERVER_ERROR, "Failed to read file signature", e);
+    }
+
+    if (detectedMimeType == null) {
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Could not determine file type");
+    }
+
+    boolean isAllowed = false;
+    for (String allowedMime : mimeAllowlist) {
+      if (allowedMime.endsWith("/")) {
+        if (detectedMimeType.startsWith(allowedMime)) {
+          isAllowed = true;
+          break;
+        }
+      } else {
+        if (detectedMimeType.equals(allowedMime)) {
+          isAllowed = true;
+          break;
+        }
+      }
+    }
+
+    if (!isAllowed) {
+      throw new ResponseStatusException(
+          HttpStatus.BAD_REQUEST, "File type not allowed: " + detectedMimeType);
+    }
+
     if (TransactionSynchronizationManager.isActualTransactionActive()) {
       TransactionSynchronizationManager.registerSynchronization(
           new TransactionSynchronization() {
@@ -92,51 +125,6 @@ public class FileService {
     } catch (IOException e) {
       throw new ResponseStatusException(
           HttpStatus.INTERNAL_SERVER_ERROR, "Failed to save file locally", e);
-    }
-
-    // 2. Nhận diện MIME type của file từ đĩa cứng bằng Apache Tika
-    String detectedMimeType;
-    try {
-      detectedMimeType = tika.detect(targetPath);
-    } catch (IOException e) {
-      try {
-        Files.deleteIfExists(targetPath);
-      } catch (IOException ignored) {
-      }
-      throw new ResponseStatusException(
-          HttpStatus.INTERNAL_SERVER_ERROR, "Failed to read file signature", e);
-    }
-
-    if (detectedMimeType == null) {
-      try {
-        Files.deleteIfExists(targetPath);
-      } catch (IOException ignored) {
-      }
-      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Could not determine file type");
-    }
-
-    boolean isAllowed = false;
-    for (String allowedMime : mimeAllowlist) {
-      if (allowedMime.endsWith("/")) {
-        if (detectedMimeType.startsWith(allowedMime)) {
-          isAllowed = true;
-          break;
-        }
-      } else {
-        if (detectedMimeType.equals(allowedMime)) {
-          isAllowed = true;
-          break;
-        }
-      }
-    }
-
-    if (!isAllowed) {
-      try {
-        Files.deleteIfExists(targetPath);
-      } catch (IOException ignored) {
-      }
-      throw new ResponseStatusException(
-          HttpStatus.BAD_REQUEST, "File type not allowed: " + detectedMimeType);
     }
 
     File entity =
