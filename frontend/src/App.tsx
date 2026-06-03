@@ -5,6 +5,7 @@ import { LoginPage } from '@/pages/login';
 import { Dashboard } from '@/pages/dashboard';
 import { CourseListPage } from '@/pages/courses';
 import { CourseDetailPage } from '@/pages/course-detail';
+import { CourseEditorPage } from './pages/instructor/course-editor';
 import { GuestRoute } from '@/components/GuestRoute';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { AuthProvider } from './providers/AuthProvider';
@@ -56,9 +57,12 @@ function App() {
                 <Route element={<MainLayout />}>
                   {/* Thêm các trang instructor ở đây:
                     <Route path={ROUTES.INSTRUCTOR_DASHBOARD} element={<InstructorDashboard />} />
-                    <Route path={ROUTES.INSTRUCTOR_COURSE_EDITOR(':id')} element={<CourseEditorPage />} />
                     <Route path={ROUTES.QUESTION_BANK} element={<QuestionBankPage />} />
-                */}
+                  */}
+                  <Route
+                    path={ROUTES.INSTRUCTOR_COURSE_EDITOR(':id')}
+                    element={<CourseEditorPage />}
+                  />
                 </Route>
               </Route>
 
