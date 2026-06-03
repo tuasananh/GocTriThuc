@@ -106,4 +106,10 @@ export const courseHandlers = [
     await delay(300);
     return new HttpResponse(null, { status: 201 });
   }),
+
+  // ── POST /api/courses/:id/access-requests ──────────────────
+  http.post('/api/courses/:id/access-requests', async () => {
+    await delay(300);
+    return new HttpResponse(null, { status: 201 });
+  }),
 ];
