@@ -7,15 +7,15 @@ import java.time.ZonedDateTime;
 @Table(name = "course_resources")
 public class CourseResourceEntity {
 
-  @Id
-  @GeneratedValue(strategy = GenerationType.IDENTITY)
-  private Long id;
+  @EmbeddedId private CourseResourceId id;
 
   @ManyToOne(fetch = FetchType.LAZY)
+  @MapsId("courseId")
   @JoinColumn(name = "course_id", nullable = false)
   private Course course;
 
   @ManyToOne(fetch = FetchType.LAZY)
+  @MapsId("fileId")
   @JoinColumn(name = "file_id", nullable = false)
   private File file;
 
@@ -30,10 +30,15 @@ public class CourseResourceEntity {
   public CourseResourceEntity(Course course, File file) {
     this.course = course;
     this.file = file;
+    this.id = new CourseResourceId(course.getId(), file.getId());
   }
 
-  public Long getId() {
+  public CourseResourceId getId() {
     return id;
+  }
+
+  public void setId(CourseResourceId id) {
+    this.id = id;
   }
 
   public Course getCourse() {
