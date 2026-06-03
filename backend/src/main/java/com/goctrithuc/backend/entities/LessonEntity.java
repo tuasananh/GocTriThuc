@@ -76,11 +76,56 @@ public class LessonEntity {
     this.order = order;
   }
 
+  @OneToOne(
+      mappedBy = "lesson",
+      cascade = CascadeType.ALL,
+      orphanRemoval = true,
+      fetch = FetchType.LAZY)
+  private LessonVideoEntity video;
+
+  @OneToOne(
+      mappedBy = "lesson",
+      cascade = CascadeType.ALL,
+      orphanRemoval = true,
+      fetch = FetchType.LAZY)
+  private LessonBlogEntity blog;
+
+  @OneToOne(
+      mappedBy = "lesson",
+      cascade = CascadeType.ALL,
+      orphanRemoval = true,
+      fetch = FetchType.LAZY)
+  private LessonTestEntity test;
+
   public ZonedDateTime getCreatedAt() {
     return createdAt;
   }
 
   public ZonedDateTime getUpdatedAt() {
     return updatedAt;
+  }
+
+  public LessonVideoEntity getVideo() {
+    return video;
+  }
+
+  public void setVideo(LessonVideoEntity video) {
+    this.video = video;
+  }
+
+  public LessonBlogEntity getBlog() {
+    return blog;
+  }
+
+  public void setBlog(LessonBlogEntity blog) {
+    this.blog = blog;
+  }
+
+  public LessonTestEntity getTest() {
+    return test;
+  }
+
+  public void setTest(LessonTestEntity test) {
+    this.test = test;
   }
 }

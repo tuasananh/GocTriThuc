@@ -3,6 +3,7 @@ package com.goctrithuc.backend.dtos;
 import com.goctrithuc.backend.entities.Course;
 import com.goctrithuc.backend.entities.CourseVisibility;
 import java.time.ZonedDateTime;
+import java.util.List;
 import java.util.Map;
 
 public record CourseResponse(
@@ -15,9 +16,14 @@ public record CourseResponse(
     String status,
     Map<String, Object> settings,
     PublicUserResponse author,
+    List<FileResponse> resources,
     ZonedDateTime createdAt,
     ZonedDateTime updatedAt) {
   public static CourseResponse from(Course course) {
+    return from(course, List.of());
+  }
+
+  public static CourseResponse from(Course course, List<FileResponse> resources) {
     String status = computeStatus(course.isPublished(), course.getVisibility());
     return new CourseResponse(
         course.getId(),
@@ -29,6 +35,7 @@ public record CourseResponse(
         status,
         course.getSettings(),
         course.getAuthor() != null ? PublicUserResponse.from(course.getAuthor()) : null,
+        resources,
         course.getCreatedAt(),
         course.getUpdatedAt());
   }
