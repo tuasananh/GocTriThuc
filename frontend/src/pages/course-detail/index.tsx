@@ -33,7 +33,11 @@ export function CourseDetailPage() {
   const user = auth?.isAuthenticated ? auth.user : null;
 
   const fetchData = useCallback(async () => {
-    if (!id) return;
+    if (!id) {
+      setError({ type: 'not_found', message: 'Không tìm thấy khóa học.' });
+      setLoading(false);
+      return;
+    }
     setLoading(true);
     setError(null);
     try {
@@ -76,7 +80,8 @@ export function CourseDetailPage() {
   const handleEnrollAction = async () => {
     if (!isAuthenticated) {
       toast.info('Bạn cần đăng nhập để tham gia khóa học');
-      navigate(ROUTES.LOGIN);
+      const redirectUrl = `${window.location.pathname}${window.location.search}${window.location.hash}`;
+      navigate(`${ROUTES.LOGIN}?redirect=${encodeURIComponent(redirectUrl)}`);
       return;
     }
 
@@ -156,7 +161,7 @@ export function CourseDetailPage() {
     private: { label: 'Riêng tư', variant: 'destructive' as const },
   }[course.visibility] ?? { label: course.visibility, variant: 'outline' as const };
 
-  const isAuthor = user?.id && course?.author.id && user.id === course.author.id;
+  const isAuthor = Boolean(user?.id && course?.author?.id && user.id === course.author.id);
 
   return (
     <PageShell>
