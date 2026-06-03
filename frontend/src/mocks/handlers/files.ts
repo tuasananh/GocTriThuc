@@ -4,13 +4,8 @@ export const fileHandlers = [
   // ── POST /api/files/upload ─────────────────────────────────
   http.post('/api/files/upload', async () => {
     await delay(800); // giả lập upload chậm
-    const mockFileId = String(Date.now());
     return HttpResponse.json(
-      {
-        id: mockFileId,
-        filename: `mock-${mockFileId}.jpg`,
-        url: `/api/files/serve/${mockFileId}`,
-      },
+      { id: 99, providerValue: 'uploads/mock.jpg' },
       { status: 201 },
     );
   }),
