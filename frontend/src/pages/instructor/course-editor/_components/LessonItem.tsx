@@ -124,8 +124,8 @@ export function LessonItem({ lesson, isFirst, isLast, onModulesChange }: LessonI
               <div className="space-y-2">
                 <p>
                   Bạn sắp xóa bài học{' '}
-                  <span className="font-semibold text-foreground">"{lesson.title}"</span>{' '}
-                  và toàn bộ nội dung bên trong.
+                  <span className="font-semibold text-foreground">"{lesson.title}"</span> và toàn bộ
+                  nội dung bên trong.
                 </p>
                 <p className="font-semibold text-destructive">
                   ⚠️ Hành động này không thể hoàn tác.

@@ -150,8 +150,8 @@ export function ModuleItem({ module, isFirst, isLast, onModulesChange }: ModuleI
               <div className="space-y-2">
                 <p>
                   Bạn sắp xóa học phần{' '}
-                  <span className="font-semibold text-foreground">"{module.title}"</span>{' '}
-                  và tất cả {module.lessons.length} bài học bên trong.
+                  <span className="font-semibold text-foreground">"{module.title}"</span> và tất cả{' '}
+                  {module.lessons.length} bài học bên trong.
                 </p>
                 <p className="font-semibold text-destructive">
                   ⚠️ Hành động này không thể hoàn tác.
