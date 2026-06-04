@@ -62,6 +62,12 @@ public class QuestionService {
             "correctChoices index " + idx + " out of bounds [0, " + (choices.size() - 1) + "]");
       }
     }
+
+    long uniqueChoices = choices.stream().map(String::trim).distinct().count();
+    if (uniqueChoices < choices.size()) {
+      throw new ResponseStatusException(
+          HttpStatus.BAD_REQUEST, "Choices list must contain unique values");
+    }
   }
 
   @Transactional
@@ -234,7 +240,7 @@ public class QuestionService {
       throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Question link to test not found");
     }
 
-    testQuestionRepo.deleteById(tqId);
+    testQuestionRepo.deleteByTestIdAndQuestionId(testId, questionId);
   }
 
   @Transactional(readOnly = true)

@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.goctrithuc.backend.BaseIntegrationTest;
 import com.goctrithuc.backend.entities.*;
+import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
@@ -24,6 +25,7 @@ public class TestQuestionRepositoryTest extends BaseIntegrationTest {
   @Autowired private TestQuestionRepository testQuestionRepository;
   @Autowired private RoleRepository roleRepository;
   @Autowired private UserRoleRepository userRoleRepository;
+  @Autowired private EntityManager entityManager;
 
   @Test
   void deleteByTestIdAndQuestionIdActuallyRemovesRow() {
@@ -58,5 +60,81 @@ public class TestQuestionRepositoryTest extends BaseIntegrationTest {
     assertThat(testQuestionRepository.existsById(new TestQuestionId(test.getId(), q.getId())))
         .as("deleteByTestIdAndQuestionId must actually remove the row")
         .isFalse();
+  }
+
+  @Test
+  void observeDeleteByIdBehavior() {
+    // --- Arrange ---
+    User teacher =
+        userRepository.save(
+            new User("teacher-del-by-id@test.com", "Teacher", "teacher_del_id", null));
+    userRoleRepository.save(
+        new UserRole(teacher, roleRepository.findByName("teacher").orElseThrow()));
+    Course course =
+        courseRepository.save(
+            new Course("C", "D", null, true, CourseVisibility.PUBLIC, teacher, null));
+    ModuleEntity module = moduleRepository.save(new ModuleEntity(course, "M", 0));
+    LessonEntity lesson = lessonRepository.save(new LessonEntity(module, "L", LessonType.TEST, 0));
+    LessonTestEntity test = lessonTestRepository.save(new LessonTestEntity(lesson, "T", 60, null));
+    QuestionEntity q =
+        questionRepository.save(
+            new QuestionEntity(teacher.getId(), "Q?", QuestionType.MULTIPLE_CHOICE));
+    mcQuestionRepository.save(
+        new McQuestionEntity(q, new String[] {"A", "B"}, new int[] {0}, true));
+
+    TestQuestionEntity tq = testQuestionRepository.save(new TestQuestionEntity(test, q, 0, 5.0));
+    testQuestionRepository.flush(); // Ensure insert is flushed first
+
+    entityManager.clear(); // Clear first-level cache to simulate cold database state
+
+    // --- Act & Observe SQL ---
+    System.out.println("==================================================");
+    System.out.println("SQL OBSERVATION: START OF deleteById");
+    System.out.println("==================================================");
+
+    testQuestionRepository.deleteById(tq.getId());
+    testQuestionRepository.flush(); // Force Hibernate to execute SQL delete/select immediately
+
+    System.out.println("==================================================");
+    System.out.println("SQL OBSERVATION: END OF deleteById");
+    System.out.println("==================================================");
+  }
+
+  @Test
+  void observeDeleteByCustomQueryBehavior() {
+    // --- Arrange ---
+    User teacher =
+        userRepository.save(
+            new User("teacher-del-by-custom@test.com", "Teacher", "teacher_del_custom", null));
+    userRoleRepository.save(
+        new UserRole(teacher, roleRepository.findByName("teacher").orElseThrow()));
+    Course course =
+        courseRepository.save(
+            new Course("C", "D", null, true, CourseVisibility.PUBLIC, teacher, null));
+    ModuleEntity module = moduleRepository.save(new ModuleEntity(course, "M", 0));
+    LessonEntity lesson = lessonRepository.save(new LessonEntity(module, "L", LessonType.TEST, 0));
+    LessonTestEntity test = lessonTestRepository.save(new LessonTestEntity(lesson, "T", 60, null));
+    QuestionEntity q =
+        questionRepository.save(
+            new QuestionEntity(teacher.getId(), "Q?", QuestionType.MULTIPLE_CHOICE));
+    mcQuestionRepository.save(
+        new McQuestionEntity(q, new String[] {"A", "B"}, new int[] {0}, true));
+
+    testQuestionRepository.save(new TestQuestionEntity(test, q, 0, 5.0));
+    testQuestionRepository.flush(); // Ensure insert is flushed first
+
+    entityManager.clear(); // Clear first-level cache to simulate cold database state
+
+    // --- Act & Observe SQL ---
+    System.out.println("==================================================");
+    System.out.println("SQL OBSERVATION: START OF deleteByTestIdAndQuestionId");
+    System.out.println("==================================================");
+
+    testQuestionRepository.deleteByTestIdAndQuestionId(test.getId(), q.getId());
+    testQuestionRepository.flush(); // Force Hibernate to execute SQL delete immediately
+
+    System.out.println("==================================================");
+    System.out.println("SQL OBSERVATION: END OF deleteByTestIdAndQuestionId");
+    System.out.println("==================================================");
   }
 }

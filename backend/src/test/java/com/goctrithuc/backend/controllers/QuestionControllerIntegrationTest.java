@@ -722,6 +722,46 @@ public class QuestionControllerIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  void testCreateQuestionDuplicateChoicesBadRequest() throws Exception {
+    CreateQuestionRequest req =
+        new CreateQuestionRequest(
+            "Statement?", List.of("Duplicate", "Duplicate", "Unique"), List.of(0), true);
+
+    mockMvc
+        .perform(
+            post("/api/questions")
+                .with(oauth2Login().attributes(attrs -> attrs.put("email", teacherA.getEmail())))
+                .with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(req)))
+        .andExpect(status().isBadRequest())
+        .andDo(print());
+  }
+
+  @Test
+  void testUpdateQuestionDuplicateChoicesBadRequest() throws Exception {
+    QuestionEntity q =
+        questionRepository.save(
+            new QuestionEntity(teacherA.getId(), "Old Statement", QuestionType.MULTIPLE_CHOICE));
+    mcQuestionRepository.save(
+        new McQuestionEntity(q, new String[] {"Choice 1", "Choice 2"}, new int[] {0}, true));
+
+    UpdateQuestionRequest updateReq =
+        new UpdateQuestionRequest(
+            "New Statement", List.of("Choice 1", "Choice 1"), List.of(0), true);
+
+    mockMvc
+        .perform(
+            put("/api/questions/" + q.getId())
+                .with(oauth2Login().attributes(attrs -> attrs.put("email", teacherA.getEmail())))
+                .with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(updateReq)))
+        .andExpect(status().isBadRequest())
+        .andDo(print());
+  }
+
+  @Test
   void testAddQuestionToTestDuplicateOrderConflict() throws Exception {
     Course course =
         courseRepository.save(
