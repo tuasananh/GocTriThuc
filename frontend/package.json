@@ -14,7 +14,7 @@
   "dependencies": {
     "@blocknote/code-block": "^0.51.3",
     "@blocknote/core": "^0.51.3",
-    "@blocknote/react": "^0.51.3",
+    "@blocknote/react": "^0.51.4",
     "@blocknote/shadcn": "^0.51.3",
     "@fontsource-variable/inter": "^5.2.8",
     "@tailwindcss/vite": "^4.3.0",
