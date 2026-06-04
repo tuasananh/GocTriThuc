@@ -406,6 +406,62 @@ public class QuestionControllerIntegrationTest extends BaseIntegrationTest {
         .andDo(print());
   }
 
+  // Regression tests for: lessonRepo was queried with a LessonTest PK in
+  // getTestQuestions and validateCourseOwnership, always causing 404.
+
+  @Test
+  void testGetTestQuestionsResolvesVialessonTestId() throws Exception {
+    Course course =
+        courseRepository.save(
+            new Course("Course 1", "Desc", null, true, CourseVisibility.PUBLIC, teacherA, null));
+    ModuleEntity module = moduleRepository.save(new ModuleEntity(course, "Module 1", 0));
+    LessonEntity lesson =
+        lessonRepository.save(new LessonEntity(module, "Test Lesson", LessonType.TEST, 0));
+    LessonTestEntity test =
+        lessonTestRepository.save(new LessonTestEntity(lesson, "Test Statement", 60, null));
+
+    // No questions — just verify the endpoint resolves the test correctly (200, not 404)
+    mockMvc
+        .perform(
+            get("/api/tests/" + test.getId() + "/questions")
+                .with(oauth2Login().attributes(attrs -> attrs.put("email", teacherA.getEmail()))))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.length()").value(0))
+        .andDo(print());
+  }
+
+  @Test
+  void testAddQuestionToTestResolvesOwnershipVialessonTestId() throws Exception {
+    Course course =
+        courseRepository.save(
+            new Course("Course 1", "Desc", null, true, CourseVisibility.PUBLIC, teacherA, null));
+    ModuleEntity module = moduleRepository.save(new ModuleEntity(course, "Module 1", 0));
+    LessonEntity lesson =
+        lessonRepository.save(new LessonEntity(module, "Test Lesson", LessonType.TEST, 0));
+    LessonTestEntity test =
+        lessonTestRepository.save(new LessonTestEntity(lesson, "Test Statement", 60, null));
+
+    QuestionEntity q =
+        questionRepository.save(
+            new QuestionEntity(
+                teacherA.getId(), "Question Statement", QuestionType.MULTIPLE_CHOICE));
+    mcQuestionRepository.save(
+        new McQuestionEntity(q, new String[] {"A", "B"}, new int[] {0}, true));
+
+    AddQuestionToTestRequest addReq = new AddQuestionToTestRequest(q.getId(), 0, 5.0);
+
+    // Ownership check uses the LessonTest ID to resolve the course — must not 404
+    mockMvc
+        .perform(
+            post("/api/tests/" + test.getId() + "/questions")
+                .with(oauth2Login().attributes(attrs -> attrs.put("email", teacherA.getEmail())))
+                .with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(addReq)))
+        .andExpect(status().isCreated())
+        .andDo(print());
+  }
+
   @Test
   void testRemoveQuestionFromTest() throws Exception {
     Course course =

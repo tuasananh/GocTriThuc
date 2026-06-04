@@ -223,11 +223,11 @@ public class QuestionService {
 
   @Transactional(readOnly = true)
   public List<TestQuestionResponse> getTestQuestions(Long testId, Long userId) {
-    LessonEntity lesson =
-        lessonRepo
+    LessonTestEntity lessonTest =
+        lessonTestRepo
             .findById(testId)
-            .orElseThrow(
-                () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Lesson not found"));
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Test not found"));
+    LessonEntity lesson = lessonTest.getLesson();
     Long courseId = lesson.getModule().getCourse().getId();
 
     boolean isCourseAuthor = lesson.getModule().getCourse().getAuthor().getId().equals(userId);
@@ -261,12 +261,11 @@ public class QuestionService {
     if (permissionService.isAdmin(userId)) {
       return;
     }
-    LessonEntity lesson =
-        lessonRepo
+    LessonTestEntity lessonTest =
+        lessonTestRepo
             .findById(testId)
-            .orElseThrow(
-                () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Lesson not found"));
-    Course course = lesson.getModule().getCourse();
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Test not found"));
+    Course course = lessonTest.getLesson().getModule().getCourse();
     if (!course.getAuthor().getId().equals(userId)) {
       throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You do not own this course");
     }
