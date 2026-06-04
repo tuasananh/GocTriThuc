@@ -16,6 +16,7 @@ import com.goctrithuc.backend.dtos.UpdateQuestionRequest;
 import com.goctrithuc.backend.entities.*;
 import com.goctrithuc.backend.repositories.*;
 import java.util.List;
+import org.hamcrest.Matchers;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -426,7 +427,7 @@ public class QuestionControllerIntegrationTest extends BaseIntegrationTest {
                     oauth2Login().attributes(attrs -> attrs.put("email", studentUser.getEmail()))))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.length()").value(1))
-        .andExpect(jsonPath("$[0].correctChoices").isEmpty()) // is null
+        .andExpect(jsonPath("$[0].correctChoices").value(Matchers.nullValue())) // is null
         .andDo(print());
   }
 
@@ -444,7 +445,8 @@ public class QuestionControllerIntegrationTest extends BaseIntegrationTest {
     LessonTestEntity test =
         lessonTestRepository.save(new LessonTestEntity(lesson, "Test Statement", 60, null));
 
-    // No questions — just verify the endpoint resolves the test correctly (200, not 404)
+    // No questions — just verify the endpoint resolves the test correctly (200, not
+    // 404)
     mockMvc
         .perform(
             get("/api/tests/" + test.getId() + "/questions")
