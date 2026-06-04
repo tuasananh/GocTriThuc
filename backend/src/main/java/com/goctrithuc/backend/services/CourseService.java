@@ -65,7 +65,8 @@ public class CourseService {
     List<CourseVisibility> guestVisibilities =
         Arrays.asList(CourseVisibility.PUBLIC, CourseVisibility.RESTRICTED);
 
-    // Students/guests cannot directly query Private courses (own=true bypasses this since
+    // Students/guests cannot directly query Private courses (own=true bypasses this
+    // since
     // they're filtering to their own authored courses).
     if (visibility != null && !hasOwnParam && !isAdmin && !guestVisibilities.contains(visibility)) {
       throw new ResponseStatusException(
@@ -78,7 +79,7 @@ public class CourseService {
       spec = spec.and(CourseSpecifications.titleContains(search));
     }
 
-    if (hasOwnParam) {
+    if (hasOwnParam && currentUser != null) {
       Long authorId = currentUser.getId();
       spec = spec.and(CourseSpecifications.authorIdEquals(authorId));
     }
@@ -108,7 +109,8 @@ public class CourseService {
       User user = getAuthenticatedUser(principal);
       boolean isAdmin = permissionService.isAdminFromUser(user);
       if (!course.getAuthor().getId().equals(user.getId()) && !isAdmin) {
-        // Return 404 instead of 403 to avoid leaking information about existence of the course
+        // Return 404 instead of 403 to avoid leaking information about existence of the
+        // course
         throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Course not found");
       }
     }

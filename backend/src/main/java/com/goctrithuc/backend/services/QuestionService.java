@@ -18,7 +18,6 @@ public class QuestionService {
   private final McQuestionRepository mcQuestionRepo;
   private final TestQuestionRepository testQuestionRepo;
   private final LessonTestRepository lessonTestRepo;
-  private final LessonRepository lessonRepo;
   private final EnrollmentRepository enrollmentRepo;
   private final PermissionService permissionService;
 
@@ -34,7 +33,6 @@ public class QuestionService {
     this.mcQuestionRepo = mcQuestionRepo;
     this.testQuestionRepo = testQuestionRepo;
     this.lessonTestRepo = lessonTestRepo;
-    this.lessonRepo = lessonRepo;
     this.enrollmentRepo = enrollmentRepo;
     this.permissionService = permissionService;
   }
