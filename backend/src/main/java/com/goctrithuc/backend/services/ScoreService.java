@@ -25,13 +25,11 @@ public class ScoreService {
       return 0.0;
     }
 
-    boolean isWeighted = false;
-    for (Double pt : points) {
-      if (pt != null) {
-        isWeighted = true;
-        break;
-      }
+    if (points == null) {
+      points = List.of();
     }
+
+    boolean isWeighted = !points.isEmpty();
 
     if (!isWeighted) {
       double correctCount = 0;

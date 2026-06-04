@@ -73,4 +73,25 @@ public class ScoreServiceTest {
     double totalScore = scoreService.calculateTotalScore(questions, studentAnswers, points);
     assertThat(totalScore).isEqualTo(70.0);
   }
+
+  @Test
+  void calculateTotalScoreWithNullPointsDoesNotNpe() {
+    // Before fix: iterating a null points list throws NullPointerException.
+    // After fix: null treated as unweighted mode.
+    McQuestionEntity mc1 = new McQuestionEntity(null, new String[] {"A", "B"}, new int[] {0}, true);
+    McQuestionEntity mc2 = new McQuestionEntity(null, new String[] {"A", "B"}, new int[] {1}, true);
+
+    List<McQuestionEntity> questions = List.of(mc1, mc2);
+    List<int[]> studentAnswers = List.of(new int[] {0}, new int[] {1}); // both correct
+
+    // null points → unweighted mode → (2/2)*100 = 100.0
+    double score = scoreService.calculateTotalScore(questions, studentAnswers, null);
+    assertThat(score).isEqualTo(100.0);
+  }
+
+  @Test
+  void calculateTotalScoreWithEmptyQuestionsReturnsZero() {
+    double score = scoreService.calculateTotalScore(List.of(), List.of(), null);
+    assertThat(score).isEqualTo(0.0);
+  }
 }
