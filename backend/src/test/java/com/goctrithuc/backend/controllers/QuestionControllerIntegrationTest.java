@@ -570,4 +570,66 @@ public class QuestionControllerIntegrationTest extends BaseIntegrationTest {
         .andExpect(status().isUnauthorized())
         .andDo(print());
   }
+
+  @Test
+  void testAddQuestionToTestNegativeOrderBadRequest() throws Exception {
+    Course course =
+        courseRepository.save(
+            new Course("Course 1", "Desc", null, true, CourseVisibility.PUBLIC, teacherA, null));
+    ModuleEntity module = moduleRepository.save(new ModuleEntity(course, "Module 1", 0));
+    LessonEntity lesson =
+        lessonRepository.save(new LessonEntity(module, "Test Lesson", LessonType.TEST, 0));
+    LessonTestEntity test =
+        lessonTestRepository.save(new LessonTestEntity(lesson, "Test Statement", 60, null));
+
+    QuestionEntity q =
+        questionRepository.save(
+            new QuestionEntity(
+                teacherA.getId(), "Question Statement", QuestionType.MULTIPLE_CHOICE));
+    mcQuestionRepository.save(
+        new McQuestionEntity(q, new String[] {"A", "B"}, new int[] {0}, true));
+
+    AddQuestionToTestRequest addReq = new AddQuestionToTestRequest(q.getId(), -1, 10.0);
+
+    mockMvc
+        .perform(
+            post("/api/tests/" + test.getId() + "/questions")
+                .with(oauth2Login().attributes(attrs -> attrs.put("email", teacherA.getEmail())))
+                .with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(addReq)))
+        .andExpect(status().isBadRequest())
+        .andDo(print());
+  }
+
+  @Test
+  void testAddQuestionToTestNegativePointBadRequest() throws Exception {
+    Course course =
+        courseRepository.save(
+            new Course("Course 1", "Desc", null, true, CourseVisibility.PUBLIC, teacherA, null));
+    ModuleEntity module = moduleRepository.save(new ModuleEntity(course, "Module 1", 0));
+    LessonEntity lesson =
+        lessonRepository.save(new LessonEntity(module, "Test Lesson", LessonType.TEST, 0));
+    LessonTestEntity test =
+        lessonTestRepository.save(new LessonTestEntity(lesson, "Test Statement", 60, null));
+
+    QuestionEntity q =
+        questionRepository.save(
+            new QuestionEntity(
+                teacherA.getId(), "Question Statement", QuestionType.MULTIPLE_CHOICE));
+    mcQuestionRepository.save(
+        new McQuestionEntity(q, new String[] {"A", "B"}, new int[] {0}, true));
+
+    AddQuestionToTestRequest addReq = new AddQuestionToTestRequest(q.getId(), 0, -5.0);
+
+    mockMvc
+        .perform(
+            post("/api/tests/" + test.getId() + "/questions")
+                .with(oauth2Login().attributes(attrs -> attrs.put("email", teacherA.getEmail())))
+                .with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(addReq)))
+        .andExpect(status().isBadRequest())
+        .andDo(print());
+  }
 }
