@@ -90,6 +90,40 @@ public class ScoreServiceTest {
   }
 
   @Test
+  void calculateTotalScoreWithNullStudentAnswersDoesNotNpe() {
+    // null studentAnswers must not NPE; every question treated as unanswered → 0.0
+    McQuestionEntity mc1 = new McQuestionEntity(null, new String[] {"A", "B"}, new int[] {0}, true);
+    McQuestionEntity mc2 = new McQuestionEntity(null, new String[] {"A", "B"}, new int[] {1}, true);
+
+    List<McQuestionEntity> questions = List.of(mc1, mc2);
+
+    double score = scoreService.calculateTotalScore(questions, null, null);
+    assertThat(score).isEqualTo(0.0);
+  }
+
+  @Test
+  void calculateTotalScoreWithAllNullPointsUsesUnweightedMode() {
+    // A non-empty list of all null values must behave identically to an empty list —
+    // unweighted mode. Before the anyMatch fix, !isEmpty() incorrectly entered
+    // weighted mode with implicit weight=1.0 per question.
+    McQuestionEntity mc1 = new McQuestionEntity(null, new String[] {"A", "B"}, new int[] {0}, true);
+    McQuestionEntity mc2 = new McQuestionEntity(null, new String[] {"A", "B"}, new int[] {1}, true);
+    McQuestionEntity mc3 = new McQuestionEntity(null, new String[] {"A", "B"}, new int[] {0}, true);
+
+    List<McQuestionEntity> questions = List.of(mc1, mc2, mc3);
+    List<int[]> studentAnswers =
+        List.of(new int[] {0}, new int[] {1}, new int[] {0}); // all correct
+    List<Double> allNullPoints = new java.util.ArrayList<>();
+    allNullPoints.add(null);
+    allNullPoints.add(null);
+    allNullPoints.add(null);
+
+    // unweighted mode → (3/3)*100 = 100.0
+    double score = scoreService.calculateTotalScore(questions, studentAnswers, allNullPoints);
+    assertThat(score).isEqualTo(100.0);
+  }
+
+  @Test
   void calculateTotalScoreWithEmptyQuestionsReturnsZero() {
     double score = scoreService.calculateTotalScore(List.of(), List.of(), null);
     assertThat(score).isEqualTo(0.0);

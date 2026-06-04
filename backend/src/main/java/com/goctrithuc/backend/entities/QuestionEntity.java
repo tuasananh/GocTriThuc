@@ -21,6 +21,9 @@ public class QuestionEntity {
   @Convert(converter = QuestionTypeJpaConverter.class)
   private QuestionType questionType;
 
+  @OneToOne(mappedBy = "question", fetch = FetchType.LAZY, cascade = CascadeType.REMOVE)
+  private McQuestionEntity mcQuestion;
+
   @Column(name = "created_at", nullable = false, insertable = false, updatable = false)
   private ZonedDateTime createdAt;
 
@@ -69,5 +72,9 @@ public class QuestionEntity {
 
   public ZonedDateTime getUpdatedAt() {
     return updatedAt;
+  }
+
+  public McQuestionEntity getMcQuestion() {
+    return mcQuestion;
   }
 }

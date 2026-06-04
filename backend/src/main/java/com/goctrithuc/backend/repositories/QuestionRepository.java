@@ -10,15 +10,22 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface QuestionRepository extends JpaRepository<QuestionEntity, Long> {
-  Page<QuestionEntity> findByAuthorId(Long authorId, Pageable pageable);
+
+  @Query("SELECT q FROM QuestionEntity q JOIN FETCH q.mcQuestion WHERE q.authorId = :authorId")
+  Page<QuestionEntity> findByAuthorId(@Param("authorId") Long authorId, Pageable pageable);
 
   @Query(
-      "SELECT q FROM QuestionEntity q WHERE q.authorId = :authorId "
-          + "AND LOWER(q.statement) LIKE LOWER(CONCAT('%', :search, '%'))")
+      "SELECT q FROM QuestionEntity q JOIN FETCH q.mcQuestion"
+          + " WHERE q.authorId = :authorId"
+          + " AND LOWER(q.statement) LIKE LOWER(CONCAT('%', :search, '%'))")
   Page<QuestionEntity> findByAuthorIdAndSearch(
       @Param("authorId") Long authorId, @Param("search") String search, Pageable pageable);
 
   @Query(
-      "SELECT q FROM QuestionEntity q WHERE LOWER(q.statement) LIKE LOWER(CONCAT('%', :search, '%'))")
+      "SELECT q FROM QuestionEntity q JOIN FETCH q.mcQuestion"
+          + " WHERE LOWER(q.statement) LIKE LOWER(CONCAT('%', :search, '%'))")
   Page<QuestionEntity> findBySearch(@Param("search") String search, Pageable pageable);
+
+  @Query("SELECT q FROM QuestionEntity q JOIN FETCH q.mcQuestion")
+  Page<QuestionEntity> findAllWithMc(Pageable pageable);
 }

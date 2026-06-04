@@ -29,7 +29,11 @@ public class ScoreService {
       points = List.of();
     }
 
-    boolean isWeighted = !points.isEmpty();
+    if (studentAnswers == null) {
+      studentAnswers = List.of();
+    }
+
+    boolean isWeighted = points.stream().anyMatch(pt -> pt != null);
 
     if (!isWeighted) {
       double correctCount = 0;

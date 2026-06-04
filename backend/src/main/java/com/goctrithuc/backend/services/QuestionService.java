@@ -128,7 +128,7 @@ public class QuestionService {
       if (search != null && !search.isBlank()) {
         page = questionRepo.findBySearch(search, pageable);
       } else {
-        page = questionRepo.findAll(pageable);
+        page = questionRepo.findAllWithMc(pageable);
       }
     } else {
       if (search != null && !search.isBlank()) {
@@ -138,11 +138,7 @@ public class QuestionService {
       }
     }
 
-    return page.map(
-        q -> {
-          McQuestionEntity mc = mcQuestionRepo.findById(q.getId()).orElse(null);
-          return QuestionResponse.fromInstructor(q, mc);
-        });
+    return page.map(q -> QuestionResponse.fromInstructor(q, q.getMcQuestion()));
   }
 
   @Transactional(readOnly = true)

@@ -233,6 +233,30 @@ public class QuestionControllerIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  void testListQuestionsReturnsChoicesForAllResults() throws Exception {
+    // Regression test for N+1: all 3 questions must have choices populated,
+    // proving the JOIN FETCH (not a per-item fallback) is working.
+    for (int i = 1; i <= 3; i++) {
+      QuestionEntity q =
+          questionRepository.save(
+              new QuestionEntity(teacherA.getId(), "Question " + i, QuestionType.MULTIPLE_CHOICE));
+      mcQuestionRepository.save(
+          new McQuestionEntity(q, new String[] {"A", "B"}, new int[] {0}, true));
+    }
+
+    mockMvc
+        .perform(
+            get("/api/questions")
+                .with(oauth2Login().attributes(attrs -> attrs.put("email", teacherA.getEmail()))))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.content.length()").value(3))
+        .andExpect(jsonPath("$.content[0].choices.length()").value(2))
+        .andExpect(jsonPath("$.content[1].choices.length()").value(2))
+        .andExpect(jsonPath("$.content[2].choices.length()").value(2))
+        .andDo(print());
+  }
+
+  @Test
   void testUpdateQuestion() throws Exception {
     QuestionEntity q =
         questionRepository.save(
