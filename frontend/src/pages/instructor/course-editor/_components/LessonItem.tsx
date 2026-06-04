@@ -22,11 +22,17 @@ interface LessonItemProps {
   isFirst: boolean;
   isLast: boolean;
   onModulesChange: () => void;
+  onReorder: (direction: 'up' | 'down') => void;
 }
 
-export function LessonItem({ lesson, isFirst, isLast, onModulesChange }: LessonItemProps) {
+export function LessonItem({
+  lesson,
+  isFirst,
+  isLast,
+  onModulesChange,
+  onReorder,
+}: LessonItemProps) {
   const [isDeleting, setIsDeleting] = useState(false);
-  const [isReordering, setIsReordering] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
   const handleDeleteConfirm = async () => {
@@ -39,20 +45,6 @@ export function LessonItem({ lesson, isFirst, isLast, onModulesChange }: LessonI
       toast.error('Có lỗi xảy ra khi xóa bài học');
     } finally {
       setIsDeleting(false);
-    }
-  };
-
-  const handleReorder = async (direction: 'up' | 'down') => {
-    if ((isFirst && direction === 'up') || (isLast && direction === 'down')) return;
-
-    setIsReordering(true);
-    try {
-      await api.patch(`/api/lessons/${lesson.id}/order`, { direction });
-      onModulesChange();
-    } catch {
-      toast.error('Có lỗi xảy ra khi sắp xếp');
-    } finally {
-      setIsReordering(false);
     }
   };
 
@@ -78,8 +70,8 @@ export function LessonItem({ lesson, isFirst, isLast, onModulesChange }: LessonI
               variant="ghost"
               size="icon"
               className="h-4 w-5"
-              onClick={() => handleReorder('up')}
-              disabled={isFirst || isReordering}
+              onClick={() => onReorder('up')}
+              disabled={isFirst}
             >
               <ArrowUp className="w-3 h-3" />
             </Button>
@@ -87,8 +79,8 @@ export function LessonItem({ lesson, isFirst, isLast, onModulesChange }: LessonI
               variant="ghost"
               size="icon"
               className="h-4 w-5"
-              onClick={() => handleReorder('down')}
-              disabled={isLast || isReordering}
+              onClick={() => onReorder('down')}
+              disabled={isLast}
             >
               <ArrowDown className="w-3 h-3" />
             </Button>

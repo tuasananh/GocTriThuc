@@ -16,7 +16,6 @@ import type { ModuleDto } from '@/types';
 import { ArrowDown, ArrowUp, Edit, Plus, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { LessonList } from './LessonList';
-
 import { CreateLessonDialog } from './CreateLessonDialog';
 
 interface ModuleItemProps {
@@ -24,11 +23,19 @@ interface ModuleItemProps {
   isFirst: boolean;
   isLast: boolean;
   onModulesChange: () => void;
+  onModuleReorder: (direction: 'up' | 'down') => void;
+  onLessonReorder: (lessonId: string, direction: 'up' | 'down') => void;
 }
 
-export function ModuleItem({ module, isFirst, isLast, onModulesChange }: ModuleItemProps) {
+export function ModuleItem({
+  module,
+  isFirst,
+  isLast,
+  onModulesChange,
+  onModuleReorder,
+  onLessonReorder,
+}: ModuleItemProps) {
   const [isDeleting, setIsDeleting] = useState(false);
-  const [isReordering, setIsReordering] = useState(false);
   const [isAddLessonOpen, setIsAddLessonOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
@@ -42,21 +49,6 @@ export function ModuleItem({ module, isFirst, isLast, onModulesChange }: ModuleI
       toast.error('Có lỗi xảy ra khi xóa học phần');
     } finally {
       setIsDeleting(false);
-    }
-  };
-
-  const handleReorder = async (e: React.MouseEvent, direction: 'up' | 'down') => {
-    e.stopPropagation();
-    if ((isFirst && direction === 'up') || (isLast && direction === 'down')) return;
-
-    setIsReordering(true);
-    try {
-      await api.patch(`/api/modules/${module.id}/order`, { direction });
-      onModulesChange();
-    } catch {
-      toast.error('Có lỗi xảy ra khi sắp xếp');
-    } finally {
-      setIsReordering(false);
     }
   };
 
@@ -77,16 +69,22 @@ export function ModuleItem({ module, isFirst, isLast, onModulesChange }: ModuleI
             <Button
               variant="ghost"
               size="icon"
-              onClick={(e) => handleReorder(e, 'up')}
-              disabled={isFirst || isReordering}
+              onClick={(e) => {
+                e.stopPropagation();
+                onModuleReorder('up');
+              }}
+              disabled={isFirst}
             >
               <ArrowUp className="w-4 h-4" />
             </Button>
             <Button
               variant="ghost"
               size="icon"
-              onClick={(e) => handleReorder(e, 'down')}
-              disabled={isLast || isReordering}
+              onClick={(e) => {
+                e.stopPropagation();
+                onModuleReorder('down');
+              }}
+              disabled={isLast}
             >
               <ArrowDown className="w-4 h-4" />
             </Button>
@@ -130,7 +128,11 @@ export function ModuleItem({ module, isFirst, isLast, onModulesChange }: ModuleI
         </div>
 
         <AccordionContent className="pt-2 pb-4">
-          <LessonList lessons={module.lessons} onModulesChange={onModulesChange} />
+          <LessonList
+            lessons={module.lessons}
+            onModulesChange={onModulesChange}
+            onLessonReorder={onLessonReorder}
+          />
         </AccordionContent>
 
         <CreateLessonDialog
