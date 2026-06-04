@@ -37,7 +37,24 @@ public class QuestionService {
     this.permissionService = permissionService;
   }
 
-  private void validateCorrectChoicesBounds(List<String> choices, List<Integer> correctChoices) {
+  private void validateQuestionChoices(
+      List<String> choices, List<Integer> correctChoices, boolean isSingleChoice) {
+    if (correctChoices == null || correctChoices.isEmpty()) {
+      throw new ResponseStatusException(
+          HttpStatus.BAD_REQUEST, "Correct choices list cannot be empty");
+    }
+
+    long uniqueCount = correctChoices.stream().distinct().count();
+    if (uniqueCount < correctChoices.size()) {
+      throw new ResponseStatusException(
+          HttpStatus.BAD_REQUEST, "correctChoices must contain unique indices");
+    }
+
+    if (isSingleChoice && uniqueCount != 1) {
+      throw new ResponseStatusException(
+          HttpStatus.BAD_REQUEST, "Single-choice question must have exactly one correct choice");
+    }
+
     for (int idx : correctChoices) {
       if (idx < 0 || idx >= choices.size()) {
         throw new ResponseStatusException(
@@ -49,7 +66,7 @@ public class QuestionService {
 
   @Transactional
   public QuestionResponse createQuestion(CreateQuestionRequest req, Long userId) {
-    validateCorrectChoicesBounds(req.choices(), req.correctChoices());
+    validateQuestionChoices(req.choices(), req.correctChoices(), req.isSingleChoice());
 
     QuestionEntity question =
         new QuestionEntity(userId, req.statement(), QuestionType.MULTIPLE_CHOICE);
@@ -77,7 +94,7 @@ public class QuestionService {
       throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You do not own this question");
     }
 
-    validateCorrectChoicesBounds(req.choices(), req.correctChoices());
+    validateQuestionChoices(req.choices(), req.correctChoices(), req.isSingleChoice());
 
     question.setStatement(req.statement());
     question = questionRepo.save(question);

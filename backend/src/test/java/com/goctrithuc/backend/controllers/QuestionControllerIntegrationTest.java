@@ -632,4 +632,90 @@ public class QuestionControllerIntegrationTest extends BaseIntegrationTest {
         .andExpect(status().isBadRequest())
         .andDo(print());
   }
+
+  @Test
+  void testCreateQuestionSingleChoiceWithMultipleCorrectChoicesBadRequest() throws Exception {
+    CreateQuestionRequest req =
+        new CreateQuestionRequest(
+            "Which of these are correct?",
+            List.of("Choice A", "Choice B", "Choice C"),
+            List.of(0, 1),
+            true); // isSingleChoice = true
+
+    mockMvc
+        .perform(
+            post("/api/questions")
+                .with(oauth2Login().attributes(attrs -> attrs.put("email", teacherA.getEmail())))
+                .with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(req)))
+        .andExpect(status().isBadRequest())
+        .andDo(print());
+  }
+
+  @Test
+  void testCreateQuestionDuplicateCorrectChoicesBadRequest() throws Exception {
+    CreateQuestionRequest req =
+        new CreateQuestionRequest(
+            "Unique choices?",
+            List.of("Choice A", "Choice B"),
+            List.of(0, 0),
+            false); // isSingleChoice = false
+
+    mockMvc
+        .perform(
+            post("/api/questions")
+                .with(oauth2Login().attributes(attrs -> attrs.put("email", teacherA.getEmail())))
+                .with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(req)))
+        .andExpect(status().isBadRequest())
+        .andDo(print());
+  }
+
+  @Test
+  void testUpdateQuestionSingleChoiceWithMultipleCorrectChoicesBadRequest() throws Exception {
+    QuestionEntity q =
+        questionRepository.save(
+            new QuestionEntity(teacherA.getId(), "Old Statement", QuestionType.MULTIPLE_CHOICE));
+    mcQuestionRepository.save(
+        new McQuestionEntity(q, new String[] {"Choice 1", "Choice 2"}, new int[] {0}, true));
+
+    UpdateQuestionRequest updateReq =
+        new UpdateQuestionRequest(
+            "New Statement", List.of("Choice 1", "Choice 2"), List.of(0, 1), true);
+
+    mockMvc
+        .perform(
+            put("/api/questions/" + q.getId())
+                .with(oauth2Login().attributes(attrs -> attrs.put("email", teacherA.getEmail())))
+                .with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(updateReq)))
+        .andExpect(status().isBadRequest())
+        .andDo(print());
+  }
+
+  @Test
+  void testUpdateQuestionDuplicateCorrectChoicesBadRequest() throws Exception {
+    QuestionEntity q =
+        questionRepository.save(
+            new QuestionEntity(teacherA.getId(), "Old Statement", QuestionType.MULTIPLE_CHOICE));
+    mcQuestionRepository.save(
+        new McQuestionEntity(q, new String[] {"Choice 1", "Choice 2"}, new int[] {0}, true));
+
+    UpdateQuestionRequest updateReq =
+        new UpdateQuestionRequest(
+            "New Statement", List.of("Choice 1", "Choice 2"), List.of(0, 0), false);
+
+    mockMvc
+        .perform(
+            put("/api/questions/" + q.getId())
+                .with(oauth2Login().attributes(attrs -> attrs.put("email", teacherA.getEmail())))
+                .with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(updateReq)))
+        .andExpect(status().isBadRequest())
+        .andDo(print());
+  }
 }
