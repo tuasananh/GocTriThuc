@@ -205,6 +205,11 @@ public class QuestionService {
           HttpStatus.CONFLICT, "Question is already added to this test");
     }
 
+    if (testQuestionRepo.existsByTestIdAndOrder(testId, req.order())) {
+      throw new ResponseStatusException(
+          HttpStatus.CONFLICT, "Order is already taken for this test");
+    }
+
     TestQuestionEntity testQuestion =
         new TestQuestionEntity(test, question, req.order(), req.point());
     testQuestion = testQuestionRepo.save(testQuestion);

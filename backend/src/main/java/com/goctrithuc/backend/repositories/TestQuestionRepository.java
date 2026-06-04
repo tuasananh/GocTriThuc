@@ -26,6 +26,8 @@ public interface TestQuestionRepository extends JpaRepository<TestQuestionEntity
 
   boolean existsByTestIdAndQuestionId(Long testId, Long questionId);
 
+  boolean existsByTestIdAndOrder(Long testId, Integer order);
+
   @Query(
       "SELECT tq, q, mc FROM TestQuestionEntity tq "
           + "JOIN QuestionEntity q ON tq.id.questionId = q.id "

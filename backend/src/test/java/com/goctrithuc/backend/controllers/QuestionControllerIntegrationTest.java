@@ -718,4 +718,42 @@ public class QuestionControllerIntegrationTest extends BaseIntegrationTest {
         .andExpect(status().isBadRequest())
         .andDo(print());
   }
+
+  @Test
+  void testAddQuestionToTestDuplicateOrderConflict() throws Exception {
+    Course course =
+        courseRepository.save(
+            new Course("Course 1", "Desc", null, true, CourseVisibility.PUBLIC, teacherA, null));
+    ModuleEntity module = moduleRepository.save(new ModuleEntity(course, "Module 1", 0));
+    LessonEntity lesson =
+        lessonRepository.save(new LessonEntity(module, "Test Lesson", LessonType.TEST, 0));
+    LessonTestEntity test =
+        lessonTestRepository.save(new LessonTestEntity(lesson, "Test Statement", 60, null));
+
+    QuestionEntity q1 =
+        questionRepository.save(
+            new QuestionEntity(teacherA.getId(), "Question 1", QuestionType.MULTIPLE_CHOICE));
+    mcQuestionRepository.save(
+        new McQuestionEntity(q1, new String[] {"A", "B"}, new int[] {0}, true));
+
+    QuestionEntity q2 =
+        questionRepository.save(
+            new QuestionEntity(teacherA.getId(), "Question 2", QuestionType.MULTIPLE_CHOICE));
+    mcQuestionRepository.save(
+        new McQuestionEntity(q2, new String[] {"C", "D"}, new int[] {1}, true));
+
+    testQuestionRepository.save(new TestQuestionEntity(test, q1, 0, 5.0));
+
+    AddQuestionToTestRequest addReq = new AddQuestionToTestRequest(q2.getId(), 0, 10.0);
+
+    mockMvc
+        .perform(
+            post("/api/tests/" + test.getId() + "/questions")
+                .with(oauth2Login().attributes(attrs -> attrs.put("email", teacherA.getEmail())))
+                .with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(addReq)))
+        .andExpect(status().isConflict())
+        .andDo(print());
+  }
 }
