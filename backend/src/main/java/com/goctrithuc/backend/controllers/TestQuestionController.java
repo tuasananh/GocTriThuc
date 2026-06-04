@@ -27,7 +27,8 @@ public class TestQuestionController {
   }
 
   @GetMapping("/{testId}/questions")
-  @PreAuthorize("isAuthenticated()")
+  @PreAuthorize(
+      "@permissionService.hasPermission(#principal, T(com.goctrithuc.backend.common.PermissionConstants).ACCESS_TESTS)")
   public ResponseEntity<List<TestQuestionResponse>> getTestQuestions(
       @PathVariable Long testId, @AuthenticationPrincipal OAuth2User principal) {
     Long userId = AuthUtils.getCurrentUserId(principal, userRepository);

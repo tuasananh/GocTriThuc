@@ -517,4 +517,57 @@ public class QuestionControllerIntegrationTest extends BaseIntegrationTest {
     assertThat(testQuestionRepository.existsById(new TestQuestionId(test.getId(), q.getId())))
         .isFalse();
   }
+
+  @Test
+  void testGetTestQuestionsWithoutAccessTestsPermissionForbidden() throws Exception {
+    Course course =
+        courseRepository.save(
+            new Course("Course 1", "Desc", null, true, CourseVisibility.PUBLIC, teacherA, null));
+    ModuleEntity module = moduleRepository.save(new ModuleEntity(course, "Module 1", 0));
+    LessonEntity lesson =
+        lessonRepository.save(new LessonEntity(module, "Test Lesson", LessonType.TEST, 0));
+    LessonTestEntity test =
+        lessonTestRepository.save(new LessonTestEntity(lesson, "Test Statement", 60, null));
+
+    QuestionEntity q =
+        questionRepository.save(
+            new QuestionEntity(
+                teacherA.getId(), "Question Statement", QuestionType.MULTIPLE_CHOICE));
+    mcQuestionRepository.save(
+        new McQuestionEntity(q, new String[] {"A", "B"}, new int[] {0}, true));
+
+    testQuestionRepository.save(new TestQuestionEntity(test, q, 0, 5.0));
+
+    User unauthorizedUser =
+        userRepository.save(
+            new User("unauthorized@hust.edu.vn", "Unauthorized User", "unauthorized", null));
+
+    enrollmentRepository.save(new EnrollmentEntity(unauthorizedUser, course));
+
+    mockMvc
+        .perform(
+            get("/api/tests/" + test.getId() + "/questions")
+                .with(
+                    oauth2Login()
+                        .attributes(attrs -> attrs.put("email", unauthorizedUser.getEmail()))))
+        .andExpect(status().isForbidden())
+        .andDo(print());
+  }
+
+  @Test
+  void testGetTestQuestionsUnauthenticatedUnauthorized() throws Exception {
+    Course course =
+        courseRepository.save(
+            new Course("Course 1", "Desc", null, true, CourseVisibility.PUBLIC, teacherA, null));
+    ModuleEntity module = moduleRepository.save(new ModuleEntity(course, "Module 1", 0));
+    LessonEntity lesson =
+        lessonRepository.save(new LessonEntity(module, "Test Lesson", LessonType.TEST, 0));
+    LessonTestEntity test =
+        lessonTestRepository.save(new LessonTestEntity(lesson, "Test Statement", 60, null));
+
+    mockMvc
+        .perform(get("/api/tests/" + test.getId() + "/questions"))
+        .andExpect(status().isUnauthorized())
+        .andDo(print());
+  }
 }
