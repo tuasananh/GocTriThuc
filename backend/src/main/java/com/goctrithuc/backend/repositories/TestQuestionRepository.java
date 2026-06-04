@@ -5,6 +5,7 @@ import com.goctrithuc.backend.entities.TestQuestionId;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -16,7 +17,12 @@ public interface TestQuestionRepository extends JpaRepository<TestQuestionEntity
   @Query("SELECT MAX(tq.order) FROM TestQuestionEntity tq WHERE tq.id.testId = :testId")
   Optional<Integer> findMaxOrderByTestId(@Param("testId") Long testId);
 
-  void deleteByTestIdAndQuestionId(Long testId, Long questionId);
+  @Modifying
+  @Query(
+      "DELETE FROM TestQuestionEntity tq"
+          + " WHERE tq.id.testId = :testId AND tq.id.questionId = :questionId")
+  void deleteByTestIdAndQuestionId(
+      @Param("testId") Long testId, @Param("questionId") Long questionId);
 
   boolean existsByTestIdAndQuestionId(Long testId, Long questionId);
 
