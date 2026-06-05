@@ -29,10 +29,7 @@ export function AvatarUpload({ user }: AvatarUploadProps) {
     try {
       const form = new FormData();
       form.append('file', file);
-      const { data } = await api.post<FileDto>(
-        '/api/files/upload',
-        form,
-      );
+      const { data } = await api.post<FileDto>('/api/files/upload', form);
 
       // Register file ID in user avatar profile
       const serveUrl = fileServeUrl(data.id);
