@@ -8,8 +8,7 @@ export const fileHandlers = [
     return HttpResponse.json(
       {
         id: mockFileId,
-        filename: `mock-${mockFileId}.jpg`,
-        url: `/api/files/serve/${mockFileId}`,
+        providerValue: `uploads/mock-${mockFileId}.jpg`,
       },
       { status: 201 },
     );
