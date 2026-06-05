@@ -2,7 +2,7 @@ import type { AuthContextType } from '@/contexts/AuthContext';
 import AuthContext from '@/contexts/AuthContext';
 import { CurrentUser, type CurrentUserResponse } from '@/types';
 import { api } from '@/lib/api';
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useLayoutEffect, useState, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 const login = (provider: string) => {
@@ -17,6 +17,10 @@ const unauthenticatedAuthValue: AuthContextType = {
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [authValue, setAuthValue] = useState<AuthContextType | null>(null);
   const navigate = useNavigate();
+
+  // Use a ref so refreshUser can always call the latest fetchCurrentUser
+  // without violating temporal declaration order (react-hooks/immutability).
+  const fetchRef = useRef<() => Promise<void>>(async () => {});
 
   const fetchCurrentUser = useCallback(async () => {
     try {
@@ -50,9 +54,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             setAuthValue(unauthenticatedAuthValue);
             navigate('/');
           },
-          refreshUser: async () => {
-            await fetchCurrentUser();
-          },
+          refreshUser: () => fetchRef.current(),
         });
       } else {
         setAuthValue(unauthenticatedAuthValue);
@@ -63,8 +65,16 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
   }, [navigate]);
 
+  // Keep the ref in sync with the latest memoized function (during commit, not render).
+  useLayoutEffect(() => {
+    fetchRef.current = fetchCurrentUser;
+  });
+
   useEffect(() => {
-    fetchCurrentUser();
+    const t = setTimeout(() => {
+      fetchCurrentUser();
+    }, 0);
+    return () => clearTimeout(t);
   }, [fetchCurrentUser]);
 
   return <AuthContext.Provider value={authValue}>{children}</AuthContext.Provider>;

@@ -9,22 +9,33 @@ import { api } from '@/lib/api';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
 import { AvatarUpload } from './_components/AvatarUpload';
+import type { AxiosError } from 'axios';
 
 export function ProfilePage() {
   const auth = useAuth();
 
-  const [displayName, setDisplayName] = useState('');
-  const [username, setUsername] = useState('');
+  const [displayName, setDisplayName] = useState(() =>
+    auth?.isAuthenticated ? auth.user.displayName || '' : '',
+  );
+  const [username, setUsername] = useState(() =>
+    auth?.isAuthenticated ? auth.user.username || '' : '',
+  );
   const [saving, setSaving] = useState(false);
   const [errors, setErrors] = useState<{ displayName?: string; username?: string }>({});
 
-  // Sync state when auth user changes
+  // Sync form fields whenever the underlying auth user data changes
+  // (e.g. after refreshUser). setTimeout defers setState out of the
+  // synchronous effect body — consistent with the project-wide pattern.
+  const authDisplayName = auth?.isAuthenticated ? (auth.user.displayName ?? '') : null;
+  const authUsername = auth?.isAuthenticated ? auth.user.username : null;
   useEffect(() => {
-    if (auth?.isAuthenticated) {
-      setDisplayName(auth.user.displayName || '');
-      setUsername(auth.user.username || '');
-    }
-  }, [auth]);
+    if (authDisplayName === null || authUsername === null) return;
+    const t = setTimeout(() => {
+      setDisplayName(authDisplayName);
+      setUsername(authUsername);
+    }, 0);
+    return () => clearTimeout(t);
+  }, [authDisplayName, authUsername]);
 
   if (!auth?.isAuthenticated) {
     return null; // ProtectedRoute will handle redirect
@@ -58,8 +69,9 @@ export function ProfilePage() {
       });
       toast.success('Cập nhật hồ sơ thành công');
       await auth.refreshUser();
-    } catch (err: any) {
-      if (err.response?.status === 409) {
+    } catch (err: unknown) {
+      const axiosErr = err as AxiosError;
+      if (axiosErr.response?.status === 409) {
         setErrors({ username: 'Tên người dùng đã tồn tại.' });
       } else {
         toast.error('Có lỗi xảy ra khi cập nhật hồ sơ. Vui lòng thử lại.');
@@ -76,60 +88,64 @@ export function ProfilePage() {
         description="Quản lý thông tin và ảnh đại diện của bạn"
       />
 
-      <div className="max-w-2xl mt-6 space-y-8">
-        <Card className="p-6">
-          <h3 className="text-lg font-medium mb-4">Ảnh đại diện</h3>
-          <AvatarUpload user={user} />
-        </Card>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-6">
+        <div className="md:col-span-1">
+          <Card className="p-6">
+            <h3 className="text-lg font-medium mb-4">Ảnh đại diện</h3>
+            <AvatarUpload user={user} />
+          </Card>
+        </div>
 
-        <Card className="p-6">
-          <h3 className="text-lg font-medium mb-4">Thông tin cơ bản</h3>
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                value={user.email}
-                disabled
-                className="bg-muted text-muted-foreground"
-              />
-              <p className="text-xs text-muted-foreground">Email không thể thay đổi.</p>
+        <div className="md:col-span-2 space-y-8">
+          <Card className="p-6">
+            <h3 className="text-lg font-medium mb-4">Thông tin cơ bản</h3>
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="email">Email</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  value={user.email}
+                  disabled
+                  className="bg-muted text-muted-foreground"
+                />
+                <p className="text-xs text-muted-foreground">Email không thể thay đổi.</p>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="displayName">Tên hiển thị</Label>
+                <Input
+                  id="displayName"
+                  value={displayName}
+                  onChange={(e) => {
+                    setDisplayName(e.target.value);
+                    if (errors.displayName) setErrors({ ...errors, displayName: undefined });
+                  }}
+                />
+                {errors.displayName && (
+                  <p className="text-sm text-destructive">{errors.displayName}</p>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="username">Tên người dùng (Username)</Label>
+                <Input
+                  id="username"
+                  value={username}
+                  onChange={(e) => {
+                    setUsername(e.target.value);
+                    if (errors.username) setErrors({ ...errors, username: undefined });
+                  }}
+                />
+                {errors.username && <p className="text-sm text-destructive">{errors.username}</p>}
+              </div>
+
+              <Button onClick={handleSave} disabled={saving} className="mt-4">
+                {saving ? 'Đang lưu...' : 'Lưu thay đổi'}
+              </Button>
             </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="displayName">Tên hiển thị</Label>
-              <Input
-                id="displayName"
-                value={displayName}
-                onChange={(e) => {
-                  setDisplayName(e.target.value);
-                  if (errors.displayName) setErrors({ ...errors, displayName: undefined });
-                }}
-              />
-              {errors.displayName && (
-                <p className="text-sm text-destructive">{errors.displayName}</p>
-              )}
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="username">Tên người dùng (Username)</Label>
-              <Input
-                id="username"
-                value={username}
-                onChange={(e) => {
-                  setUsername(e.target.value);
-                  if (errors.username) setErrors({ ...errors, username: undefined });
-                }}
-              />
-              {errors.username && <p className="text-sm text-destructive">{errors.username}</p>}
-            </div>
-
-            <Button onClick={handleSave} disabled={saving} className="mt-4">
-              {saving ? 'Đang lưu...' : 'Lưu thay đổi'}
-            </Button>
-          </div>
-        </Card>
+          </Card>
+        </div>
       </div>
     </PageShell>
   );

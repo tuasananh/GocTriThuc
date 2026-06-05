@@ -44,7 +44,14 @@ const UserButtonDropdown = ({
         <DropdownMenuGroup>
           <DropdownMenuLabel>@{user.username}</DropdownMenuLabel>
           <DropdownMenuItem>
-            <Link to={ROUTES.DASHBOARD}>Trang cá nhân</Link>
+            <Link to={ROUTES.PROFILE} className="w-full">
+              Hồ sơ cá nhân
+            </Link>
+          </DropdownMenuItem>
+          <DropdownMenuItem>
+            <Link to={ROUTES.DASHBOARD} className="w-full">
+              Bảng điều khiển
+            </Link>
           </DropdownMenuItem>
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
