@@ -24,7 +24,6 @@ import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.MvcResult;
 
 @AutoConfigureMockMvc
 public class TestSessionControllerIntegrationTest extends BaseIntegrationTest {
@@ -45,9 +44,7 @@ public class TestSessionControllerIntegrationTest extends BaseIntegrationTest {
   private final TestSessionAnswerRepository testSessionAnswerRepository;
   private final ObjectMapper objectMapper = new ObjectMapper();
 
-  private User adminUser;
   private User teacherA;
-  private User teacherB;
   private User studentUser;
   private User studentUser2;
 
@@ -55,8 +52,6 @@ public class TestSessionControllerIntegrationTest extends BaseIntegrationTest {
   private LessonTestEntity testEntity;
   private QuestionEntity q1;
   private QuestionEntity q2;
-  private McQuestionEntity mc1;
-  private McQuestionEntity mc2;
   private TestQuestionEntity tq1;
   private TestQuestionEntity tq2;
 
@@ -96,7 +91,7 @@ public class TestSessionControllerIntegrationTest extends BaseIntegrationTest {
   void setUp() {
     cleanDatabase();
 
-    adminUser = userRepository.save(new User("admin@hust.edu.vn", "Admin", "admin", null));
+    User adminUser = userRepository.save(new User("admin@hust.edu.vn", "Admin", "admin", null));
     userRoleRepository.save(
         new UserRole(adminUser, roleRepository.findByName("admin").orElseThrow()));
 
@@ -104,7 +99,8 @@ public class TestSessionControllerIntegrationTest extends BaseIntegrationTest {
     userRoleRepository.save(
         new UserRole(teacherA, roleRepository.findByName("teacher").orElseThrow()));
 
-    teacherB = userRepository.save(new User("teacherb@hust.edu.vn", "Teacher B", "teacherb", null));
+    User teacherB =
+        userRepository.save(new User("teacherb@hust.edu.vn", "Teacher B", "teacherb", null));
     userRoleRepository.save(
         new UserRole(teacherB, roleRepository.findByName("teacher").orElseThrow()));
 
@@ -139,18 +135,16 @@ public class TestSessionControllerIntegrationTest extends BaseIntegrationTest {
         questionRepository.save(
             new QuestionEntity(
                 teacherA.getId(), "Is Java object-oriented?", QuestionType.MULTIPLE_CHOICE));
-    mc1 =
-        mcQuestionRepository.save(
-            new McQuestionEntity(q1, new String[] {"Yes", "No"}, new int[] {0}, true));
+    mcQuestionRepository.save(
+        new McQuestionEntity(q1, new String[] {"Yes", "No"}, new int[] {0}, true));
 
     q2 =
         questionRepository.save(
             new QuestionEntity(
                 teacherA.getId(), "Select Java keywords", QuestionType.MULTIPLE_CHOICE));
-    mc2 =
-        mcQuestionRepository.save(
-            new McQuestionEntity(
-                q2, new String[] {"class", "goto", "interface"}, new int[] {0, 2}, false));
+    mcQuestionRepository.save(
+        new McQuestionEntity(
+            q2, new String[] {"class", "goto", "interface"}, new int[] {0, 2}, false));
 
     // Link questions to test
     tq1 = testQuestionRepository.save(new TestQuestionEntity(testEntity, q1, 0, 4.0));
@@ -199,16 +193,12 @@ public class TestSessionControllerIntegrationTest extends BaseIntegrationTest {
   @Test
   void resumeExistingSession() throws Exception {
     // Start session once
-    MvcResult result =
-        mockMvc
-            .perform(
-                post("/api/tests/" + testEntity.getId() + "/sessions")
-                    .with(
-                        oauth2Login()
-                            .attributes(attrs -> attrs.put("email", studentUser.getEmail())))
-                    .with(csrf()))
-            .andExpect(status().isCreated())
-            .andReturn();
+    mockMvc
+        .perform(
+            post("/api/tests/" + testEntity.getId() + "/sessions")
+                .with(oauth2Login().attributes(attrs -> attrs.put("email", studentUser.getEmail())))
+                .with(csrf()))
+        .andExpect(status().isCreated());
 
     // Backdate session startedAt by 5 seconds to ensure resume returns 200 OK
     TestSessionEntity session =
