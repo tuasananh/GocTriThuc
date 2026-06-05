@@ -5,6 +5,7 @@ import { LoginPage } from '@/pages/login';
 import { Dashboard } from '@/pages/dashboard';
 import { CourseListPage } from '@/pages/courses';
 import { CourseDetailPage } from '@/pages/course-detail';
+import { ProfilePage } from '@/pages/profile';
 import { CourseEditorPage } from './pages/instructor/course-editor';
 import { GuestRoute } from '@/components/GuestRoute';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
@@ -43,10 +44,8 @@ function App() {
               <Route element={<ProtectedRoute />}>
                 <Route element={<MainLayout />}>
                   <Route path={ROUTES.DASHBOARD} element={<Dashboard />} />
-                  {/* Thêm các trang cần auth ở đây:
-                    <Route path={ROUTES.PROFILE} element={<ProfilePage />} />
-                    <Route path={ROUTES.CLASSROOM(':id')} element={<ClassroomPage />} />
-                */}
+                  <Route path={ROUTES.PROFILE} element={<ProfilePage />} />
+                  {/* <Route path={ROUTES.CLASSROOM(':id')} element={<ClassroomPage />} /> */}
                 </Route>
               </Route>
 

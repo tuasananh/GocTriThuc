@@ -10,6 +10,7 @@ export type AuthContextType =
       isAuthenticated: true;
       user: CurrentUser;
       logout: () => Promise<void>;
+      refreshUser: () => Promise<void>;
     };
 
 const AuthContext = createContext<AuthContextType | null | undefined>(undefined);
