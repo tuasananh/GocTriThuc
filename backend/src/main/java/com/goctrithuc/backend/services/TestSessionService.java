@@ -81,6 +81,9 @@ public class TestSessionService {
       if (!activeSession.isDone()) {
         long remainingTime = calculateRemainingTime(activeSession, test.getTimeLimit());
         return TestSessionResponse.from(activeSession, remainingTime);
+      } else {
+        throw new ResponseStatusException(
+            HttpStatus.CONFLICT, "You have already completed this test");
       }
     }
 
@@ -254,9 +257,12 @@ public class TestSessionService {
   }
 
   public void validateAnswerBounds(Long questionId, List<Integer> selectedChoices) {
-    if (selectedChoices == null || selectedChoices.isEmpty()) {
-      throw new ResponseStatusException(
-          HttpStatus.BAD_REQUEST, "Choices selection cannot be empty");
+    if (selectedChoices == null) {
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Choices selection cannot be null");
+    }
+
+    if (selectedChoices.isEmpty()) {
+      return;
     }
 
     McQuestionEntity mc =

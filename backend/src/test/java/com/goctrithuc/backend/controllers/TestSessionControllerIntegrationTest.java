@@ -854,4 +854,75 @@ public class TestSessionControllerIntegrationTest extends BaseIntegrationTest {
     assertThatThrownBy(() -> testSessionRepository.saveAndFlush(activeSession2))
         .isInstanceOf(DataIntegrityViolationException.class);
   }
+
+  @Test
+  void saveAnswer_emptyChoices_allowed() throws Exception {
+    mockMvc
+        .perform(
+            post("/api/tests/" + testEntity.getId() + "/sessions")
+                .with(oauth2Login().attributes(attrs -> attrs.put("email", studentUser.getEmail())))
+                .with(csrf()))
+        .andExpect(status().isCreated());
+
+    TestSessionEntity session =
+        testSessionRepository
+            .findByUserIdAndTestIdAndIsDoneFalse(studentUser.getId(), testEntity.getId())
+            .orElseThrow();
+
+    // Save non-empty answer first
+    SaveAnswerRequest req1 = new SaveAnswerRequest(q1.getId(), List.of(0));
+    mockMvc
+        .perform(
+            put("/api/sessions/" + session.getId() + "/answers")
+                .with(oauth2Login().attributes(attrs -> attrs.put("email", studentUser.getEmail())))
+                .with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(req1)))
+        .andExpect(status().isOk());
+
+    // Save empty answer to clear it
+    SaveAnswerRequest req2 = new SaveAnswerRequest(q1.getId(), List.of());
+    mockMvc
+        .perform(
+            put("/api/sessions/" + session.getId() + "/answers")
+                .with(oauth2Login().attributes(attrs -> attrs.put("email", studentUser.getEmail())))
+                .with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(req2)))
+        .andExpect(status().isOk());
+
+    TestSessionAnswerEntity answer =
+        testSessionAnswerRepository
+            .findBySessionIdAndQuestionId(session.getId(), q1.getId())
+            .orElseThrow();
+    assertThat(answer.getQuestionAnswer()).isEmpty();
+  }
+
+  @Test
+  void startSession_expiredSessionExist_returns409() throws Exception {
+    mockMvc
+        .perform(
+            post("/api/tests/" + testEntity.getId() + "/sessions")
+                .with(oauth2Login().attributes(attrs -> attrs.put("email", studentUser.getEmail())))
+                .with(csrf()))
+        .andExpect(status().isCreated());
+
+    TestSessionEntity session =
+        testSessionRepository
+            .findByUserIdAndTestIdAndIsDoneFalse(studentUser.getId(), testEntity.getId())
+            .orElseThrow();
+
+    // Manually backdate startedAt to 10 minutes ago to expire it
+    session.setStartedAt(ZonedDateTime.now().minusMinutes(10));
+    testSessionRepository.saveAndFlush(session);
+
+    // Call startSession again -> should lazy auto-submit and return 409 Conflict
+    mockMvc
+        .perform(
+            post("/api/tests/" + testEntity.getId() + "/sessions")
+                .with(oauth2Login().attributes(attrs -> attrs.put("email", studentUser.getEmail())))
+                .with(csrf()))
+        .andExpect(status().isConflict())
+        .andDo(print());
+  }
 }
