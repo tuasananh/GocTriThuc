@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { api } from '@/lib/api';
 import { toast } from 'sonner';
 import { Camera, Loader2 } from 'lucide-react';
-import type { CurrentUser } from '@/types';
+import { fileServeUrl, type CurrentUser, type FileDto } from '@/types';
 import { useAuth } from '@/contexts/AuthContext';
 
 interface AvatarUploadProps {
@@ -29,16 +29,13 @@ export function AvatarUpload({ user }: AvatarUploadProps) {
     try {
       const form = new FormData();
       form.append('file', file);
-      const { data } = await api.post<{ id: string; providerValue: string }>(
+      const { data } = await api.post<FileDto>(
         '/api/files/upload',
         form,
-        {
-          headers: { 'Content-Type': 'multipart/form-data' },
-        },
       );
 
       // Register file ID in user avatar profile
-      const serveUrl = `/api/files/serve/${data.id}`;
+      const serveUrl = fileServeUrl(data.id);
       await api.patch('/api/users/me', { avatarUrl: serveUrl });
 
       toast.success('Cập nhật ảnh đại diện thành công');
