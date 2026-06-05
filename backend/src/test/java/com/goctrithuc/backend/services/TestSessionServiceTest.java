@@ -2,29 +2,34 @@ package com.goctrithuc.backend.services;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
+import com.goctrithuc.backend.dtos.SaveAnswerRequest;
 import com.goctrithuc.backend.entities.*;
 import com.goctrithuc.backend.repositories.*;
-import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
 
+/**
+ * Unit tests for TestSessionService orchestration logic. Scoring and lifecycle behaviour are
+ * covered by QuizScoringServiceTest and SessionLifecycleServiceTest respectively.
+ */
 public class TestSessionServiceTest {
 
   private TestSessionRepository testSessionRepo;
   private TestSessionAnswerRepository testSessionAnswerRepository;
-  private LessonRepository lessonRepo;
   private LessonTestRepository lessonTestRepo;
   private EnrollmentRepository enrollmentRepo;
   private UserRepository userRepository;
-  private McQuestionRepository mcQuestionRepo;
-  private TestQuestionRepository testQuestionRepo;
   private PermissionService permissionService;
-  private ScoreService scoreService;
+  private SessionLifecycleService lifecycleService;
+  private QuizScoringService quizScoringService;
 
   private TestSessionService testSessionService;
 
@@ -32,110 +37,117 @@ public class TestSessionServiceTest {
   void setUp() {
     testSessionRepo = mock(TestSessionRepository.class);
     testSessionAnswerRepository = mock(TestSessionAnswerRepository.class);
-    lessonRepo = mock(LessonRepository.class);
     lessonTestRepo = mock(LessonTestRepository.class);
     enrollmentRepo = mock(EnrollmentRepository.class);
     userRepository = mock(UserRepository.class);
-    mcQuestionRepo = mock(McQuestionRepository.class);
-    testQuestionRepo = mock(TestQuestionRepository.class);
     permissionService = mock(PermissionService.class);
-    scoreService = mock(ScoreService.class);
+    lifecycleService = mock(SessionLifecycleService.class);
+    quizScoringService = mock(QuizScoringService.class);
 
     testSessionService =
         new TestSessionService(
             testSessionRepo,
             testSessionAnswerRepository,
-            lessonRepo,
             lessonTestRepo,
             enrollmentRepo,
             userRepository,
-            mcQuestionRepo,
-            testQuestionRepo,
             permissionService,
-            scoreService);
+            lifecycleService,
+            quizScoringService);
   }
 
   @Test
-  void lazyAutoSubmitIfExpired_setsIsDoneAndSubmittedAt() {
+  void saveAnswer_sessionNotFound_throws404() {
+    when(testSessionRepo.findById(99L)).thenReturn(java.util.Optional.empty());
+
+    assertThatThrownBy(() -> testSessionService.saveAnswer(99L, null, 1L))
+        .isInstanceOf(ResponseStatusException.class)
+        .satisfies(
+            ex ->
+                assertThat(((ResponseStatusException) ex).getStatusCode().value()).isEqualTo(404));
+  }
+
+  @Test
+  void submitSession_sessionNotFound_throws404() {
+    when(testSessionRepo.findById(99L)).thenReturn(java.util.Optional.empty());
+
+    assertThatThrownBy(() -> testSessionService.submitSession(99L, 1L))
+        .isInstanceOf(ResponseStatusException.class)
+        .satisfies(
+            ex ->
+                assertThat(((ResponseStatusException) ex).getStatusCode().value()).isEqualTo(404));
+  }
+
+  @Test
+  void saveAnswer_notOwner_throws403() {
+    User owner = mock(User.class);
+    when(owner.getId()).thenReturn(1L);
+
+    TestSessionEntity session = mock(TestSessionEntity.class);
+    when(session.getUser()).thenReturn(owner);
+    when(testSessionRepo.findById(10L)).thenReturn(Optional.of(session));
+
+    assertThatThrownBy(
+            () -> testSessionService.saveAnswer(10L, new SaveAnswerRequest(5L, List.of(0)), 99L))
+        .isInstanceOf(ResponseStatusException.class)
+        .satisfies(
+            ex ->
+                assertThat(((ResponseStatusException) ex).getStatusCode())
+                    .isEqualTo(HttpStatus.FORBIDDEN));
+  }
+
+  @Test
+  void startSession_concurrentRequest_returns409() {
+    // Setup: test found, user enrolled, no existing session, but save() throws due to
+    // partial unique index hit from a concurrent request — service must return 409, not 500.
     LessonTestEntity test = mock(LessonTestEntity.class);
+    LessonEntity lesson = mock(LessonEntity.class);
+    ModuleEntity module = mock(ModuleEntity.class);
+    Course course = mock(Course.class);
+    User author = mock(User.class);
+    User user = mock(User.class);
+
+    when(author.getId()).thenReturn(99L);
+    when(course.getAuthor()).thenReturn(author);
+    when(course.getId()).thenReturn(10L);
+    when(module.getCourse()).thenReturn(course);
+    when(lesson.getModule()).thenReturn(module);
+    when(test.getLesson()).thenReturn(lesson);
     when(test.getTimeLimit()).thenReturn(60);
+    when(user.getId()).thenReturn(1L);
 
-    ZonedDateTime startedAt = ZonedDateTime.now().minusSeconds(61);
-    TestSessionEntity session = spy(new TestSessionEntity(null, test, startedAt));
+    when(lessonTestRepo.findById(42L)).thenReturn(Optional.of(test));
+    when(permissionService.isAdmin(1L)).thenReturn(false);
+    when(enrollmentRepo.existsById(any())).thenReturn(true);
+    when(testSessionRepo.existsByUserIdAndTestIdAndIsDoneTrue(1L, 42L)).thenReturn(false);
+    when(testSessionRepo.findByUserIdAndTestIdAndIsDoneFalse(1L, 42L)).thenReturn(Optional.empty());
+    when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+    // Simulate race: DB partial unique index rejects the second concurrent insert
+    when(testSessionRepo.save(any())).thenThrow(new DataIntegrityViolationException("unique"));
 
-    testSessionService.lazyAutoSubmitIfExpired(session);
-
-    assertThat(session.isDone()).isTrue();
-    assertThat(session.getSubmittedAt()).isEqualTo(startedAt.plusSeconds(60));
-    verify(testSessionRepo).save(session);
-  }
-
-  @Test
-  void lazyAutoSubmitIfExpired_doesNothingIfNotExpired() {
-    LessonTestEntity test = mock(LessonTestEntity.class);
-    when(test.getTimeLimit()).thenReturn(60);
-
-    ZonedDateTime startedAt = ZonedDateTime.now().minusSeconds(30);
-    TestSessionEntity session = spy(new TestSessionEntity(null, test, startedAt));
-
-    testSessionService.lazyAutoSubmitIfExpired(session);
-
-    assertThat(session.isDone()).isFalse();
-    assertThat(session.getSubmittedAt()).isNull();
-    verify(testSessionRepo, never()).save(any());
-  }
-
-  @Test
-  void remainingTime_calculation_is_correct() {
-    LessonTestEntity test = mock(LessonTestEntity.class);
-    ZonedDateTime startedAt = ZonedDateTime.now().minusSeconds(20);
-    TestSessionEntity session = new TestSessionEntity(null, test, startedAt);
-
-    long remaining = testSessionService.calculateRemainingTime(session, 60);
-    assertThat(remaining).isBetween(35L, 45L);
-  }
-
-  @Test
-  void remainingTime_clamps_to_zero_when_negative() {
-    LessonTestEntity test = mock(LessonTestEntity.class);
-    ZonedDateTime startedAt = ZonedDateTime.now().minusSeconds(100);
-    TestSessionEntity session = new TestSessionEntity(null, test, startedAt);
-
-    long remaining = testSessionService.calculateRemainingTime(session, 60);
-    assertThat(remaining).isEqualTo(0);
-  }
-
-  @Test
-  void validateAnswerBounds_rejectsNegativeIndex() {
-    McQuestionEntity mc = mock(McQuestionEntity.class);
-    when(mc.getChoices()).thenReturn(new String[] {"A", "B"});
-    when(mcQuestionRepo.findById(1L)).thenReturn(Optional.of(mc));
-
-    assertThatThrownBy(() -> testSessionService.validateAnswerBounds(1L, List.of(-1)))
+    assertThatThrownBy(() -> testSessionService.startSession(42L, 1L))
         .isInstanceOf(ResponseStatusException.class)
-        .hasMessageContaining("Choice index -1 out of bounds");
+        .satisfies(
+            ex ->
+                assertThat(((ResponseStatusException) ex).getStatusCode())
+                    .isEqualTo(HttpStatus.CONFLICT));
   }
 
   @Test
-  void validateAnswerBounds_rejectsIndexEqualToChoicesLength() {
-    McQuestionEntity mc = mock(McQuestionEntity.class);
-    when(mc.getChoices()).thenReturn(new String[] {"A", "B"});
-    when(mcQuestionRepo.findById(1L)).thenReturn(Optional.of(mc));
+  void submitSession_alreadyDone_throws409() {
+    User owner = mock(User.class);
+    when(owner.getId()).thenReturn(1L);
 
-    assertThatThrownBy(() -> testSessionService.validateAnswerBounds(1L, List.of(2)))
+    TestSessionEntity session = mock(TestSessionEntity.class);
+    when(session.getUser()).thenReturn(owner);
+    when(session.isDone()).thenReturn(true);
+    when(testSessionRepo.findById(20L)).thenReturn(Optional.of(session));
+
+    assertThatThrownBy(() -> testSessionService.submitSession(20L, 1L))
         .isInstanceOf(ResponseStatusException.class)
-        .hasMessageContaining("Choice index 2 out of bounds");
-  }
-
-  @Test
-  void validateAnswerBounds_singleChoice_rejectsMultipleSelections() {
-    McQuestionEntity mc = mock(McQuestionEntity.class);
-    when(mc.getChoices()).thenReturn(new String[] {"A", "B"});
-    when(mc.isSingleChoice()).thenReturn(true);
-    when(mcQuestionRepo.findById(1L)).thenReturn(Optional.of(mc));
-
-    assertThatThrownBy(() -> testSessionService.validateAnswerBounds(1L, List.of(0, 1)))
-        .isInstanceOf(ResponseStatusException.class)
-        .hasMessageContaining("Single-choice question requires exactly 1 selection");
+        .satisfies(
+            ex ->
+                assertThat(((ResponseStatusException) ex).getStatusCode())
+                    .isEqualTo(HttpStatus.CONFLICT));
   }
 }

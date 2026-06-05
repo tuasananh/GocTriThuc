@@ -5,7 +5,6 @@ import com.goctrithuc.backend.dtos.*;
 import com.goctrithuc.backend.repositories.UserRepository;
 import com.goctrithuc.backend.services.TestSessionService;
 import jakarta.validation.Valid;
-import java.time.ZonedDateTime;
 import java.util.List;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -34,10 +33,10 @@ public class TestSessionController {
       @PathVariable Long testId, @AuthenticationPrincipal OAuth2User principal) {
     Long userId = AuthUtils.getCurrentUserId(principal, userRepository);
     TestSessionResponse res = testSessionService.startSession(testId, userId);
-    if (res.startedAt().isBefore(ZonedDateTime.now().minusSeconds(2))) {
-      return ResponseEntity.ok(res);
-    } else {
+    if (res.isNew()) {
       return ResponseEntity.status(HttpStatus.CREATED).body(res);
+    } else {
+      return ResponseEntity.ok(res);
     }
   }
 

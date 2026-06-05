@@ -9,16 +9,17 @@ public record TestSessionResponse(
     Long userId,
     ZonedDateTime startedAt,
     ZonedDateTime submittedAt,
-    boolean isDone,
+    boolean isNew,
     long remainingTime) {
-  public static TestSessionResponse from(TestSessionEntity entity, long remainingTime) {
+  public static TestSessionResponse from(
+      TestSessionEntity entity, long remainingTime, boolean isNew) {
     return new TestSessionResponse(
         entity.getId(),
         entity.getTest().getId(),
         entity.getUser().getId(),
         entity.getStartedAt(),
         entity.getSubmittedAt(),
-        entity.isDone(),
+        isNew,
         remainingTime);
   }
 }

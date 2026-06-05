@@ -191,7 +191,7 @@ public class TestSessionControllerIntegrationTest extends BaseIntegrationTest {
         .andExpect(jsonPath("$.id").exists())
         .andExpect(jsonPath("$.testId").value(testEntity.getId()))
         .andExpect(jsonPath("$.userId").value(studentUser.getId()))
-        .andExpect(jsonPath("$.isDone").value(false))
+        .andExpect(jsonPath("$.isNew").value(true))
         .andExpect(jsonPath("$.remainingTime").value(60))
         .andDo(print());
   }
@@ -226,7 +226,7 @@ public class TestSessionControllerIntegrationTest extends BaseIntegrationTest {
                 .with(csrf()))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.id").exists())
-        .andExpect(jsonPath("$.isDone").value(false))
+        .andExpect(jsonPath("$.isNew").value(false))
         .andDo(print());
   }
 
@@ -857,6 +857,8 @@ public class TestSessionControllerIntegrationTest extends BaseIntegrationTest {
 
   @Test
   void saveAnswer_emptyChoices_allowed() throws Exception {
+    // Empty selectedChoices = "clear answer" UX — intentionally allowed.
+    // Single-choice validation is skipped for empty lists so a student can de-select.
     mockMvc
         .perform(
             post("/api/tests/" + testEntity.getId() + "/sessions")
