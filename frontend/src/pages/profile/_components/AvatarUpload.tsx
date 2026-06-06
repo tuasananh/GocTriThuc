@@ -93,7 +93,7 @@ export function AvatarUpload({ user }: AvatarUploadProps) {
 
   return (
     <div className="flex flex-col items-center space-y-4">
-      <div 
+      <div
         className={`relative group rounded-full transition-colors ${dragActive ? 'ring-4 ring-primary/50' : ''}`}
         onDragEnter={handleDrag}
         onDragLeave={handleDrag}
@@ -101,7 +101,10 @@ export function AvatarUpload({ user }: AvatarUploadProps) {
         onDrop={handleDrop}
       >
         <Avatar className="w-24 h-24 sm:w-32 sm:h-32 border-4 border-background shadow-md">
-          <AvatarImage src={previewUrl || user.avatarUrl || ''} alt={user.displayName || user.username} />
+          <AvatarImage
+            src={previewUrl || user.avatarUrl || ''}
+            alt={user.displayName || user.username}
+          />
           <AvatarFallback className="text-2xl sm:text-4xl">
             {user.displayName?.[0]?.toUpperCase() || user.username[0]?.toUpperCase()}
           </AvatarFallback>
@@ -125,7 +128,9 @@ export function AvatarUpload({ user }: AvatarUploadProps) {
         </button>
       </div>
 
-      {dragActive && <p className="text-xs text-primary font-medium animate-pulse">Thả ảnh vào đây...</p>}
+      {dragActive && (
+        <p className="text-xs text-primary font-medium animate-pulse">Thả ảnh vào đây...</p>
+      )}
 
       <input
         type="file"

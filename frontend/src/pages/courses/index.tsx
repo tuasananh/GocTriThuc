@@ -36,7 +36,12 @@ export function CourseListPage() {
     setError(null);
     try {
       const res = await api.get<PageResponse<CourseDto>>('/api/courses', {
-        params: { search: debouncedSearch || undefined, page, size: 12, visibility: visibility === 'all' ? undefined : visibility },
+        params: {
+          search: debouncedSearch || undefined,
+          page,
+          size: 12,
+          visibility: visibility === 'all' ? undefined : visibility,
+        },
       });
       setCourses(res.data);
     } catch {
