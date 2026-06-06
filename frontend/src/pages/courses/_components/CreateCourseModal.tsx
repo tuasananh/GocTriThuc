@@ -49,10 +49,10 @@ export function CreateCourseModal({
       onCreated(res.data);
       onClose();
       toast.success('Tạo khóa học thành công!');
-    } catch (err: any) {
-      const apiError = err.response?.data as ApiError | undefined;
-      if (apiError?.errors) {
-        setErrors(apiError.errors);
+    } catch (err: unknown) {
+      const error = err as { response?: { data?: ApiError } };
+      if (error?.response?.data?.errors) {
+        setErrors(error.response.data.errors);
       }
     } finally {
       setLoading(false);
