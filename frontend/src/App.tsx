@@ -6,6 +6,7 @@ import { Dashboard } from '@/pages/dashboard';
 import { CourseListPage } from '@/pages/courses';
 import { CourseDetailPage } from '@/pages/course-detail';
 import { ProfilePage } from '@/pages/profile';
+import { LessonPage } from '@/pages/lessons';
 import { CourseEditorPage } from './pages/instructor/course-editor';
 import { GuestRoute } from '@/components/GuestRoute';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
@@ -45,6 +46,7 @@ function App() {
                 <Route element={<MainLayout />}>
                   <Route path={ROUTES.DASHBOARD} element={<Dashboard />} />
                   <Route path={ROUTES.PROFILE} element={<ProfilePage />} />
+                  <Route path={ROUTES.LESSON(':courseId', ':lessonId')} element={<LessonPage />} />
                   {/* <Route path={ROUTES.CLASSROOM(':id')} element={<ClassroomPage />} /> */}
                 </Route>
               </Route>
