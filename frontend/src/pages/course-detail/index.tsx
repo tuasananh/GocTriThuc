@@ -14,6 +14,7 @@ import { toast } from 'sonner';
 import { ErrorState } from '@/components/ErrorState';
 import { useIsAdmin } from '@/lib/permissions';
 import { isAxiosError } from 'axios';
+import { ModuleSidebar } from './_components/ModuleSidebar';
 
 export function CourseDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -73,8 +74,10 @@ export function CourseDetailPage() {
   }, [id, isAuthenticated]);
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    fetchData();
+    const t = setTimeout(() => {
+      fetchData();
+    }, 0);
+    return () => clearTimeout(t);
   }, [fetchData]);
 
   const handleEnrollAction = async () => {
@@ -277,11 +280,8 @@ export function CourseDetailPage() {
         </div>
       </div>
 
-      {/* TODO: Add Course Content (Curriculum/Modules) Below */}
-      <div className="mt-16 text-center text-muted-foreground p-12 border-2 border-dashed rounded-3xl">
-        <h3 className="text-xl font-medium mb-2">Nội dung khóa học</h3>
-        <p>Phần hiển thị danh sách chương và bài học sẽ được phát triển tiếp theo.</p>
-      </div>
+      {/* Course Content — Modules & Lessons */}
+      <ModuleSidebar courseId={id!} visible={accessStatus === 'enrolled' || isAuthor || isAdmin} />
     </PageShell>
   );
 }
