@@ -40,8 +40,10 @@ export function LessonPage() {
   }, [courseId, lessonId]);
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    fetchLesson();
+    const t = setTimeout(() => {
+      fetchLesson();
+    }, 0);
+    return () => clearTimeout(t);
   }, [fetchLesson]);
 
   const markAsCompleted = async () => {
