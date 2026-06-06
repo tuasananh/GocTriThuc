@@ -1,5 +1,7 @@
 import { http, HttpResponse, delay } from 'msw';
-import type { ModuleDto, LessonDetailDto } from '@/types';
+import type { ModuleDto, LessonDetailDto, LessonDto } from '@/types';
+
+const completedLessonsMap = new Map<string, boolean>();
 
 // ── Fake modules & lessons ──────────────────────────────────
 
@@ -118,17 +120,53 @@ export const moduleHandlers = [
   http.get('/api/lessons/:lessonId', async ({ params }) => {
     await delay(200);
     const id = params.lessonId as string;
+
+    // Find in mockModules
+    let foundLesson: LessonDto | null = null;
+    for (const mod of mockModules) {
+      const les = mod.lessons.find((l) => l.id === id);
+      if (les) {
+        foundLesson = les;
+        break;
+      }
+    }
+
+    const title = foundLesson ? foundLesson.title : 'Bài giảng mẫu';
+    const lessonType = foundLesson ? foundLesson.lessonType : 'video';
+    const moduleId = foundLesson ? foundLesson.moduleId : '101';
+    const order = foundLesson ? foundLesson.order : 0;
+
     const detail: LessonDetailDto = {
       id,
-      title: 'Bài giảng mẫu',
-      lessonType: 'blog',
-      order: 0,
-      moduleId: '101',
+      title,
+      lessonType,
+      order,
+      moduleId,
+      isCompleted: completedLessonsMap.get(id) || false,
       createdAt: '2026-05-01T00:00:00Z',
       updatedAt: '2026-05-01T00:00:00Z',
-      blog: { content: '<h2>Nội dung bài giảng</h2><p>Đây là nội dung blog mẫu.</p>' },
     };
+
+    if (lessonType === 'video') {
+      detail.video = {
+        provider: 'youtube',
+        providerValue: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+      };
+    } else if (lessonType === 'blog') {
+      detail.blog = {
+        content: '<h2>Nội dung bài giảng</h2><p>Đây là nội dung blog mẫu.</p>',
+      };
+    }
+
     return HttpResponse.json(detail);
+  }),
+
+  // ── POST /api/lessons/:id/complete ───────────────────────
+  http.post('/api/lessons/:lessonId/complete', async ({ params }) => {
+    await delay(200);
+    const id = params.lessonId as string;
+    completedLessonsMap.set(id, true);
+    return new HttpResponse(null, { status: 200 });
   }),
 
   // ── PATCH reorder ────────────────────────────────────────

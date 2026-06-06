@@ -1,6 +1,7 @@
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
-import { Navigate } from 'react-router-dom';
+import { Navigate, Link } from 'react-router-dom';
+import { ROUTES } from '@/lib/routes';
 
 export const Dashboard = () => {
   const auth = useAuth();
@@ -17,7 +18,7 @@ export const Dashboard = () => {
   }
 
   if (auth.isAuthenticated === false) {
-    return <Navigate to="/login" replace />;
+    return <Navigate to={ROUTES.LOGIN} replace />;
   }
 
   const { user } = auth;
@@ -66,14 +67,15 @@ export const Dashboard = () => {
 
           {/* Quick Actions */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-6 border-t border-slate-700">
-            <Button className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2">
-              Khám Phá Khóa Học
+            <Button className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2" asChild>
+              <Link to={ROUTES.COURSES}>Khám Phá Khóa Học</Link>
             </Button>
             <Button
               variant="outline"
               className="bg-slate-700 hover:bg-slate-600 text-white border-slate-600 font-semibold py-2"
+              asChild
             >
-              Thông Tin Tài Khoản
+              <Link to={ROUTES.PROFILE}>Thông Tin Tài Khoản</Link>
             </Button>
           </div>
         </div>

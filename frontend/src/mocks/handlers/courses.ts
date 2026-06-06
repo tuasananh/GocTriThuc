@@ -47,9 +47,12 @@ export const courseHandlers = [
     const page = Number(url.searchParams.get('page') ?? 0);
     const size = Number(url.searchParams.get('size') ?? 12);
     const search = url.searchParams.get('search') ?? '';
-    const visibility = url.searchParams.get('visibility') ?? 'public';
+    const visibility = url.searchParams.get('visibility') ?? 'all';
 
-    let filtered = mockCourses.filter((c) => c.visibility === visibility && c.isPublished);
+    let filtered = mockCourses.filter((c) => c.isPublished);
+    if (visibility !== 'all') {
+      filtered = filtered.filter((c) => c.visibility === visibility);
+    }
     if (search) {
       filtered = filtered.filter((c) => c.title.toLowerCase().includes(search.toLowerCase()));
     }
@@ -103,6 +106,12 @@ export const courseHandlers = [
 
   // ── POST /api/courses/:id/enroll ───────────────────────────
   http.post('/api/courses/:id/enroll', async () => {
+    await delay(300);
+    return new HttpResponse(null, { status: 201 });
+  }),
+
+  // ── POST /api/courses/:id/access-requests ──────────────────
+  http.post('/api/courses/:id/access-requests', async () => {
     await delay(300);
     return new HttpResponse(null, { status: 201 });
   }),

@@ -7,7 +7,6 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
 import java.util.List;
 import java.util.UUID;
 import org.apache.tika.Tika;
@@ -53,6 +52,26 @@ public class FileService {
       throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "File is empty");
     }
 
+    String rawFilename = file.getOriginalFilename();
+    if (rawFilename == null || rawFilename.isBlank()) {
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Filename is required");
+    }
+
+    String originalFilename = StringUtils.cleanPath(rawFilename);
+    if (originalFilename.isBlank()) {
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid filename");
+    }
+
+    if (originalFilename.contains("..")) {
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid file path sequence");
+    }
+
+    String secureFilename = userId + "_" + UUID.randomUUID() + "_" + originalFilename;
+    Path targetPath = this.uploadLocation.resolve(secureFilename).normalize().toAbsolutePath();
+    if (!targetPath.startsWith(this.uploadLocation)) {
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid file path");
+    }
+
     String detectedMimeType;
     try (InputStream is = file.getInputStream()) {
       detectedMimeType = tika.detect(is);
@@ -85,26 +104,6 @@ public class FileService {
           HttpStatus.BAD_REQUEST, "File type not allowed: " + detectedMimeType);
     }
 
-    String rawFilename = file.getOriginalFilename();
-    if (rawFilename == null || rawFilename.isBlank()) {
-      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Filename is required");
-    }
-
-    String originalFilename = StringUtils.cleanPath(rawFilename);
-    if (originalFilename.isBlank()) {
-      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid filename");
-    }
-
-    if (originalFilename.contains("..")) {
-      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid file path sequence");
-    }
-
-    String secureFilename = userId + "_" + UUID.randomUUID() + "_" + originalFilename;
-    Path targetPath = this.uploadLocation.resolve(secureFilename).normalize().toAbsolutePath();
-    if (!targetPath.startsWith(this.uploadLocation)) {
-      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid file path");
-    }
-
     if (TransactionSynchronizationManager.isActualTransactionActive()) {
       TransactionSynchronizationManager.registerSynchronization(
           new TransactionSynchronization() {
@@ -120,14 +119,17 @@ public class FileService {
           });
     }
 
+    // 1. Ghi file xuống đĩa cứng bằng phương thức tối ưu transferTo
     try {
-      Files.copy(file.getInputStream(), targetPath, StandardCopyOption.REPLACE_EXISTING);
+      file.transferTo(targetPath.toFile());
     } catch (IOException e) {
       throw new ResponseStatusException(
           HttpStatus.INTERNAL_SERVER_ERROR, "Failed to save file locally", e);
     }
 
-    File entity = new File(userId, "local", secureFilename);
+    File entity =
+        new File(
+            userId, "local", secureFilename, detectedMimeType, originalFilename, file.getSize());
     return fileRepository.save(entity);
   }
 

@@ -11,6 +11,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.goctrithuc.backend.BaseIntegrationTest;
+import com.goctrithuc.backend.dtos.AttachResourceRequest;
 import com.goctrithuc.backend.dtos.CreateCourseRequest;
 import com.goctrithuc.backend.dtos.UpdateCourseRequest;
 import com.goctrithuc.backend.entities.*;
@@ -33,6 +34,8 @@ public class CourseControllerIntegrationTest extends BaseIntegrationTest {
   private final UserRoleRepository userRoleRepository;
   private final RoleRepository roleRepository;
   private final CourseRepository courseRepository;
+  private final FileRepository fileRepository;
+  private final CourseResourceRepository courseResourceRepository;
   private final ObjectMapper objectMapper = new ObjectMapper();
 
   private User adminUser;
@@ -46,18 +49,24 @@ public class CourseControllerIntegrationTest extends BaseIntegrationTest {
       UserRepository userRepository,
       UserRoleRepository userRoleRepository,
       RoleRepository roleRepository,
-      CourseRepository courseRepository) {
+      CourseRepository courseRepository,
+      FileRepository fileRepository,
+      CourseResourceRepository courseResourceRepository) {
     this.mockMvc = mockMvc;
     this.userRepository = userRepository;
     this.userRoleRepository = userRoleRepository;
     this.roleRepository = roleRepository;
     this.courseRepository = courseRepository;
+    this.fileRepository = fileRepository;
+    this.courseResourceRepository = courseResourceRepository;
   }
 
   @BeforeEach
   void setUp() {
     // Clean up first to prevent conflicts
+    courseResourceRepository.deleteAll();
     courseRepository.deleteAll();
+    fileRepository.deleteAll();
     userRoleRepository.deleteAll();
     userRepository.deleteAll();
 
@@ -81,7 +90,9 @@ public class CourseControllerIntegrationTest extends BaseIntegrationTest {
 
   @AfterEach
   void cleanUp() {
+    courseResourceRepository.deleteAll();
     courseRepository.deleteAll();
+    fileRepository.deleteAll();
     userRoleRepository.deleteAll();
     userRepository.deleteAll();
   }
@@ -679,6 +690,132 @@ public class CourseControllerIntegrationTest extends BaseIntegrationTest {
                 .contentType(MediaType.TEXT_PLAIN)
                 .content("hi"))
         .andExpect(status().isUnsupportedMediaType())
+        .andDo(print());
+  }
+
+  @Test
+  void shouldAllowAuthorToAttachCourseResourceAndRetrieveDetailWithResources() throws Exception {
+    // 1. Create course
+    Course course =
+        courseRepository.save(
+            new Course(
+                "Course with Resources",
+                "Desc",
+                null,
+                true,
+                CourseVisibility.PUBLIC,
+                teacherA,
+                null));
+
+    // 2. Create uploaded file owned by teacherA
+    File file =
+        fileRepository.save(
+            new File(
+                teacherA.getId(),
+                "local",
+                "teacher_doc.pdf",
+                "application/pdf",
+                "My Lecture Document.pdf",
+                1024L));
+
+    // 3. Attach file to course
+    AttachResourceRequest attachReq = new AttachResourceRequest(file.getId());
+    mockMvc
+        .perform(
+            post("/api/courses/" + course.getId() + "/resources")
+                .with(oauth2Login().attributes(attrs -> attrs.put("email", teacherA.getEmail())))
+                .with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(attachReq)))
+        .andExpect(status().isCreated())
+        .andDo(print());
+
+    // 4. Verify in detail API
+    mockMvc
+        .perform(
+            get("/api/courses/" + course.getId())
+                .with(oauth2Login().attributes(attrs -> attrs.put("email", teacherA.getEmail()))))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.resources.length()").value(1))
+        .andExpect(jsonPath("$.resources[0].filename").value("teacher_doc.pdf"))
+        .andExpect(jsonPath("$.resources[0].mimeType").value("application/pdf"))
+        .andExpect(jsonPath("$.resources[0].originalName").value("My Lecture Document.pdf"))
+        .andExpect(jsonPath("$.resources[0].sizeBytes").value(1024))
+        .andDo(print());
+  }
+
+  @Test
+  void shouldRejectNonAuthorOrNonAdminFromAttachingCourseResource() throws Exception {
+    Course course =
+        courseRepository.save(
+            new Course(
+                "Course with Resources",
+                "Desc",
+                null,
+                true,
+                CourseVisibility.PUBLIC,
+                teacherA,
+                null));
+
+    File file =
+        fileRepository.save(
+            new File(
+                teacherB.getId(),
+                "local",
+                "teacher_doc.pdf",
+                "application/pdf",
+                "My Lecture Document.pdf",
+                1024L));
+
+    AttachResourceRequest attachReq = new AttachResourceRequest(file.getId());
+
+    // Teacher B is NOT the author of Teacher A's course
+    mockMvc
+        .perform(
+            post("/api/courses/" + course.getId() + "/resources")
+                .with(oauth2Login().attributes(attrs -> attrs.put("email", teacherB.getEmail())))
+                .with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(attachReq)))
+        .andExpect(status().isForbidden())
+        .andDo(print());
+  }
+
+  @Test
+  void shouldRejectAttachingCourseResourceWhenFileNotOwnedByAuthor() throws Exception {
+    Course course =
+        courseRepository.save(
+            new Course(
+                "Course with Resources",
+                "Desc",
+                null,
+                true,
+                CourseVisibility.PUBLIC,
+                teacherA,
+                null));
+
+    // File uploaded by Teacher B (not owned by Teacher A)
+    File file =
+        fileRepository.save(
+            new File(
+                teacherB.getId(),
+                "local",
+                "teacher_b_doc.pdf",
+                "application/pdf",
+                "B's Lecture.pdf",
+                1024L));
+
+    AttachResourceRequest attachReq = new AttachResourceRequest(file.getId());
+
+    // Teacher A tries to attach Teacher B's file -> Rejected because of ownership constraint
+    mockMvc
+        .perform(
+            post("/api/courses/" + course.getId() + "/resources")
+                .with(oauth2Login().attributes(attrs -> attrs.put("email", teacherA.getEmail())))
+                .with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(attachReq)))
+        .andExpect(status().isForbidden())
         .andDo(print());
   }
 }

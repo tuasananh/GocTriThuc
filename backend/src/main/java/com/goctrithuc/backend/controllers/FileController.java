@@ -69,17 +69,15 @@ public class FileController {
 
     Path filePath = fileService.resolveFilePath(fileEntity.getProviderValue());
 
-    String contentType;
-    try {
-      contentType = Files.probeContentType(filePath);
-    } catch (IOException e) {
-      throw new ResponseStatusException(
-          HttpStatus.INTERNAL_SERVER_ERROR, "Could not determine file content type", e);
+    String contentType = fileEntity.getMimeType();
+    if (contentType == null || contentType.isBlank()) {
+      try {
+        contentType = Files.probeContentType(filePath);
+      } catch (IOException ignored) {
+      }
     }
-
-    if (contentType == null) {
-      throw new ResponseStatusException(
-          HttpStatus.BAD_REQUEST, "Could not determine file content type");
+    if (contentType == null || contentType.isBlank()) {
+      contentType = "application/octet-stream";
     }
 
     Resource resource;
@@ -90,8 +88,17 @@ public class FileController {
           HttpStatus.INTERNAL_SERVER_ERROR, "File path URL is malformed", e);
     }
 
+    String originalName =
+        fileEntity.getOriginalName() != null
+            ? fileEntity.getOriginalName()
+            : fileEntity.getProviderValue();
+    String filenameEncoded =
+        org.springframework.web.util.UriUtils.encode(
+            originalName, java.nio.charset.StandardCharsets.UTF_8);
+
     return ResponseEntity.ok()
         .header(HttpHeaders.CONTENT_TYPE, contentType)
+        .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename*=UTF-8''" + filenameEncoded)
         .header(HttpHeaders.CACHE_CONTROL, "public, max-age=31536000")
         .body(resource);
   }

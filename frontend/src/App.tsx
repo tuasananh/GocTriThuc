@@ -4,6 +4,10 @@ import { LandingPage } from '@/pages';
 import { LoginPage } from '@/pages/login';
 import { Dashboard } from '@/pages/dashboard';
 import { CourseListPage } from '@/pages/courses';
+import { CourseDetailPage } from '@/pages/course-detail';
+import { ProfilePage } from '@/pages/profile';
+import { LessonPage } from '@/pages/lessons';
+import { CourseEditorPage } from './pages/instructor/course-editor';
 import { GuestRoute } from '@/components/GuestRoute';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { AuthProvider } from './providers/AuthProvider';
@@ -28,18 +32,7 @@ function App() {
               {/* ── Public (với MainLayout) ────────────────── */}
               <Route element={<MainLayout />}>
                 <Route path={ROUTES.HOME} element={<LandingPage />} />
-                <Route
-                  path={ROUTES.COURSE_DETAIL(':id')}
-                  element={
-                    <div className="p-8 text-center text-muted-foreground">
-                      <h2 className="text-2xl font-bold mb-4">Course Detail (Đang thi công)</h2>
-                      <p>
-                        Bạn vừa click vào xem chi tiết khóa học. Component này sẽ do team Frontend
-                        phát triển.
-                      </p>
-                    </div>
-                  }
-                />
+                <Route path={ROUTES.COURSE_DETAIL(':id')} element={<CourseDetailPage />} />
                 <Route path={ROUTES.COURSES} element={<CourseListPage />} />
               </Route>
 
@@ -52,10 +45,9 @@ function App() {
               <Route element={<ProtectedRoute />}>
                 <Route element={<MainLayout />}>
                   <Route path={ROUTES.DASHBOARD} element={<Dashboard />} />
-                  {/* Thêm các trang cần auth ở đây:
-                    <Route path={ROUTES.PROFILE} element={<ProfilePage />} />
-                    <Route path={ROUTES.CLASSROOM(':id')} element={<ClassroomPage />} />
-                */}
+                  <Route path={ROUTES.PROFILE} element={<ProfilePage />} />
+                  <Route path={ROUTES.LESSON(':courseId', ':lessonId')} element={<LessonPage />} />
+                  {/* <Route path={ROUTES.CLASSROOM(':id')} element={<ClassroomPage />} /> */}
                 </Route>
               </Route>
 
@@ -66,9 +58,12 @@ function App() {
                 <Route element={<MainLayout />}>
                   {/* Thêm các trang instructor ở đây:
                     <Route path={ROUTES.INSTRUCTOR_DASHBOARD} element={<InstructorDashboard />} />
-                    <Route path={ROUTES.INSTRUCTOR_COURSE_EDITOR(':id')} element={<CourseEditorPage />} />
                     <Route path={ROUTES.QUESTION_BANK} element={<QuestionBankPage />} />
-                */}
+                  */}
+                  <Route
+                    path={ROUTES.INSTRUCTOR_COURSE_EDITOR(':id')}
+                    element={<CourseEditorPage />}
+                  />
                 </Route>
               </Route>
 

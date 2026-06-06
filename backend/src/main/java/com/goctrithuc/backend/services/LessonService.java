@@ -25,6 +25,10 @@ public class LessonService {
   private final LessonBlogRepository blogRepo;
   private final LessonTestRepository testRepo;
 
+  private final LessonResourceRepository lessonResourceRepo;
+  private final LessonCompletionRepository completionRepo;
+  private final FileRepository fileRepo;
+
   public LessonService(
       LessonRepository lessonRepo,
       ModuleRepository moduleRepo,
@@ -33,7 +37,10 @@ public class LessonService {
       PermissionService permissionService,
       LessonVideoRepository videoRepo,
       LessonBlogRepository blogRepo,
-      LessonTestRepository testRepo) {
+      LessonTestRepository testRepo,
+      LessonResourceRepository lessonResourceRepo,
+      LessonCompletionRepository completionRepo,
+      FileRepository fileRepo) {
     this.lessonRepo = lessonRepo;
     this.moduleRepo = moduleRepo;
     this.courseRepo = courseRepo;
@@ -42,6 +49,9 @@ public class LessonService {
     this.videoRepo = videoRepo;
     this.blogRepo = blogRepo;
     this.testRepo = testRepo;
+    this.lessonResourceRepo = lessonResourceRepo;
+    this.completionRepo = completionRepo;
+    this.fileRepo = fileRepo;
   }
 
   @Transactional
@@ -170,6 +180,13 @@ public class LessonService {
       }
     }
 
+    boolean completed =
+        completionRepo.existsById(
+            new com.goctrithuc.backend.entities.LessonCompletionId(userId, id));
+    List<LessonResourceEntity> resources = lessonResourceRepo.findByLessonId(id);
+    List<FileResponse> fileResponses =
+        resources.stream().map(r -> FileResponse.from(r.getFile())).toList();
+
     return new LessonDetailResponse(
         lesson.getId(),
         lesson.getModule().getId(),
@@ -178,7 +195,37 @@ public class LessonService {
         lesson.getOrder(),
         videoRes,
         blogRes,
-        testRes);
+        testRes,
+        completed,
+        fileResponses);
+  }
+
+  @Transactional
+  public void attachResource(Long lessonId, Long fileId, Long userId) {
+    LessonEntity lesson =
+        lessonRepo
+            .findById(lessonId)
+            .orElseThrow(
+                () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Lesson not found"));
+    Course course = lesson.getModule().getCourse();
+    if (!course.getAuthor().getId().equals(userId) && !permissionService.isAdmin(userId)) {
+      throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Access denied");
+    }
+
+    File file =
+        fileRepo
+            .findById(fileId)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "File not found"));
+
+    if (!file.getAuthorId().equals(userId) && !permissionService.isAdmin(userId)) {
+      throw new ResponseStatusException(
+          HttpStatus.FORBIDDEN, "You do not own this file and cannot attach it");
+    }
+
+    if (!lessonResourceRepo.existsByLessonIdAndFileId(lessonId, fileId)) {
+      LessonResourceEntity lr = new LessonResourceEntity(lesson, file);
+      lessonResourceRepo.save(lr);
+    }
   }
 
   // --- CẬP NHẬT NỘI DUNG CHI TIẾT CHO SUBTYPE ---
