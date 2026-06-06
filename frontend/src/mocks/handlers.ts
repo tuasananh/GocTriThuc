@@ -8,7 +8,7 @@ import { authHandlers } from './handlers/auth';
  * Tất cả mock handlers — import vào browser.ts
  */
 export const handlers = [
-  //...authHandlers,
+  ...authHandlers,
   ...courseHandlers,
   ...moduleHandlers,
   ...questionHandlers,
