@@ -122,7 +122,7 @@ export const moduleHandlers = [
     const id = params.lessonId as string;
 
     // Find in mockModules
-    let foundLesson: any = null;
+    let foundLesson = null;
     for (const mod of mockModules) {
       const les = mod.lessons.find((l) => l.id === id);
       if (les) {
