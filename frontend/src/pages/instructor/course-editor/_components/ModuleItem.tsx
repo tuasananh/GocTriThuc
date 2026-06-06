@@ -39,12 +39,14 @@ export function ModuleItem({
   const [isAddLessonOpen, setIsAddLessonOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
-  const handleDeleteConfirm = async () => {
+  const handleDeleteConfirm = async (e: React.MouseEvent) => {
+    e.preventDefault();
     setIsDeleting(true);
     try {
       await api.delete(`/api/modules/${module.id}`);
       toast.success('Xóa học phần thành công');
       onModulesChange();
+      setIsDeleteDialogOpen(false);
     } catch {
       toast.error('Có lỗi xảy ra khi xóa học phần');
     } finally {

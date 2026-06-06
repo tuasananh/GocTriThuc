@@ -69,8 +69,10 @@ export function ModuleSidebar({ courseId, visible }: ModuleSidebarProps) {
 
   useEffect(() => {
     if (!visible) return;
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    fetchModules();
+    const t = setTimeout(() => {
+      fetchModules();
+    }, 0);
+    return () => clearTimeout(t);
   }, [visible, fetchModules]);
 
   if (!visible) return null;

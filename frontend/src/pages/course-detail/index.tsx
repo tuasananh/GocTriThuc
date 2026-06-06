@@ -74,8 +74,10 @@ export function CourseDetailPage() {
   }, [id, isAuthenticated]);
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    fetchData();
+    const t = setTimeout(() => {
+      fetchData();
+    }, 0);
+    return () => clearTimeout(t);
   }, [fetchData]);
 
   const handleEnrollAction = async () => {
