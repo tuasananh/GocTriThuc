@@ -72,7 +72,10 @@ export function MainLayout() {
     <div className="flex min-h-screen flex-col bg-background text-foreground selection:bg-primary/10 font-sans">
       <header className="sticky top-0 z-50 w-full border-b bg-background/80 backdrop-blur-md">
         <div className="container mx-auto flex h-16 items-center justify-between px-4 md:px-8">
-          <Link to="/" className="flex items-center gap-2 transition-opacity hover:opacity-80">
+          <Link
+            to={ROUTES.HOME}
+            className="flex items-center gap-2 transition-opacity hover:opacity-80"
+          >
             <GocTriThuc withLogo className="text-lg font-semibold" />
           </Link>
           <nav className="hidden md:flex gap-6 text-sm font-medium text-muted-foreground">
