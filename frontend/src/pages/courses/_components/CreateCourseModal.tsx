@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import axios from 'axios';
 import { Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { api } from '@/lib/api';
@@ -34,7 +33,7 @@ export function CreateCourseModal({
 }) {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
-  const [visibility, setVisibility] = useState<'public' | 'restricted' | 'private'>('public');
+  const [visibility, setVisibility] = useState<'public' | 'restricted'>('public');
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -51,10 +50,8 @@ export function CreateCourseModal({
       onClose();
       toast.success('Tạo khóa học thành công!');
     } catch (err: unknown) {
-      if (axios.isAxiosError(err) && err.response?.data?.errors) {
-        setErrors(err.response.data.errors);
-      } else {
-        toast.error('Tạo thất bại. Vui lòng thử lại.');
+      if ((err as any)?.response?.data?.errors) {
+        setErrors((err as any).response.data.errors);
       }
     } finally {
       setLoading(false);
@@ -62,7 +59,7 @@ export function CreateCourseModal({
   };
 
   return (
-    <Dialog open={open} onOpenChange={onClose}>
+    <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Tạo khóa học mới</DialogTitle>
@@ -89,7 +86,7 @@ export function CreateCourseModal({
             <Label htmlFor="course-visibility">Chế độ hiển thị</Label>
             <Select
               value={visibility}
-              onValueChange={(v) => setVisibility(v as 'public' | 'restricted' | 'private')}
+              onValueChange={(v) => setVisibility(v as 'public' | 'restricted')}
             >
               <SelectTrigger id="course-visibility">
                 <SelectValue />
@@ -97,7 +94,6 @@ export function CreateCourseModal({
               <SelectContent>
                 <SelectItem value="public">Công khai — ai cũng có thể đăng ký</SelectItem>
                 <SelectItem value="restricted">Giới hạn — cần được duyệt</SelectItem>
-                <SelectItem value="private">Riêng tư — chỉ bạn thấy</SelectItem>
               </SelectContent>
             </Select>
           </div>
