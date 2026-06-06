@@ -15,6 +15,7 @@ import { ErrorState } from '@/components/ErrorState';
 import { useIsAdmin } from '@/lib/permissions';
 import { isAxiosError } from 'axios';
 import { ModuleSidebar } from './_components/ModuleSidebar';
+import { RestrictedAccessBanner } from './_components/RestrictedAccessBanner';
 
 export function CourseDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -279,6 +280,13 @@ export function CourseDetailPage() {
           </div>
         </div>
       </div>
+
+      <RestrictedAccessBanner
+        visibility={course.visibility}
+        accessStatus={accessStatus}
+        isAuthor={isAuthor}
+        isAdmin={isAdmin}
+      />
 
       {/* Course Content — Modules & Lessons */}
       <ModuleSidebar courseId={id!} visible={accessStatus === 'enrolled' || isAuthor || isAdmin} />
