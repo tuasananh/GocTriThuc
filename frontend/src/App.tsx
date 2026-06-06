@@ -8,6 +8,7 @@ import { CourseDetailPage } from '@/pages/course-detail';
 import { ProfilePage } from '@/pages/profile';
 import { LessonPage } from '@/pages/lessons';
 import { CourseEditorPage } from './pages/instructor/course-editor';
+import { LessonEditorPage } from './pages/instructor/lesson-editor';
 import { GuestRoute } from '@/components/GuestRoute';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { AuthProvider } from './providers/AuthProvider';
@@ -63,6 +64,10 @@ function App() {
                   <Route
                     path={ROUTES.INSTRUCTOR_COURSE_EDITOR(':id')}
                     element={<CourseEditorPage />}
+                  />
+                  <Route
+                    path={ROUTES.INSTRUCTOR_LESSON_EDITOR(':lessonId')}
+                    element={<LessonEditorPage />}
                   />
                 </Route>
               </Route>
