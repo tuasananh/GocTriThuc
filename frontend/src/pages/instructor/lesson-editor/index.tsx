@@ -1,7 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { api } from '@/lib/api';
-import { ROUTES } from '@/lib/routes';
 import type { LessonDetailDto } from '@/types';
 import { PageShell } from '@/components/PageShell';
 import { ErrorState } from '@/components/ErrorState';
@@ -37,7 +36,10 @@ export function LessonEditorPage() {
   }, [lessonId]);
 
   useEffect(() => {
-    fetchLesson();
+    const t = setTimeout(() => {
+      fetchLesson();
+    }, 0);
+    return () => clearTimeout(t);
   }, [fetchLesson]);
 
   const handleSave = async () => {
