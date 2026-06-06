@@ -6,7 +6,7 @@ export function VideoLessonViewer({
   // Parse dynamic YouTube/Vimeo urls on the fly
   const extractEmbed = (url: string, provider: string) => {
     if (provider === 'youtube') {
-      const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+      const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
       const match = url.match(regExp);
       const id = match && match[2].length === 11 ? match[2] : '';
       return `https://www.youtube.com/embed/${id}`;

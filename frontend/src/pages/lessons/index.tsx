@@ -40,6 +40,7 @@ export function LessonPage() {
   }, [courseId, lessonId]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchLesson();
   }, [fetchLesson]);
 
