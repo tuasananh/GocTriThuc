@@ -1,5 +1,5 @@
 import { http, HttpResponse, delay } from 'msw';
-import type { ModuleDto, LessonDetailDto } from '@/types';
+import type { ModuleDto, LessonDetailDto, LessonDto } from '@/types';
 
 const completedLessonsMap = new Map<string, boolean>();
 
@@ -122,7 +122,7 @@ export const moduleHandlers = [
     const id = params.lessonId as string;
 
     // Find in mockModules
-    let foundLesson = null;
+    let foundLesson: LessonDto | null = null;
     for (const mod of mockModules) {
       const les = mod.lessons.find((l) => l.id === id);
       if (les) {
