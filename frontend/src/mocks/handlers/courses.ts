@@ -47,12 +47,9 @@ export const courseHandlers = [
     const page = Number(url.searchParams.get('page') ?? 0);
     const size = Number(url.searchParams.get('size') ?? 12);
     const search = url.searchParams.get('search') ?? '';
-    const visibility = url.searchParams.get('visibility') ?? 'all';
+    const visibility = url.searchParams.get('visibility') ?? 'public';
 
-    let filtered = mockCourses.filter((c) => c.isPublished);
-    if (visibility !== 'all') {
-      filtered = filtered.filter((c) => c.visibility === visibility);
-    }
+    let filtered = mockCourses.filter((c) => c.visibility === visibility && c.isPublished);
     if (search) {
       filtered = filtered.filter((c) => c.title.toLowerCase().includes(search.toLowerCase()));
     }

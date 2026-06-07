@@ -13,6 +13,7 @@ import { PERMISSION } from '@/lib/permissions';
 import { usePermission } from '@/lib/permissions';
 import type { PageResponse, CourseDto } from '@/types';
 import { CourseCard } from './_components/CourseCard';
+import { CreateCourseModal } from './_components/CreateCourseModal';
 
 export function CourseListPage() {
   const [courses, setCourses] = useState<PageResponse<CourseDto> | null>(null);
@@ -21,7 +22,8 @@ export function CourseListPage() {
   const [search, setSearch] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [page, setPage] = useState(0);
-  const [visibility, setVisibility] = useState<'all' | 'public' | 'restricted'>('all');
+  const [visibility, setVisibility] = useState<'public' | 'restricted'>('public');
+  const [showCreate, setShowCreate] = useState(false);
 
   // Debounce search query
   useEffect(() => {
@@ -40,7 +42,7 @@ export function CourseListPage() {
           search: debouncedSearch || undefined,
           page,
           size: 12,
-          visibility: visibility === 'all' ? undefined : visibility,
+          visibility,
         },
       });
       setCourses(res.data);
@@ -69,8 +71,7 @@ export function CourseListPage() {
         description="Tìm kiếm và đăng ký các khóa học phù hợp với bạn"
         action={
           canCreateCourse && (
-            // TODO(Tuấn): remove disabled and add onClick={() => setShowCreate(true)} sau khi thêm state
-            <Button id="btn-create-course" disabled title="Chức năng đang được phát triển">
+            <Button id="btn-create-course" onClick={() => setShowCreate(true)}>
               <Plus size={16} className="mr-1" /> Tạo khóa học
             </Button>
           )
@@ -99,12 +100,11 @@ export function CourseListPage() {
         <Tabs
           value={visibility}
           onValueChange={(v) => {
-            setVisibility(v as 'all' | 'public' | 'restricted');
+            setVisibility(v as 'public' | 'restricted');
             setPage(0);
           }}
         >
           <TabsList>
-            <TabsTrigger value="all">Tất cả</TabsTrigger>
             <TabsTrigger value="public">Công khai</TabsTrigger>
             <TabsTrigger value="restricted">Giới hạn</TabsTrigger>
           </TabsList>
@@ -158,6 +158,14 @@ export function CourseListPage() {
           </Button>
         </div>
       )}
+
+      <CreateCourseModal
+        open={showCreate}
+        onClose={() => setShowCreate(false)}
+        onCreated={() => {
+          fetchCourses();
+        }}
+      />
     </PageShell>
   );
 }
