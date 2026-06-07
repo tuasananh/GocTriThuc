@@ -17,6 +17,7 @@ import { ArrowDown, ArrowUp, Edit, Plus, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { LessonList } from './LessonList';
 import { CreateLessonDialog } from './CreateLessonDialog';
+import { EditModuleDialog } from './EditModuleDialog';
 
 interface ModuleItemProps {
   module: ModuleDto;
@@ -38,6 +39,7 @@ export function ModuleItem({
   const [isDeleting, setIsDeleting] = useState(false);
   const [isAddLessonOpen, setIsAddLessonOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isEditModuleOpen, setIsEditModuleOpen] = useState(false);
 
   const handleDeleteConfirm = async (e: React.MouseEvent) => {
     e.preventDefault();
@@ -95,8 +97,7 @@ export function ModuleItem({
               size="icon"
               onClick={(e) => {
                 e.stopPropagation();
-                // TODO: Open Edit Module Dialog
-                toast.info('Tính năng đang phát triển');
+                setIsEditModuleOpen(true);
               }}
             >
               <Edit className="w-4 h-4" />
@@ -141,6 +142,14 @@ export function ModuleItem({
           moduleId={module.id}
           open={isAddLessonOpen}
           onOpenChange={setIsAddLessonOpen}
+          onSuccess={onModulesChange}
+        />
+
+        <EditModuleDialog
+          key={isEditModuleOpen && module ? module.id : 'closed'}
+          module={module}
+          open={isEditModuleOpen}
+          onOpenChange={setIsEditModuleOpen}
           onSuccess={onModulesChange}
         />
       </AccordionItem>

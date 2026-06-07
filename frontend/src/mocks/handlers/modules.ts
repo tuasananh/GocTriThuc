@@ -179,6 +179,49 @@ export const moduleHandlers = [
     return new HttpResponse(null, { status: 204 });
   }),
 
+  // ── PUT /api/modules/:id ──────────────────────────────────
+  http.put('/api/modules/:id', async ({ request, params }) => {
+    await delay(200);
+    const body = (await request.json()) as { title: string };
+    const id = params.id as string;
+    const mod = mockModules.find((m) => m.id === id);
+    if (mod) {
+      mod.title = body.title;
+      return HttpResponse.json(mod);
+    }
+    return HttpResponse.json({
+      id,
+      title: body.title,
+      order: 0,
+      lessons: [],
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    });
+  }),
+
+  // ── PUT /api/lessons/:id ──────────────────────────────────
+  http.put('/api/lessons/:id', async ({ request, params }) => {
+    await delay(200);
+    const body = (await request.json()) as { title: string };
+    const id = params.id as string;
+    for (const mod of mockModules) {
+      const les = mod.lessons.find((l) => l.id === id);
+      if (les) {
+        les.title = body.title;
+        return HttpResponse.json(les);
+      }
+    }
+    return HttpResponse.json({
+      id,
+      title: body.title,
+      lessonType: 'video',
+      order: 0,
+      moduleId: '101',
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    });
+  }),
+
   // ── DELETE ───────────────────────────────────────────────
   http.delete('/api/modules/:id', async () => {
     await delay(200);
