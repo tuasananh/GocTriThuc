@@ -21,6 +21,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { ThumbnailUpload } from './ThumbnailUpload';
 
 export function CreateCourseModal({
   open,
@@ -33,6 +34,7 @@ export function CreateCourseModal({
 }) {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
+  const [thumbnailUrl, setThumbnailUrl] = useState<string | null>(null);
   const [visibility, setVisibility] = useState<'public' | 'restricted' | 'private'>('public');
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -45,6 +47,7 @@ export function CreateCourseModal({
         title,
         description,
         visibility,
+        thumbnailUrl,
       });
       onCreated(res.data);
       onClose();
@@ -72,6 +75,12 @@ export function CreateCourseModal({
             <Label htmlFor="course-title">Tên khóa học *</Label>
             <Input id="course-title" value={title} onChange={(e) => setTitle(e.target.value)} />
             {errors.title && <p className="mt-1 text-xs text-destructive">{errors.title}</p>}
+          </div>
+          <div>
+            <Label>Ảnh bìa (Thumbnail)</Label>
+            <div className="mt-1">
+              <ThumbnailUpload value={thumbnailUrl} onChange={setThumbnailUrl} />
+            </div>
           </div>
           <div>
             <Label htmlFor="course-desc">Mô tả *</Label>

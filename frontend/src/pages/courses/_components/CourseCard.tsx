@@ -15,14 +15,14 @@ export function CourseCard({ course }: { course: CourseDto }) {
 
   return (
     <Link to={ROUTES.COURSE_DETAIL(course.id)} className="group block">
-      <Card className="h-full overflow-hidden transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5">
+      <Card className="h-full overflow-hidden transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5">
         {/* Thumbnail */}
         <div className="aspect-video overflow-hidden bg-muted">
           {course.thumbnailUrl ? (
             <img
               src={course.thumbnailUrl}
               alt={course.title}
-              className="h-full w-full object-cover transition-transform duration-200 group-hover:scale-105"
+              className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
             />
           ) : (
             <div className="flex h-full items-center justify-center">
