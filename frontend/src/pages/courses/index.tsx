@@ -22,7 +22,7 @@ export function CourseListPage() {
   const [search, setSearch] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [page, setPage] = useState(0);
-  const [visibility, setVisibility] = useState<'all' | 'public' | 'restricted'>('all');
+  const [visibility, setVisibility] = useState<'public' | 'restricted'>('public');
   const [showCreate, setShowCreate] = useState(false);
 
   // Debounce search query
@@ -42,7 +42,7 @@ export function CourseListPage() {
           search: debouncedSearch || undefined,
           page,
           size: 12,
-          visibility: visibility === 'all' ? undefined : visibility,
+          visibility,
         },
       });
       setCourses(res.data);
@@ -100,12 +100,11 @@ export function CourseListPage() {
         <Tabs
           value={visibility}
           onValueChange={(v) => {
-            setVisibility(v as 'all' | 'public' | 'restricted');
+            setVisibility(v as 'public' | 'restricted');
             setPage(0);
           }}
         >
           <TabsList>
-            <TabsTrigger value="all">Tất cả</TabsTrigger>
             <TabsTrigger value="public">Công khai</TabsTrigger>
             <TabsTrigger value="restricted">Giới hạn</TabsTrigger>
           </TabsList>
