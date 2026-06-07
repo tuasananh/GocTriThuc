@@ -33,7 +33,7 @@ export function CreateCourseModal({
 }) {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
-  const [visibility, setVisibility] = useState<'public' | 'restricted'>('public');
+  const [visibility, setVisibility] = useState<'public' | 'restricted' | 'private'>('public');
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -53,6 +53,8 @@ export function CreateCourseModal({
       const error = err as { response?: { data?: ApiError } };
       if (error?.response?.data?.errors) {
         setErrors(error.response.data.errors);
+      } else {
+        toast.error('Tạo khóa học thất bại. Vui lòng thử lại.');
       }
     } finally {
       setLoading(false);
@@ -87,7 +89,7 @@ export function CreateCourseModal({
             <Label htmlFor="course-visibility">Chế độ hiển thị</Label>
             <Select
               value={visibility}
-              onValueChange={(v) => setVisibility(v as 'public' | 'restricted')}
+              onValueChange={(v) => setVisibility(v as 'public' | 'restricted' | 'private')}
             >
               <SelectTrigger id="course-visibility">
                 <SelectValue />
@@ -95,6 +97,7 @@ export function CreateCourseModal({
               <SelectContent>
                 <SelectItem value="public">Công khai — ai cũng có thể đăng ký</SelectItem>
                 <SelectItem value="restricted">Giới hạn — cần được duyệt</SelectItem>
+                <SelectItem value="private">Riêng tư — chỉ bạn thấy</SelectItem>
               </SelectContent>
             </Select>
           </div>
