@@ -11,12 +11,14 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { BlogLessonForm } from './_components/BlogLessonForm';
 import { VideoLessonForm } from './_components/VideoLessonForm';
 import { TestLessonForm } from './_components/TestLessonForm';
+import { Input } from '@/components/ui/input';
 
 export function LessonEditorPage() {
   const { lessonId } = useParams<{ lessonId: string }>();
   const navigate = useNavigate();
 
   const [lesson, setLesson] = useState<LessonDetailDto | null>(null);
+  const [title, setTitle] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
@@ -28,6 +30,7 @@ export function LessonEditorPage() {
     try {
       const res = await api.get<LessonDetailDto>(`/api/lessons/${lessonId}`);
       setLesson(res.data);
+      setTitle(res.data.title);
     } catch {
       setError('Không thể tải thông tin bài học.');
     } finally {
@@ -43,15 +46,12 @@ export function LessonEditorPage() {
   }, [fetchLesson]);
 
   const handleSave = async () => {
-    // In Day 6, we mainly update the title. The content update is separate for Day 7.
-    // However, if we need to save the content, we can call the respective APIs here.
-    if (!lesson) return;
+    if (!lesson || !title.trim()) return;
     setIsSaving(true);
     try {
-      // For now, just a placeholder success since content saving is Day 7
+      await api.put(`/api/lessons/${lesson.id}`, { title: title.trim() });
       toast.success('Đã lưu các thay đổi của bài học!');
-      // Example of Day 7's request:
-      // await api.put(`/api/lessons/${lesson.id}`, { title: lesson.title });
+      setLesson((prev) => (prev ? { ...prev, title: title.trim() } : null));
     } catch {
       toast.error('Lỗi khi lưu bài học.');
     } finally {
@@ -92,8 +92,22 @@ export function LessonEditorPage() {
               <ArrowLeft className="w-4 h-4" />
               Quay lại quản lý học phần
             </Button>
-            <h1 className="text-3xl font-bold tracking-tight">Chỉnh sửa: {lesson.title}</h1>
-            <p className="text-sm text-muted-foreground">
+            <div className="space-y-2 max-w-xl">
+              <h1 className="text-3xl font-bold tracking-tight">Chỉnh sửa bài học</h1>
+              <div className="space-y-1.5">
+                <label htmlFor="lesson-title" className="text-sm font-medium text-muted-foreground">
+                  Tiêu đề bài học
+                </label>
+                <Input
+                  id="lesson-title"
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  placeholder="Nhập tên bài học..."
+                  className="font-semibold text-lg"
+                />
+              </div>
+            </div>
+            <p className="text-sm text-muted-foreground mt-2">
               Loại bài học:{' '}
               <span className="font-semibold text-foreground uppercase">{lesson.lessonType}</span>
             </p>
