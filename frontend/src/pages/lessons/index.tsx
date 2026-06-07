@@ -10,6 +10,7 @@ import { ArrowLeft, CheckCircle2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { ErrorState } from '@/components/ErrorState';
 import { VideoLessonViewer } from './_components/VideoLessonViewer';
+import { BlogLessonViewer } from './_components/BlogLessonViewer';
 import { LessonResourceList } from './_components/LessonResourceList';
 
 export function LessonPage() {
@@ -127,10 +128,7 @@ export function LessonPage() {
           {lesson.lessonType === 'video' && lesson.video ? (
             <VideoLessonViewer video={lesson.video} />
           ) : lesson.lessonType === 'blog' ? (
-            <div className="p-8 text-center text-muted-foreground bg-muted/20 rounded-lg">
-              {/* BlogLessonViewer will be implemented by Sâm */}
-              <p>BlogLessonViewer component chưa được tích hợp.</p>
-            </div>
+            <BlogLessonViewer blog={lesson.blog ?? { content: '' }} />
           ) : lesson.lessonType === 'test' ? (
             <div className="p-8 text-center text-muted-foreground bg-muted/20 rounded-lg">
               <p>Giao diện bài kiểm tra sẽ hiển thị tại đây.</p>
