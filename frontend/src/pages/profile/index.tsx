@@ -9,6 +9,7 @@ import { api } from '@/lib/api';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
 import { AvatarUpload } from './_components/AvatarUpload';
+import { RoleBadge } from '@/components/RoleBadge';
 import type { AxiosError } from 'axios';
 
 export function ProfilePage() {
@@ -91,8 +92,15 @@ export function ProfilePage() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-6">
         <div className="md:col-span-1">
           <Card className="p-6">
-            <h3 className="text-lg font-medium mb-4">Ảnh đại diện</h3>
+            <h3 className="text-lg font-medium mb-4 text-center">Ảnh đại diện</h3>
             <AvatarUpload user={user} />
+            {user.roles && user.roles.length > 0 && (
+              <div className="mt-6 flex flex-wrap gap-2 justify-center">
+                {user.roles.map((role) => (
+                  <RoleBadge key={role} role={role} />
+                ))}
+              </div>
+            )}
           </Card>
         </div>
 
