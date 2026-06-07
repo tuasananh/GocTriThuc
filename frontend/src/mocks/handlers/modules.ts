@@ -143,6 +143,10 @@ export const moduleHandlers = [
       order,
       moduleId,
       isCompleted: completedLessonsMap.get(id) || false,
+      resources: [
+        { id: 'file-react-1', filename: 'React-19-CheatSheet.pdf', url: '' },
+        { id: 'file-react-2', filename: 'Thuc-hanh-Props-State.zip', url: '' },
+      ],
       createdAt: '2026-05-01T00:00:00Z',
       updatedAt: '2026-05-01T00:00:00Z',
     };

@@ -10,6 +10,7 @@ import { ArrowLeft, CheckCircle2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { ErrorState } from '@/components/ErrorState';
 import { VideoLessonViewer } from './_components/VideoLessonViewer';
+import { LessonResourceList } from './_components/LessonResourceList';
 
 export function LessonPage() {
   const { courseId, lessonId } = useParams<{ courseId: string; lessonId: string }>();
@@ -140,6 +141,8 @@ export function LessonPage() {
             </div>
           )}
         </div>
+
+        {lesson.resources && <LessonResourceList resources={lesson.resources} />}
       </div>
     </PageShell>
   );

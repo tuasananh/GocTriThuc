@@ -1,4 +1,5 @@
 import type { UserDto } from './user';
+import type { FileDto } from './file';
 
 // ============================================================
 // Course DTOs
@@ -95,6 +96,7 @@ export interface LessonDetailDto extends LessonDto {
     timeLimit: number; // seconds
     settings?: Record<string, unknown>; // extensible config (passing_score, max_retakes, etc.)
   };
+  resources?: FileDto[];
 }
 
 // ============================================================
