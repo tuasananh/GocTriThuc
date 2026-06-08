@@ -48,11 +48,13 @@ public class CourseService {
       String search,
       CourseVisibility visibility,
       Boolean own,
+      Boolean enrolled,
       Pageable pageable) {
 
     boolean hasOwnParam = Boolean.TRUE.equals(own);
+    boolean hasEnrolledParam = Boolean.TRUE.equals(enrolled);
 
-    if (hasOwnParam && principal == null) {
+    if ((hasOwnParam || hasEnrolledParam) && principal == null) {
       throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Authentication required");
     }
 
@@ -65,10 +67,14 @@ public class CourseService {
     List<CourseVisibility> guestVisibilities =
         Arrays.asList(CourseVisibility.PUBLIC, CourseVisibility.RESTRICTED);
 
-    // Students/guests cannot directly query Private courses (own=true bypasses this
-    // since
-    // they're filtering to their own authored courses).
-    if (visibility != null && !hasOwnParam && !isAdmin && !guestVisibilities.contains(visibility)) {
+    // Students/guests cannot directly query Private courses (own=true or enrolled=true bypasses
+    // this
+    // since they're filtering to their own or enrolled courses).
+    if (visibility != null
+        && !hasOwnParam
+        && !hasEnrolledParam
+        && !isAdmin
+        && !guestVisibilities.contains(visibility)) {
       throw new ResponseStatusException(
           HttpStatus.FORBIDDEN, "Access denied to requested visibility");
     }
@@ -84,9 +90,13 @@ public class CourseService {
       spec = spec.and(CourseSpecifications.authorIdEquals(authorId));
     }
 
+    if (hasEnrolledParam && currentUser != null) {
+      spec = spec.and(CourseSpecifications.enrolledBy(currentUser.getId()));
+    }
+
     if (visibility != null) {
       spec = spec.and(CourseSpecifications.visibilityEquals(visibility));
-    } else if (!hasOwnParam && !isAdmin) {
+    } else if (!hasOwnParam && !hasEnrolledParam && !isAdmin) {
       spec = spec.and(CourseSpecifications.visibilityIn(guestVisibilities));
     }
 

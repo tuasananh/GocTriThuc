@@ -26,4 +26,13 @@ public interface TestSessionRepository extends JpaRepository<TestSessionEntity, 
           + "JOIN FETCH t.lesson "
           + "WHERE ts.id = :sessionId")
   Optional<TestSessionEntity> findByIdWithTest(@Param("sessionId") Long sessionId);
+
+  @Query(
+      "SELECT ts FROM TestSessionEntity ts "
+          + "JOIN FETCH ts.test t "
+          + "JOIN FETCH t.lesson l "
+          + "JOIN FETCH l.module m "
+          + "JOIN FETCH m.course c "
+          + "WHERE ts.user.id = :userId ORDER BY ts.submittedAt DESC")
+  List<TestSessionEntity> findWithTestAndCourseByUserId(@Param("userId") Long userId);
 }

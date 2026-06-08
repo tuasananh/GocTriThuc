@@ -90,4 +90,13 @@ public class TestSessionController {
     TestResultResponse res = testSessionService.getResult(sessionId, userId);
     return ResponseEntity.ok(res);
   }
+
+  @GetMapping("/tests/sessions/my")
+  @PreAuthorize("isAuthenticated()")
+  public ResponseEntity<List<MyTestSessionResponse>> getMyTestSessions(
+      @AuthenticationPrincipal OAuth2User principal) {
+    Long userId = AuthUtils.getCurrentUserId(principal, userRepository);
+    List<MyTestSessionResponse> res = testSessionService.getMyTestSessions(userId);
+    return ResponseEntity.ok(res);
+  }
 }

@@ -917,4 +917,68 @@ public class TestSessionControllerIntegrationTest extends BaseIntegrationTest {
         .andExpect(status().isConflict())
         .andDo(print());
   }
+
+  @Test
+  void getMyTestSessions_returnsCompletedSessions() throws Exception {
+    // 1. Initially empty
+    mockMvc
+        .perform(
+            get("/api/tests/sessions/my")
+                .with(
+                    oauth2Login().attributes(attrs -> attrs.put("email", studentUser.getEmail()))))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.length()").value(0));
+
+    // 2. Start a session
+    mockMvc
+        .perform(
+            post("/api/tests/" + testEntity.getId() + "/sessions")
+                .with(oauth2Login().attributes(attrs -> attrs.put("email", studentUser.getEmail())))
+                .with(csrf()))
+        .andExpect(status().isCreated());
+
+    // 3. Answer questions (q1 correct, q2 incorrect)
+    SaveAnswerRequest req1 = new SaveAnswerRequest(q1.getId(), List.of(0));
+    mockMvc
+        .perform(
+            put("/api/sessions/"
+                    + testSessionRepository
+                        .findByUserIdAndTestIdAndIsDoneFalse(
+                            studentUser.getId(), testEntity.getId())
+                        .orElseThrow()
+                        .getId()
+                    + "/answers")
+                .with(oauth2Login().attributes(attrs -> attrs.put("email", studentUser.getEmail())))
+                .with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(req1)))
+        .andExpect(status().isOk());
+
+    // Submit session
+    TestSessionEntity session =
+        testSessionRepository
+            .findByUserIdAndTestIdAndIsDoneFalse(studentUser.getId(), testEntity.getId())
+            .orElseThrow();
+    mockMvc
+        .perform(
+            post("/api/sessions/" + session.getId() + "/submit")
+                .with(oauth2Login().attributes(attrs -> attrs.put("email", studentUser.getEmail())))
+                .with(csrf()))
+        .andExpect(status().isOk());
+
+    // 4. Query my test sessions -> should return 1 session
+    mockMvc
+        .perform(
+            get("/api/tests/sessions/my")
+                .with(
+                    oauth2Login().attributes(attrs -> attrs.put("email", studentUser.getEmail()))))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.length()").value(1))
+        .andExpect(jsonPath("$[0].testTitle").value("Lesson Test 1"))
+        .andExpect(jsonPath("$[0].courseTitle").value("Java Core"))
+        .andExpect(jsonPath("$[0].score").value(40.0)) // 4.0 / 10.0 * 100 = 40%
+        .andExpect(jsonPath("$[0].correctCount").value(1))
+        .andExpect(jsonPath("$[0].totalQuestions").value(2))
+        .andDo(print());
+  }
 }

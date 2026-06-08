@@ -228,4 +228,27 @@ public class TestSessionService {
     List<TestSessionEntity> sessions = testSessionRepo.findWithUserByTestId(testId);
     return sessions.stream().map(TestSessionSummaryResponse::from).toList();
   }
+
+  @Transactional(readOnly = true)
+  public List<MyTestSessionResponse> getMyTestSessions(Long userId) {
+    List<TestSessionEntity> sessions = testSessionRepo.findWithTestAndCourseByUserId(userId);
+    return sessions.stream()
+        .map(
+            session -> {
+              TestResultResponse result = quizScoringService.calculateResult(session);
+              LessonEntity lesson = session.getTest().getLesson();
+              Course course = lesson.getModule().getCourse();
+              return new MyTestSessionResponse(
+                  session.getId(),
+                  session.getTest().getId(),
+                  lesson.getTitle(),
+                  course.getTitle(),
+                  course.getId(),
+                  result.score(),
+                  result.correctCount(),
+                  result.totalQuestions(),
+                  session.getSubmittedAt());
+            })
+        .toList();
+  }
 }
