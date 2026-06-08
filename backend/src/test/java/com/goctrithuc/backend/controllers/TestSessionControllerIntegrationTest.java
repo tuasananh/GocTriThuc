@@ -937,6 +937,15 @@ public class TestSessionControllerIntegrationTest extends BaseIntegrationTest {
                 .with(csrf()))
         .andExpect(status().isCreated());
 
+    // Verify active session is excluded
+    mockMvc
+        .perform(
+            get("/api/tests/sessions/my")
+                .with(
+                    oauth2Login().attributes(attrs -> attrs.put("email", studentUser.getEmail()))))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.length()").value(0));
+
     // 3. Answer questions (q1 correct, q2 incorrect)
     SaveAnswerRequest req1 = new SaveAnswerRequest(q1.getId(), List.of(0));
     mockMvc

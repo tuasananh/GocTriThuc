@@ -110,16 +110,18 @@ public class CommentService {
             lessonId, pageable);
 
     if (rootsPage.isEmpty()) {
-      return Page.empty();
+      return new PageImpl<>(List.of(), pageable, 0);
     }
 
     List<Long> rootIds = rootsPage.getContent().stream().map(LessonCommentEntity::getId).toList();
-    List<Long> descendantIds = lessonCommentRepository.findDescendantIds(rootIds);
+    List<Long> descendantIds =
+        rootIds.isEmpty() ? List.of() : lessonCommentRepository.findDescendantIds(rootIds);
 
     List<Long> allIds = new ArrayList<>(rootIds);
     allIds.addAll(descendantIds);
 
-    List<LessonCommentEntity> allEntities = lessonCommentRepository.findAllByIdsWithAuthor(allIds);
+    List<LessonCommentEntity> allEntities =
+        allIds.isEmpty() ? List.of() : lessonCommentRepository.findAllByIdsWithAuthor(allIds);
 
     List<CommentResponse> rootsList = buildLessonCommentsTree(allEntities, rootIds);
 
@@ -250,18 +252,19 @@ public class CommentService {
             announcementId, pageable);
 
     if (rootsPage.isEmpty()) {
-      return Page.empty();
+      return new PageImpl<>(List.of(), pageable, 0);
     }
 
     List<Long> rootIds =
         rootsPage.getContent().stream().map(AnnouncementCommentEntity::getId).toList();
-    List<Long> descendantIds = announcementCommentRepository.findDescendantIds(rootIds);
+    List<Long> descendantIds =
+        rootIds.isEmpty() ? List.of() : announcementCommentRepository.findDescendantIds(rootIds);
 
     List<Long> allIds = new ArrayList<>(rootIds);
     allIds.addAll(descendantIds);
 
     List<AnnouncementCommentEntity> allEntities =
-        announcementCommentRepository.findAllByIdsWithAuthor(allIds);
+        allIds.isEmpty() ? List.of() : announcementCommentRepository.findAllByIdsWithAuthor(allIds);
 
     List<CommentResponse> rootsList = buildAnnouncementCommentsTree(allEntities, rootIds);
 

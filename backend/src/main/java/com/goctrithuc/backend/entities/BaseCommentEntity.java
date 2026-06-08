@@ -2,6 +2,7 @@ package com.goctrithuc.backend.entities;
 
 import jakarta.persistence.*;
 import java.time.ZonedDateTime;
+import org.hibernate.annotations.Generated;
 
 @MappedSuperclass
 public abstract class BaseCommentEntity {
@@ -18,9 +19,11 @@ public abstract class BaseCommentEntity {
   private String content;
 
   @Column(name = "created_at", nullable = false, insertable = false, updatable = false)
+  @Generated
   private ZonedDateTime createdAt;
 
   @Column(name = "updated_at", nullable = false, insertable = false)
+  @Generated
   private ZonedDateTime updatedAt;
 
   @Column(name = "edited_at")

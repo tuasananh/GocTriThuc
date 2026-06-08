@@ -75,7 +75,7 @@ public class AnnouncementController {
     boolean isAdmin = permissionService.isAdmin(principal);
 
     AnnouncementResponse response =
-        announcementService.updateAnnouncement(announcementId, request, userId, isAdmin);
+        announcementService.updateAnnouncement(courseId, announcementId, request, userId, isAdmin);
     return ResponseEntity.ok(response);
   }
 
@@ -89,7 +89,7 @@ public class AnnouncementController {
     Long userId = AuthUtils.getCurrentUserId(principal, userRepository);
     boolean isAdmin = permissionService.isAdmin(principal);
 
-    announcementService.deleteAnnouncement(announcementId, userId, isAdmin);
+    announcementService.deleteAnnouncement(courseId, announcementId, userId, isAdmin);
     return ResponseEntity.noContent().build();
   }
 }

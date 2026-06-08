@@ -29,6 +29,9 @@ public class LessonCommentEntity extends BaseCommentEntity {
     super(author, content);
     this.lesson = lesson;
     this.parent = parent;
+    if (parent != null) {
+      parent.getReplies().add(this);
+    }
   }
 
   public LessonEntity getLesson() {

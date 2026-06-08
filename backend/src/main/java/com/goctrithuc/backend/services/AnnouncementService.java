@@ -9,7 +9,9 @@ import com.goctrithuc.backend.entities.User;
 import com.goctrithuc.backend.repositories.AnnouncementRepository;
 import com.goctrithuc.backend.repositories.CourseRepository;
 import com.goctrithuc.backend.repositories.UserRepository;
+import java.util.List;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -55,9 +57,21 @@ public class AnnouncementService {
     Page<Announcement> announcements =
         announcementRepository.findByCourseIdOrderByCreatedAtDesc(courseId, pageable);
 
+    if (announcements.isEmpty()) {
+      return new PageImpl<>(List.of(), pageable, 0);
+    }
+
+    List<Long> authorIds =
+        announcements.getContent().stream().map(Announcement::getAuthorId).distinct().toList();
+    List<User> authors = userRepository.findAllById(authorIds);
+    java.util.Map<Long, User> authorMap = new java.util.HashMap<>();
+    for (User u : authors) {
+      authorMap.put(u.getId(), u);
+    }
+
     return announcements.map(
         ann -> {
-          User author = userRepository.findById(ann.getAuthorId()).orElse(null);
+          User author = authorMap.get(ann.getAuthorId());
           return AnnouncementResponse.from(ann, author);
         });
   }
@@ -89,12 +103,21 @@ public class AnnouncementService {
 
   @Transactional
   public AnnouncementResponse updateAnnouncement(
-      Long announcementId, AnnouncementRequest request, Long userId, boolean isAdmin) {
+      Long courseId,
+      Long announcementId,
+      AnnouncementRequest request,
+      Long userId,
+      boolean isAdmin) {
     Announcement announcement =
         announcementRepository
             .findById(announcementId)
             .orElseThrow(
                 () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Announcement not found"));
+
+    if (!announcement.getCourse().getId().equals(courseId)) {
+      throw new ResponseStatusException(
+          HttpStatus.BAD_REQUEST, "Announcement does not belong to this course");
+    }
 
     Course course = announcement.getCourse();
     boolean isAuthor = course.getAuthor() != null && course.getAuthor().getId().equals(userId);
@@ -113,12 +136,17 @@ public class AnnouncementService {
   }
 
   @Transactional
-  public void deleteAnnouncement(Long announcementId, Long userId, boolean isAdmin) {
+  public void deleteAnnouncement(Long courseId, Long announcementId, Long userId, boolean isAdmin) {
     Announcement announcement =
         announcementRepository
             .findById(announcementId)
             .orElseThrow(
                 () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Announcement not found"));
+
+    if (!announcement.getCourse().getId().equals(courseId)) {
+      throw new ResponseStatusException(
+          HttpStatus.BAD_REQUEST, "Announcement does not belong to this course");
+    }
 
     Course course = announcement.getCourse();
     boolean isAuthor = course.getAuthor() != null && course.getAuthor().getId().equals(userId);

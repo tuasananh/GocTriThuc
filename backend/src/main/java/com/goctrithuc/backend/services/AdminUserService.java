@@ -36,7 +36,7 @@ public class AdminUserService {
   public Page<AdminUserResponse> listUsers(Pageable pageable) {
     Page<Long> userIdsPage = userRepository.findUserIds(pageable);
     if (userIdsPage.isEmpty()) {
-      return Page.empty();
+      return new PageImpl<>(List.of(), pageable, 0);
     }
 
     List<Long> ids = userIdsPage.getContent();

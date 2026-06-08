@@ -235,6 +235,10 @@ public class TestSessionService {
     return sessions.stream()
         .map(
             session -> {
+              // TODO: Calculating quiz scores on-the-fly triggers N+1 database queries here.
+              // For future versions, consider storing the final score, correctCount, and
+              // totalQuestions
+              // in the TestSessionEntity during quiz submission to optimize listing performance.
               TestResultResponse result = quizScoringService.calculateResult(session);
               LessonEntity lesson = session.getTest().getLesson();
               Course course = lesson.getModule().getCourse();

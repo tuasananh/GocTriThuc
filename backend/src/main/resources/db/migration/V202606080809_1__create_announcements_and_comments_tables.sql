@@ -38,3 +38,14 @@ FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 CREATE TRIGGER tr_announcement_comments_updated_at BEFORE UPDATE ON announcement_comments
 FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+-- Foreign key and query performance indexes
+CREATE INDEX idx_announcements_course_id ON announcements (course_id);
+CREATE INDEX idx_announcements_author_id ON announcements (author_id);
+
+CREATE INDEX idx_lesson_comments_author_id ON lesson_comments (author_id);
+CREATE INDEX idx_lesson_comments_lesson ON lesson_comments (lesson_id, parent_id);
+
+CREATE INDEX idx_announcement_comments_author_id ON announcement_comments (author_id);
+CREATE INDEX idx_ann_comments_announcement ON announcement_comments (announcement_id, parent_id);
+

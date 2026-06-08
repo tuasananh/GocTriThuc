@@ -29,6 +29,9 @@ public class AnnouncementCommentEntity extends BaseCommentEntity {
     super(author, content);
     this.announcement = announcement;
     this.parent = parent;
+    if (parent != null) {
+      parent.getReplies().add(this);
+    }
   }
 
   public Announcement getAnnouncement() {

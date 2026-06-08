@@ -160,6 +160,24 @@ public class Day10IntegrationTest extends BaseIntegrationTest {
         .andExpect(jsonPath("$.title").value("Updated Title"))
         .andExpect(jsonPath("$.content").value("Updated Content"));
 
+    // BOLA Check - Update announcement with mismatching course ID -> Should fail
+    mockMvc
+        .perform(
+            put("/api/courses/999/announcements/" + announcementId)
+                .with(oauth2Login().attributes(attrs -> attrs.put("email", teacher.getEmail())))
+                .with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(updateRequest)))
+        .andExpect(status().isBadRequest());
+
+    // BOLA Check - Delete announcement with mismatching course ID -> Should fail
+    mockMvc
+        .perform(
+            delete("/api/courses/999/announcements/" + announcementId)
+                .with(oauth2Login().attributes(attrs -> attrs.put("email", teacher.getEmail())))
+                .with(csrf()))
+        .andExpect(status().isBadRequest());
+
     // 4. Delete - Success for Teacher (Course Author)
     mockMvc
         .perform(
@@ -179,8 +197,17 @@ public class Day10IntegrationTest extends BaseIntegrationTest {
 
   @Test
   void testLessonCommentsRecursiveTreeAndSanitization() throws Exception {
-    // 1. Create root comment
-    CommentRequest rootReq = new CommentRequest("Root comment <b>HTML</b>", null);
+    // 0. Query comments on empty lesson - Should return empty page instead of crashing
+    mockMvc
+        .perform(
+            get("/api/lessons/" + lesson.getId() + "/comments")
+                .with(oauth2Login().attributes(attrs -> attrs.put("email", student.getEmail()))))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.content").isEmpty());
+
+    // 1. Create root comment with sanitization test (strip <script>)
+    CommentRequest rootReq =
+        new CommentRequest("<script>alert(1)</script>Root comment <b>HTML</b>", null);
     String rootRes =
         mockMvc
             .perform(
@@ -190,6 +217,8 @@ public class Day10IntegrationTest extends BaseIntegrationTest {
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(objectMapper.writeValueAsString(rootReq)))
             .andExpect(status().isCreated())
+            .andExpect(jsonPath("$.createdAt").isNotEmpty())
+            .andExpect(jsonPath("$.updatedAt").isNotEmpty())
             // Sanitized content strips unallowed tags
             .andExpect(
                 jsonPath("$.content").value("Root comment <b>HTML</b>")) // <b> is relaxed allowed
@@ -267,6 +296,37 @@ public class Day10IntegrationTest extends BaseIntegrationTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(editReq)))
         .andExpect(status().isForbidden());
+
+    // 5. Verify cascading deletion works
+    // Create a child reply comment
+    CommentRequest replyReq = new CommentRequest("Child reply to comment", commentId);
+    String replyRes =
+        mockMvc
+            .perform(
+                post("/api/lessons/" + lesson.getId() + "/comments")
+                    .with(oauth2Login().attributes(attrs -> attrs.put("email", student.getEmail())))
+                    .with(csrf())
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(objectMapper.writeValueAsString(replyReq)))
+            .andExpect(status().isCreated())
+            .andReturn()
+            .getResponse()
+            .getContentAsString();
+    Long replyId = objectMapper.readTree(replyRes).get("id").asLong();
+
+    // Delete root comment
+    mockMvc
+        .perform(
+            delete("/api/lessons/comments/" + commentId)
+                .with(oauth2Login().attributes(attrs -> attrs.put("email", admin.getEmail())))
+                .with(csrf()))
+        .andExpect(status().isNoContent());
+
+    // Verify parent and child comments are both deleted
+    org.junit.jupiter.api.Assertions.assertTrue(
+        lessonCommentRepository.findById(commentId).isEmpty());
+    org.junit.jupiter.api.Assertions.assertTrue(
+        lessonCommentRepository.findById(replyId).isEmpty());
   }
 
   @Test
