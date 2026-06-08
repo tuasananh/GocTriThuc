@@ -2,6 +2,7 @@ package com.goctrithuc.backend.entities;
 
 import jakarta.persistence.*;
 import java.time.ZonedDateTime;
+import org.hibernate.annotations.Generated;
 
 @Entity
 @Table(name = "lesson_videos")
@@ -21,9 +22,11 @@ public class LessonVideoEntity {
   private String providerValue;
 
   @Column(name = "created_at", nullable = false, insertable = false, updatable = false)
+  @Generated
   private ZonedDateTime createdAt;
 
   @Column(name = "updated_at", nullable = false, insertable = false)
+  @Generated
   private ZonedDateTime updatedAt;
 
   protected LessonVideoEntity() {}

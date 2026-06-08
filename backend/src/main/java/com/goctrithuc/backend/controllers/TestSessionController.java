@@ -83,7 +83,8 @@ public class TestSessionController {
   }
 
   @GetMapping("/sessions/{sessionId}/result")
-  @PreAuthorize("isAuthenticated()")
+  @PreAuthorize(
+      "@permissionService.hasPermission(#principal, T(com.goctrithuc.backend.common.PermissionConstants).ACCESS_TESTS)")
   public ResponseEntity<TestResultResponse> getResult(
       @PathVariable Long sessionId, @AuthenticationPrincipal OAuth2User principal) {
     Long userId = AuthUtils.getCurrentUserId(principal, userRepository);
@@ -92,7 +93,8 @@ public class TestSessionController {
   }
 
   @GetMapping("/tests/sessions/my")
-  @PreAuthorize("isAuthenticated()")
+  @PreAuthorize(
+      "@permissionService.hasPermission(#principal, T(com.goctrithuc.backend.common.PermissionConstants).ACCESS_TESTS)")
   public ResponseEntity<List<MyTestSessionResponse>> getMyTestSessions(
       @AuthenticationPrincipal OAuth2User principal) {
     Long userId = AuthUtils.getCurrentUserId(principal, userRepository);

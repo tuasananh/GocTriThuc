@@ -5,6 +5,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import java.time.ZonedDateTime;
+import org.hibernate.annotations.Generated;
 
 @Entity
 @Table(name = "roles")
@@ -20,9 +21,11 @@ public class Role {
   @Column private String description;
 
   @Column(name = "created_at", nullable = false, insertable = false, updatable = false)
+  @Generated
   private ZonedDateTime createdAt;
 
   @Column(name = "updated_at", nullable = false, insertable = false, updatable = false)
+  @Generated
   private ZonedDateTime updatedAt;
 
   protected Role() {}

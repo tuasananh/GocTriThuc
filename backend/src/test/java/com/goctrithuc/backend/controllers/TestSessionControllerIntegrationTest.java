@@ -990,4 +990,30 @@ public class TestSessionControllerIntegrationTest extends BaseIntegrationTest {
         .andExpect(jsonPath("$[0].totalQuestions").value(2))
         .andDo(print());
   }
+
+  @Test
+  void getMyTestSessions_withoutPermission_returns403() throws Exception {
+    User guest = userRepository.save(new User("guest@hust.edu.vn", "Guest", "guest", null));
+    Role guestRole = roleRepository.save(new Role("guest", 0x00L, "No access"));
+    userRoleRepository.save(new UserRole(guest, guestRole));
+
+    mockMvc
+        .perform(
+            get("/api/tests/sessions/my")
+                .with(oauth2Login().attributes(attrs -> attrs.put("email", guest.getEmail()))))
+        .andExpect(status().isForbidden());
+  }
+
+  @Test
+  void getResult_withoutPermission_returns403() throws Exception {
+    User guest = userRepository.save(new User("guest@hust.edu.vn", "Guest", "guest", null));
+    Role guestRole = roleRepository.save(new Role("guest", 0x00L, "No access"));
+    userRoleRepository.save(new UserRole(guest, guestRole));
+
+    mockMvc
+        .perform(
+            get("/api/sessions/1/result")
+                .with(oauth2Login().attributes(attrs -> attrs.put("email", guest.getEmail()))))
+        .andExpect(status().isForbidden());
+  }
 }

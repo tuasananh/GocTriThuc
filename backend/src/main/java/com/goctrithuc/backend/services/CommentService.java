@@ -57,7 +57,8 @@ public class CommentService {
   // === LESSON COMMENTS ===
 
   @Transactional
-  public CommentResponse createLessonComment(Long lessonId, CommentRequest request, Long userId) {
+  public CommentResponse createLessonComment(
+      Long lessonId, CommentRequest request, Long userId, boolean isAdmin) {
     LessonEntity lesson =
         lessonRepository
             .findById(lessonId)
@@ -65,7 +66,7 @@ public class CommentService {
                 () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Lesson not found"));
 
     Long courseId = lesson.getModule().getCourse().getId();
-    verifyCourseAccess(courseId, userId);
+    verifyCourseAccess(courseId, userId, isAdmin);
 
     User author =
         userRepository
@@ -88,6 +89,9 @@ public class CommentService {
     }
 
     String sanitized = HtmlSanitizer.sanitize(request.content());
+    if (sanitized.isBlank()) {
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Comment content cannot be blank");
+    }
     LessonCommentEntity comment = new LessonCommentEntity(author, sanitized, lesson, parent);
 
     LessonCommentEntity saved = lessonCommentRepository.save(comment);
@@ -95,7 +99,8 @@ public class CommentService {
   }
 
   @Transactional(readOnly = true)
-  public Page<CommentResponse> getLessonComments(Long lessonId, Long userId, Pageable pageable) {
+  public Page<CommentResponse> getLessonComments(
+      Long lessonId, Long userId, boolean isAdmin, Pageable pageable) {
     LessonEntity lesson =
         lessonRepository
             .findById(lessonId)
@@ -103,7 +108,7 @@ public class CommentService {
                 () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Lesson not found"));
 
     Long courseId = lesson.getModule().getCourse().getId();
-    verifyCourseAccess(courseId, userId);
+    verifyCourseAccess(courseId, userId, isAdmin);
 
     Page<LessonCommentEntity> rootsPage =
         lessonCommentRepository.findByLessonIdAndParentIsNullOrderByCreatedAtDesc(
@@ -129,7 +134,7 @@ public class CommentService {
   }
 
   @Transactional(readOnly = true)
-  public CommentResponse getLessonCommentThread(Long commentId, Long userId) {
+  public CommentResponse getLessonCommentThread(Long commentId, Long userId, boolean isAdmin) {
     LessonCommentEntity targetComment =
         lessonCommentRepository
             .findById(commentId)
@@ -137,7 +142,7 @@ public class CommentService {
                 () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Comment not found"));
 
     Long courseId = targetComment.getLesson().getModule().getCourse().getId();
-    verifyCourseAccess(courseId, userId);
+    verifyCourseAccess(courseId, userId, isAdmin);
 
     List<Long> ids = lessonCommentRepository.findSubtreeIdsFromRoot(commentId);
     List<LessonCommentEntity> allEntities = lessonCommentRepository.findAllByIdsWithAuthor(ids);
@@ -166,6 +171,9 @@ public class CommentService {
     }
 
     String sanitized = HtmlSanitizer.sanitize(request.content());
+    if (sanitized.isBlank()) {
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Comment content cannot be blank");
+    }
     comment.setContent(sanitized);
     comment.setEditedAt(ZonedDateTime.now());
 
@@ -197,7 +205,7 @@ public class CommentService {
 
   @Transactional
   public CommentResponse createAnnouncementComment(
-      Long announcementId, CommentRequest request, Long userId) {
+      Long announcementId, CommentRequest request, Long userId, boolean isAdmin) {
     Announcement announcement =
         announcementRepository
             .findById(announcementId)
@@ -205,7 +213,7 @@ public class CommentService {
                 () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Announcement not found"));
 
     Long courseId = announcement.getCourse().getId();
-    verifyCourseAccess(courseId, userId);
+    verifyCourseAccess(courseId, userId, isAdmin);
 
     User author =
         userRepository
@@ -228,6 +236,9 @@ public class CommentService {
     }
 
     String sanitized = HtmlSanitizer.sanitize(request.content());
+    if (sanitized.isBlank()) {
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Comment content cannot be blank");
+    }
     AnnouncementCommentEntity comment =
         new AnnouncementCommentEntity(author, sanitized, announcement, parent);
 
@@ -237,7 +248,7 @@ public class CommentService {
 
   @Transactional(readOnly = true)
   public Page<CommentResponse> getAnnouncementComments(
-      Long announcementId, Long userId, Pageable pageable) {
+      Long announcementId, Long userId, boolean isAdmin, Pageable pageable) {
     Announcement announcement =
         announcementRepository
             .findById(announcementId)
@@ -245,7 +256,7 @@ public class CommentService {
                 () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Announcement not found"));
 
     Long courseId = announcement.getCourse().getId();
-    verifyCourseAccess(courseId, userId);
+    verifyCourseAccess(courseId, userId, isAdmin);
 
     Page<AnnouncementCommentEntity> rootsPage =
         announcementCommentRepository.findByAnnouncementIdAndParentIsNullOrderByCreatedAtDesc(
@@ -272,7 +283,8 @@ public class CommentService {
   }
 
   @Transactional(readOnly = true)
-  public CommentResponse getAnnouncementCommentThread(Long commentId, Long userId) {
+  public CommentResponse getAnnouncementCommentThread(
+      Long commentId, Long userId, boolean isAdmin) {
     AnnouncementCommentEntity targetComment =
         announcementCommentRepository
             .findById(commentId)
@@ -280,7 +292,7 @@ public class CommentService {
                 () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Comment not found"));
 
     Long courseId = targetComment.getAnnouncement().getCourse().getId();
-    verifyCourseAccess(courseId, userId);
+    verifyCourseAccess(courseId, userId, isAdmin);
 
     List<Long> ids = announcementCommentRepository.findSubtreeIdsFromRoot(commentId);
     List<AnnouncementCommentEntity> allEntities =
@@ -311,6 +323,9 @@ public class CommentService {
     }
 
     String sanitized = HtmlSanitizer.sanitize(request.content());
+    if (sanitized.isBlank()) {
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Comment content cannot be blank");
+    }
     comment.setContent(sanitized);
     comment.setEditedAt(ZonedDateTime.now());
 
@@ -340,7 +355,10 @@ public class CommentService {
 
   // === HELPERS ===
 
-  private void verifyCourseAccess(Long courseId, Long userId) {
+  private void verifyCourseAccess(Long courseId, Long userId, boolean isAdmin) {
+    if (isAdmin) {
+      return;
+    }
     Course course =
         courseRepository
             .findById(courseId)
@@ -349,16 +367,8 @@ public class CommentService {
 
     boolean isAuthor = course.getAuthor() != null && course.getAuthor().getId().equals(userId);
     boolean isEnrolled = enrollmentService.isEnrolled(userId, courseId);
-    boolean isAdmin =
-        userRepository
-            .findById(userId)
-            .map(
-                u ->
-                    u.getUserRoles().stream()
-                        .anyMatch(ur -> ur.getRole().getName().equals("admin")))
-            .orElse(false);
 
-    if (!isEnrolled && !isAuthor && !isAdmin) {
+    if (!isEnrolled && !isAuthor) {
       throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Access denied to comments thread");
     }
   }

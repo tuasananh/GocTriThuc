@@ -43,7 +43,9 @@ public class CommentController {
       @AuthenticationPrincipal OAuth2User principal,
       @PageableDefault(size = 20) Pageable pageable) {
     Long userId = AuthUtils.getCurrentUserId(principal, userRepository);
-    Page<CommentResponse> responses = commentService.getLessonComments(lessonId, userId, pageable);
+    boolean isAdmin = permissionService.isAdmin(principal);
+    Page<CommentResponse> responses =
+        commentService.getLessonComments(lessonId, userId, isAdmin, pageable);
     return ResponseEntity.ok(responses);
   }
 
@@ -54,7 +56,9 @@ public class CommentController {
       @Valid @RequestBody CommentRequest request,
       @AuthenticationPrincipal OAuth2User principal) {
     Long userId = AuthUtils.getCurrentUserId(principal, userRepository);
-    CommentResponse response = commentService.createLessonComment(lessonId, request, userId);
+    boolean isAdmin = permissionService.isAdmin(principal);
+    CommentResponse response =
+        commentService.createLessonComment(lessonId, request, userId, isAdmin);
     return ResponseEntity.status(HttpStatus.CREATED).body(response);
   }
 
@@ -63,7 +67,8 @@ public class CommentController {
   public ResponseEntity<CommentResponse> getLessonCommentThread(
       @PathVariable("commentId") Long commentId, @AuthenticationPrincipal OAuth2User principal) {
     Long userId = AuthUtils.getCurrentUserId(principal, userRepository);
-    CommentResponse response = commentService.getLessonCommentThread(commentId, userId);
+    boolean isAdmin = permissionService.isAdmin(principal);
+    CommentResponse response = commentService.getLessonCommentThread(commentId, userId, isAdmin);
     return ResponseEntity.ok(response);
   }
 
@@ -97,8 +102,9 @@ public class CommentController {
       @AuthenticationPrincipal OAuth2User principal,
       @PageableDefault(size = 20) Pageable pageable) {
     Long userId = AuthUtils.getCurrentUserId(principal, userRepository);
+    boolean isAdmin = permissionService.isAdmin(principal);
     Page<CommentResponse> responses =
-        commentService.getAnnouncementComments(announcementId, userId, pageable);
+        commentService.getAnnouncementComments(announcementId, userId, isAdmin, pageable);
     return ResponseEntity.ok(responses);
   }
 
@@ -109,8 +115,9 @@ public class CommentController {
       @Valid @RequestBody CommentRequest request,
       @AuthenticationPrincipal OAuth2User principal) {
     Long userId = AuthUtils.getCurrentUserId(principal, userRepository);
+    boolean isAdmin = permissionService.isAdmin(principal);
     CommentResponse response =
-        commentService.createAnnouncementComment(announcementId, request, userId);
+        commentService.createAnnouncementComment(announcementId, request, userId, isAdmin);
     return ResponseEntity.status(HttpStatus.CREATED).body(response);
   }
 
@@ -119,7 +126,9 @@ public class CommentController {
   public ResponseEntity<CommentResponse> getAnnouncementCommentThread(
       @PathVariable("commentId") Long commentId, @AuthenticationPrincipal OAuth2User principal) {
     Long userId = AuthUtils.getCurrentUserId(principal, userRepository);
-    CommentResponse response = commentService.getAnnouncementCommentThread(commentId, userId);
+    boolean isAdmin = permissionService.isAdmin(principal);
+    CommentResponse response =
+        commentService.getAnnouncementCommentThread(commentId, userId, isAdmin);
     return ResponseEntity.ok(response);
   }
 

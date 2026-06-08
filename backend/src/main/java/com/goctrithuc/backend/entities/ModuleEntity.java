@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import org.hibernate.annotations.Generated;
 
 @Entity
 @Table(name = "modules")
@@ -28,9 +29,11 @@ public class ModuleEntity {
   private List<LessonEntity> lessons = new ArrayList<>();
 
   @Column(name = "created_at", nullable = false, insertable = false, updatable = false)
+  @Generated
   private ZonedDateTime createdAt;
 
   @Column(name = "updated_at", nullable = false, insertable = false)
+  @Generated
   private ZonedDateTime updatedAt;
 
   protected ModuleEntity() {}

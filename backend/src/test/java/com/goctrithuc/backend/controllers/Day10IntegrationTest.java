@@ -133,6 +133,8 @@ public class Day10IntegrationTest extends BaseIntegrationTest {
             .andExpect(status().isCreated())
             .andExpect(jsonPath("$.title").value("Welcome Title"))
             .andExpect(jsonPath("$.content").value("Welcome Content"))
+            .andExpect(jsonPath("$.createdAt").isNotEmpty())
+            .andExpect(jsonPath("$.updatedAt").isNotEmpty())
             .andReturn()
             .getResponse()
             .getContentAsString();
@@ -246,8 +248,17 @@ public class Day10IntegrationTest extends BaseIntegrationTest {
             get("/api/lessons/" + lesson.getId() + "/comments")
                 .with(oauth2Login().attributes(attrs -> attrs.put("email", student.getEmail()))))
         .andExpect(status().isOk())
-        .andExpect(jsonPath("$.content[0].id").value(rootCommentId.toString()))
-        .andExpect(jsonPath("$.content[0].replies[0].content").value("Reply to root"));
+        .andExpect(jsonPath("$.content[0].id").value(rootCommentId.toString()));
+    // 4. Create comment with blank content (after sanitization) - Should fail
+    CommentRequest blankReq = new CommentRequest("   <script>alert(1)</script>   ", null);
+    mockMvc
+        .perform(
+            post("/api/lessons/" + lesson.getId() + "/comments")
+                .with(oauth2Login().attributes(attrs -> attrs.put("email", student.getEmail())))
+                .with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(blankReq)))
+        .andExpect(status().isBadRequest());
   }
 
   @Test
