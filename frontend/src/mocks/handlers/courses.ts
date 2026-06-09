@@ -95,6 +95,21 @@ export const courseHandlers = [
     return HttpResponse.json(newCourse, { status: 201 });
   }),
 
+  // ── PATCH /api/courses/:id ──────────────────────────────────
+  http.patch('/api/courses/:id', async ({ request, params }) => {
+    await delay(300);
+    const body = (await request.json()) as Partial<CourseDto>;
+    const courseIndex = mockCourses.findIndex((c) => c.id === params.id);
+    if (courseIndex === -1) return HttpResponse.json(null, { status: 404 });
+
+    mockCourses[courseIndex] = {
+      ...mockCourses[courseIndex],
+      ...body,
+      updatedAt: new Date().toISOString(),
+    };
+    return HttpResponse.json(mockCourses[courseIndex]);
+  }),
+
   // ── GET /api/courses/:id/access-status ─────────────────────
   http.get('/api/courses/:id/access-status', async () => {
     await delay(200);

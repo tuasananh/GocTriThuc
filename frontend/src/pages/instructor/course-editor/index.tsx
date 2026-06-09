@@ -6,10 +6,11 @@ import { ErrorState } from '@/components/ErrorState';
 import { Button } from '@/components/ui/button';
 import { api } from '@/lib/api';
 import { ROUTES } from '@/lib/routes';
-import { Plus, ArrowLeft } from 'lucide-react';
+import { Plus, ArrowLeft, Settings } from 'lucide-react';
 import type { CourseDto, ModuleDto } from '@/types';
 import { ModuleList } from './_components/ModuleList';
 import { CreateModuleDialog } from './_components/CreateModuleDialog';
+import { EditCourseModal } from './_components/EditCourseModal';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -23,6 +24,7 @@ export function CourseEditorPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isAddModuleOpen, setIsAddModuleOpen] = useState(false);
+  const [isEditCourseOpen, setIsEditCourseOpen] = useState(false);
 
   const fetchData = useCallback(async () => {
     if (!id) return;
@@ -107,10 +109,16 @@ export function CourseEditorPage() {
           title={`Chỉnh sửa: ${course.title}`}
           description={course.description}
           action={
-            <Button onClick={() => setIsAddModuleOpen(true)}>
-              <Plus className="w-4 h-4 mr-2" />
-              Thêm học phần
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button variant="outline" onClick={() => setIsEditCourseOpen(true)}>
+                <Settings className="w-4 h-4 mr-2" />
+                Cài đặt
+              </Button>
+              <Button onClick={() => setIsAddModuleOpen(true)}>
+                <Plus className="w-4 h-4 mr-2" />
+                Thêm học phần
+              </Button>
+            </div>
           }
         />
       </div>
@@ -122,6 +130,14 @@ export function CourseEditorPage() {
         open={isAddModuleOpen}
         onOpenChange={setIsAddModuleOpen}
         onSuccess={fetchData}
+      />
+      <EditCourseModal
+        course={course}
+        open={isEditCourseOpen}
+        onClose={() => setIsEditCourseOpen(false)}
+        onUpdated={(updatedCourse) => {
+          setCourse(updatedCourse);
+        }}
       />
     </PageShell>
   );
