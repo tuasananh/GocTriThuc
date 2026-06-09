@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { api } from '@/lib/api';
@@ -35,28 +35,30 @@ export function CreateCourseModal({
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [thumbnailUrl, setThumbnailUrl] = useState<string | null>(null);
-  const [visibility, setVisibility] = useState<'public' | 'restricted' | 'private'>('public');
+  const [visibility, setVisibility] = useState<'public' | 'restricted' | 'private'>('private');
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  // Reset form khi mở modal
-  useEffect(() => {
-    if (open) {
-      setTitle('');
-      setDescription('');
-      setThumbnailUrl(null);
-      setVisibility('public');
-      setLoading(false);
-      setErrors({});
-    }
-  }, [open]);
+  const resetForm = () => {
+    setTitle('');
+    setDescription('');
+    setThumbnailUrl(null);
+    setVisibility('private');
+    setLoading(false);
+    setErrors({});
+  };
+
+  const handleClose = () => {
+    resetForm();
+    onClose();
+  };
 
   const submit = async () => {
     // Client-side validation
     const newErrors: Record<string, string> = {};
     if (!title.trim()) newErrors.title = 'Tên khóa học không được để trống';
     if (title.length > 200) newErrors.title = 'Tên khóa học tối đa 200 ký tự';
-    if (!description.trim()) newErrors.description = 'Mô tả không được để trống';
+    if (description.length > 10000) newErrors.description = 'Mô tả tối đa 10.000 ký tự';
 
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
@@ -68,10 +70,11 @@ export function CreateCourseModal({
     try {
       const res = await api.post<CourseDto>('/api/courses', {
         title: title.trim(),
-        description: description.trim(),
+        description: description.trim() || undefined,
         visibility,
         thumbnailUrl,
       });
+      resetForm();
       onCreated(res.data);
       toast.success('Tạo khóa học thành công!');
     } catch (err: unknown) {
@@ -87,7 +90,7 @@ export function CreateCourseModal({
   };
 
   return (
-    <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
+    <Dialog open={open} onOpenChange={(isOpen) => !isOpen && handleClose()}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Tạo khóa học mới</DialogTitle>
@@ -105,7 +108,7 @@ export function CreateCourseModal({
             </div>
           </div>
           <div>
-            <Label htmlFor="course-desc">Mô tả *</Label>
+            <Label htmlFor="course-desc">Mô tả</Label>
             <Textarea
               id="course-desc"
               rows={3}
@@ -134,13 +137,13 @@ export function CreateCourseModal({
           </div>
         </div>
         <DialogFooter>
-          <Button variant="ghost" onClick={onClose}>
+          <Button variant="ghost" onClick={handleClose}>
             Hủy
           </Button>
           <Button
             id="btn-submit-create-course"
             onClick={submit}
-            disabled={loading || !title.trim() || !description.trim()}
+            disabled={loading || !title.trim()}
           >
             {loading ? <Loader2 size={16} className="animate-spin mr-2" /> : null}
             Tạo khóa học

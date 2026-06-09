@@ -35,8 +35,15 @@ export function CourseCard({ course }: { course: CourseDto }) {
           <div className="mb-2 flex items-center justify-between">
             <Badge variant={visibilityBadge.variant}>{visibilityBadge.label}</Badge>
             {!course.isPublished && (
-              <Badge variant="outline" className="text-amber-600 dark:text-amber-400">
-                Bản nháp
+              <Badge
+                variant="outline"
+                className={
+                  course.visibility === 'private'
+                    ? 'text-amber-600 dark:text-amber-400'
+                    : 'text-blue-600 dark:text-blue-400'
+                }
+              >
+                {course.visibility === 'private' ? 'Bản nháp' : 'Sắp ra mắt'}
               </Badge>
             )}
           </div>
