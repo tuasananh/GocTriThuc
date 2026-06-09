@@ -20,9 +20,16 @@ export function AvatarUpload({ user }: AvatarUploadProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const auth = useAuth();
 
+  const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB — Rule F copilot-instructions
+
   const handleFile = async (file: File) => {
     if (!file.type.startsWith('image/')) {
       toast.error('Vui lòng chọn file hình ảnh hợp lệ.');
+      return;
+    }
+
+    if (file.size > MAX_FILE_SIZE) {
+      toast.error('File quá lớn. Tối đa 50MB.');
       return;
     }
 
@@ -35,6 +42,8 @@ export function AvatarUpload({ user }: AvatarUploadProps) {
     try {
       const form = new FormData();
       form.append('file', file);
+      // Không set explicit Content-Type header — Axios tự detect FormData
+      // và set multipart/form-data kèm boundary parameter chính xác.
       const { data } = await api.post<FileDto>('/api/files/upload', form, {
         onUploadProgress: (progressEvent) => {
           if (progressEvent.total) {
