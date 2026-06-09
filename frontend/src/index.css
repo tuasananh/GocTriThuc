@@ -553,3 +553,13 @@ math-field[read-only] {
   background-color: var(--accent) !important;
   border-color: var(--border) !important;
 }
+
+/* Global cursor style for interactive elements */
+button,
+[role="button"],
+select,
+input[type="submit"],
+input[type="button"],
+input[type="reset"] {
+  cursor: pointer;
+}
