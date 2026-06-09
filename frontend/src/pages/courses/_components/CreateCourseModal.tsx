@@ -137,7 +137,11 @@ export function CreateCourseModal({
           <Button variant="ghost" onClick={onClose}>
             Hủy
           </Button>
-          <Button id="btn-submit-create-course" onClick={submit} disabled={loading || !title.trim() || !description.trim()}>
+          <Button
+            id="btn-submit-create-course"
+            onClick={submit}
+            disabled={loading || !title.trim() || !description.trim()}
+          >
             {loading ? <Loader2 size={16} className="animate-spin mr-2" /> : null}
             Tạo khóa học
           </Button>
