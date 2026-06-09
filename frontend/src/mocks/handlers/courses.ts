@@ -1,6 +1,5 @@
 import { http, HttpResponse, delay } from 'msw';
-import type { CourseDto } from '@/types';
-import type { UserDto } from '@/types';
+import type { CourseDto, UserDto } from '@/types';
 
 // ── Fake Data ─────────────────────────────────────────────────
 

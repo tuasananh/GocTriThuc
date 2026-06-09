@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { api } from '@/lib/api';
@@ -39,18 +39,40 @@ export function CreateCourseModal({
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
+  // Reset form khi mở modal
+  useEffect(() => {
+    if (open) {
+      setTitle('');
+      setDescription('');
+      setThumbnailUrl(null);
+      setVisibility('public');
+      setLoading(false);
+      setErrors({});
+    }
+  }, [open]);
+
   const submit = async () => {
+    // Client-side validation
+    const newErrors: Record<string, string> = {};
+    if (!title.trim()) newErrors.title = 'Tên khóa học không được để trống';
+    if (title.length > 200) newErrors.title = 'Tên khóa học tối đa 200 ký tự';
+    if (!description.trim()) newErrors.description = 'Mô tả không được để trống';
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      return;
+    }
+
     setLoading(true);
     setErrors({});
     try {
       const res = await api.post<CourseDto>('/api/courses', {
-        title,
-        description,
+        title: title.trim(),
+        description: description.trim(),
         visibility,
         thumbnailUrl,
       });
       onCreated(res.data);
-      onClose();
       toast.success('Tạo khóa học thành công!');
     } catch (err: unknown) {
       const error = err as { response?: { data?: ApiError } };
@@ -115,7 +137,7 @@ export function CreateCourseModal({
           <Button variant="ghost" onClick={onClose}>
             Hủy
           </Button>
-          <Button id="btn-submit-create-course" onClick={submit} disabled={loading}>
+          <Button id="btn-submit-create-course" onClick={submit} disabled={loading || !title.trim() || !description.trim()}>
             {loading ? <Loader2 size={16} className="animate-spin mr-2" /> : null}
             Tạo khóa học
           </Button>

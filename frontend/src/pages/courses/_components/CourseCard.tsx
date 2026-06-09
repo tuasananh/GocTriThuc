@@ -15,7 +15,7 @@ export function CourseCard({ course }: { course: CourseDto }) {
 
   return (
     <Link to={ROUTES.COURSE_DETAIL(course.id)} className="group block">
-      <Card className="h-full overflow-hidden transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5">
+      <Card className="h-full overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-1">
         {/* Thumbnail */}
         <div className="aspect-video overflow-hidden bg-muted">
           {course.thumbnailUrl ? (
@@ -35,7 +35,7 @@ export function CourseCard({ course }: { course: CourseDto }) {
           <div className="mb-2 flex items-center justify-between">
             <Badge variant={visibilityBadge.variant}>{visibilityBadge.label}</Badge>
             {!course.isPublished && (
-              <Badge variant="outline" className="text-amber-600">
+              <Badge variant="outline" className="text-amber-600 dark:text-amber-400">
                 Bản nháp
               </Badge>
             )}

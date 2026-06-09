@@ -146,7 +146,10 @@ export function CourseListPage() {
             variant="outline"
             aria-label="Trang trước"
             disabled={page === 0}
-            onClick={() => setPage((p) => p - 1)}
+            onClick={() => {
+              setPage((p) => p - 1);
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }}
           >
             ←
           </Button>
@@ -157,7 +160,10 @@ export function CourseListPage() {
             variant="outline"
             aria-label="Trang sau"
             disabled={page >= courses.totalPages - 1}
-            onClick={() => setPage((p) => p + 1)}
+            onClick={() => {
+              setPage((p) => p + 1);
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }}
           >
             →
           </Button>
@@ -169,7 +175,6 @@ export function CourseListPage() {
         onClose={() => setShowCreate(false)}
         onCreated={(course) => {
           fetchCourses();
-          setShowCreate(false);
           navigate(ROUTES.INSTRUCTOR_COURSE_EDITOR(course.id));
         }}
       />

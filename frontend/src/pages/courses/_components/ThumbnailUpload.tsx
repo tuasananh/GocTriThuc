@@ -88,8 +88,15 @@ export function ThumbnailUpload({ value, onChange }: ThumbnailUploadProps) {
         onDragOver={handleDrag}
         onDrop={handleDrop}
         onClick={() => !uploading && fileInputRef.current?.click()}
+        onKeyDown={(e) => {
+          if ((e.key === 'Enter' || e.key === ' ') && !uploading) {
+            e.preventDefault();
+            fileInputRef.current?.click();
+          }
+        }}
         role="button"
         tabIndex={0}
+        aria-label="Chọn hoặc kéo thả ảnh bìa"
       >
         {value ? (
           <>
