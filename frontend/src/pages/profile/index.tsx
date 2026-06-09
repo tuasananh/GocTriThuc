@@ -5,10 +5,12 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
 import { api } from '@/lib/api';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
 import { AvatarUpload } from './_components/AvatarUpload';
+import { RoleBadge } from '@/components/RoleBadge';
 import type { AxiosError } from 'axios';
 
 export function ProfilePage() {
@@ -37,7 +39,40 @@ export function ProfilePage() {
     return () => clearTimeout(t);
   }, [authDisplayName, authUsername]);
 
-  if (!auth?.isAuthenticated) {
+  // Loading state — auth đang được fetch từ server
+  if (auth === null) {
+    return (
+      <PageShell>
+        <SectionHeader
+          title="Hồ sơ cá nhân"
+          description="Quản lý thông tin và ảnh đại diện của bạn"
+        />
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-6">
+          <div className="md:col-span-1">
+            <Card className="p-6 flex flex-col items-center space-y-4">
+              <Skeleton className="w-32 h-32 rounded-full" />
+              <Skeleton className="h-4 w-24" />
+              <Skeleton className="h-8 w-32" />
+            </Card>
+          </div>
+          <div className="md:col-span-2">
+            <Card className="p-6 space-y-4">
+              <Skeleton className="h-5 w-32" />
+              {Array.from({ length: 3 }).map((_, i) => (
+                <div key={i} className="space-y-2">
+                  <Skeleton className="h-4 w-20" />
+                  <Skeleton className="h-10 w-full" />
+                </div>
+              ))}
+              <Skeleton className="h-10 w-28 mt-4" />
+            </Card>
+          </div>
+        </div>
+      </PageShell>
+    );
+  }
+
+  if (!auth.isAuthenticated) {
     return null; // ProtectedRoute will handle redirect
   }
 
@@ -90,14 +125,21 @@ export function ProfilePage() {
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-6">
         <div className="md:col-span-1">
-          <Card className="p-6">
-            <h3 className="text-lg font-medium mb-4">Ảnh đại diện</h3>
+          <Card className="p-6 transition-all duration-300 hover:shadow-lg">
+            <h3 className="text-lg font-medium mb-4 text-center">Ảnh đại diện</h3>
             <AvatarUpload user={user} />
+            {user.roles && user.roles.length > 0 && (
+              <div className="mt-6 flex flex-wrap gap-2 justify-center">
+                {user.roles.map((role) => (
+                  <RoleBadge key={role} role={role} />
+                ))}
+              </div>
+            )}
           </Card>
         </div>
 
         <div className="md:col-span-2 space-y-8">
-          <Card className="p-6">
+          <Card className="p-6 transition-all duration-300 hover:shadow-lg">
             <h3 className="text-lg font-medium mb-4">Thông tin cơ bản</h3>
             <div className="space-y-4">
               <div className="space-y-2">

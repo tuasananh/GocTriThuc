@@ -8,7 +8,7 @@ const mockUser = {
   email: 'khaba@goctrithuc.com',
   avatarUrl: null as string | null,
   username: 'khaba',
-  roles: ['INSTRUCTOR'],
+  roles: ['teacher'],
   permissions: '62', // Tất cả các quyền trừ ADMIN (bit 0)
 };
 
