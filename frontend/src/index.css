@@ -556,10 +556,10 @@ math-field[read-only] {
 
 /* Global cursor style for interactive elements */
 button,
-[role="button"],
+[role='button'],
 select,
-input[type="submit"],
-input[type="button"],
-input[type="reset"] {
+input[type='submit'],
+input[type='button'],
+input[type='reset'] {
   cursor: pointer;
 }
