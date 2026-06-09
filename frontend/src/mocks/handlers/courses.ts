@@ -48,8 +48,21 @@ export const courseHandlers = [
     const size = Number(url.searchParams.get('size') ?? 12);
     const search = url.searchParams.get('search') ?? '';
     const visibility = url.searchParams.get('visibility') ?? 'public';
+    const own = url.searchParams.get('own') === 'true';
 
-    let filtered = mockCourses.filter((c) => c.visibility === visibility && c.isPublished);
+    let filtered = mockCourses;
+    if (own) {
+      // Current mock user is vinh_nc (id: '1')
+      filtered = filtered.filter((c) => c.author.id === '1');
+    }
+    if (visibility) {
+      filtered = filtered.filter((c) => c.visibility === visibility);
+    }
+    // Only check isPublished for general public/restricted queries (not for own drafts)
+    if (!own) {
+      filtered = filtered.filter((c) => c.isPublished);
+    }
+
     if (search) {
       filtered = filtered.filter((c) => c.title.toLowerCase().includes(search.toLowerCase()));
     }

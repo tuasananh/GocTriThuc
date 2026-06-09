@@ -46,6 +46,7 @@ export function CourseListPage() {
           page,
           size: 12,
           visibility,
+          own: visibility === 'private' ? true : undefined,
         },
       });
       setCourses(res.data);
