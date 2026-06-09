@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { BookOpen, UserPlus, LogIn, Lock, PlayCircle, Loader2 } from 'lucide-react';
+import { BookOpen, UserPlus, LogIn, Lock, PlayCircle, Loader2, Settings } from 'lucide-react';
 import { toast } from 'sonner';
 import { ErrorState } from '@/components/ErrorState';
 import { useIsAdmin } from '@/lib/permissions';
@@ -217,14 +217,27 @@ export function CourseDetailPage() {
                   Đăng nhập để học
                 </Button>
               ) : accessStatus === 'enrolled' || isAdmin || isAuthor ? (
-                <Button
-                  size="lg"
-                  className="rounded-xl px-8"
-                  onClick={() => navigate(ROUTES.CLASSROOM(id!))}
-                >
-                  <PlayCircle className="mr-2 h-5 w-5" />
-                  Vào lớp học
-                </Button>
+                <div className="flex flex-wrap gap-4">
+                  <Button
+                    size="lg"
+                    className="rounded-xl px-8"
+                    onClick={() => navigate(ROUTES.CLASSROOM(id!))}
+                  >
+                    <PlayCircle className="mr-2 h-5 w-5" />
+                    Vào lớp học
+                  </Button>
+                  {isAuthor && (
+                    <Button
+                      size="lg"
+                      variant="outline"
+                      className="rounded-xl px-8 border-primary text-primary hover:bg-primary/5"
+                      onClick={() => navigate(ROUTES.INSTRUCTOR_COURSE_EDITOR(id!))}
+                    >
+                      <Settings className="mr-2 h-5 w-5" />
+                      Chỉnh sửa
+                    </Button>
+                  )}
+                </div>
               ) : accessStatus === 'requested' ? (
                 <Button size="lg" variant="secondary" className="rounded-xl px-8" disabled>
                   <Lock className="mr-2 h-5 w-5" />

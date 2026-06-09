@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { api } from '@/lib/api';
@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { Switch } from '@/components/ui/switch';
 import {
   Dialog,
   DialogContent,
@@ -21,84 +22,82 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { ThumbnailUpload } from './ThumbnailUpload';
+import { ThumbnailUpload } from '@/pages/courses/_components/ThumbnailUpload';
 
-export function CreateCourseModal({
+export function EditCourseModal({
+  course,
   open,
   onClose,
-  onCreated,
+  onUpdated,
 }: {
+  course: CourseDto | null;
   open: boolean;
   onClose: () => void;
-  onCreated: (course: CourseDto) => void;
+  onUpdated: (course: CourseDto) => void;
 }) {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [thumbnailUrl, setThumbnailUrl] = useState<string | null>(null);
-  const [visibility, setVisibility] = useState<'public' | 'restricted' | 'private'>('private');
+  const [visibility, setVisibility] = useState<'public' | 'restricted' | 'private'>('public');
+  const [isPublished, setIsPublished] = useState(false);
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  const resetForm = () => {
-    setTitle('');
-    setDescription('');
-    setThumbnailUrl(null);
-    setVisibility('private');
-    setLoading(false);
-    setErrors({});
-  };
-
-  const handleClose = () => {
-    resetForm();
-    onClose();
-  };
+  useEffect(() => {
+    if (course && open) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setTitle(course.title);
+      setDescription(course.description);
+      setThumbnailUrl(course.thumbnailUrl);
+      setVisibility(course.visibility);
+      setIsPublished(course.isPublished);
+      setErrors({});
+    }
+  }, [course, open]);
 
   const submit = async () => {
-    // Client-side validation
-    const newErrors: Record<string, string> = {};
-    if (!title.trim()) newErrors.title = 'Tên khóa học không được để trống';
-    if (title.length > 200) newErrors.title = 'Tên khóa học tối đa 200 ký tự';
-    if (description.length > 10000) newErrors.description = 'Mô tả tối đa 10.000 ký tự';
-
-    if (Object.keys(newErrors).length > 0) {
-      setErrors(newErrors);
-      return;
-    }
-
+    if (!course) return;
     setLoading(true);
     setErrors({});
     try {
-      const res = await api.post<CourseDto>('/api/courses', {
-        title: title.trim(),
-        description: description.trim() || undefined,
+      const res = await api.patch<CourseDto>(`/api/courses/${course.id}`, {
+        title,
+        description,
         visibility,
         thumbnailUrl,
+        isPublished,
       });
-      resetForm();
-      onCreated(res.data);
-      toast.success('Tạo khóa học thành công!');
+      onUpdated(res.data);
+      onClose();
+      toast.success('Cập nhật khóa học thành công!');
     } catch (err: unknown) {
       const error = err as { response?: { data?: ApiError } };
       if (error?.response?.data?.errors) {
         setErrors(error.response.data.errors);
       } else {
-        toast.error('Tạo khóa học thất bại. Vui lòng thử lại.');
+        toast.error('Cập nhật khóa học thất bại. Vui lòng thử lại.');
       }
     } finally {
       setLoading(false);
     }
   };
 
+  if (!course) return null;
+
   return (
-    <Dialog open={open} onOpenChange={(isOpen) => !isOpen && handleClose()}>
-      <DialogContent className="sm:max-w-md">
+    <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
+      <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Tạo khóa học mới</DialogTitle>
+          <DialogTitle>Cài đặt khóa học</DialogTitle>
         </DialogHeader>
-        <div className="space-y-4">
+        <div className="space-y-4 py-2">
           <div>
-            <Label htmlFor="course-title">Tên khóa học *</Label>
-            <Input id="course-title" value={title} onChange={(e) => setTitle(e.target.value)} />
+            <Label htmlFor="edit-course-title">Tên khóa học *</Label>
+            <Input
+              id="edit-course-title"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+            />
             {errors.title && <p className="mt-1 text-xs text-destructive">{errors.title}</p>}
           </div>
           <div>
@@ -108,9 +107,9 @@ export function CreateCourseModal({
             </div>
           </div>
           <div>
-            <Label htmlFor="course-desc">Mô tả</Label>
+            <Label htmlFor="edit-course-desc">Mô tả *</Label>
             <Textarea
-              id="course-desc"
+              id="edit-course-desc"
               rows={3}
               value={description}
               onChange={(e) => setDescription(e.target.value)}
@@ -120,12 +119,12 @@ export function CreateCourseModal({
             )}
           </div>
           <div>
-            <Label htmlFor="course-visibility">Chế độ hiển thị</Label>
+            <Label htmlFor="edit-course-visibility">Quyền truy cập</Label>
             <Select
               value={visibility}
               onValueChange={(v) => setVisibility(v as 'public' | 'restricted' | 'private')}
             >
-              <SelectTrigger id="course-visibility">
+              <SelectTrigger id="edit-course-visibility">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -135,18 +134,30 @@ export function CreateCourseModal({
               </SelectContent>
             </Select>
           </div>
+
+          <div className="flex items-center justify-between rounded-lg border p-3">
+            <div className="space-y-0.5">
+              <Label htmlFor="edit-course-published" className="text-base font-medium">
+                Xuất bản khóa học
+              </Label>
+              <p className="text-sm text-muted-foreground">
+                Khóa học đã xuất bản sẽ hiển thị cho học viên.
+              </p>
+            </div>
+            <Switch
+              id="edit-course-published"
+              checked={isPublished}
+              onCheckedChange={setIsPublished}
+            />
+          </div>
         </div>
         <DialogFooter>
-          <Button variant="ghost" onClick={handleClose}>
+          <Button variant="ghost" onClick={onClose}>
             Hủy
           </Button>
-          <Button
-            id="btn-submit-create-course"
-            onClick={submit}
-            disabled={loading || !title.trim()}
-          >
+          <Button id="btn-submit-edit-course" onClick={submit} disabled={loading}>
             {loading ? <Loader2 size={16} className="animate-spin mr-2" /> : null}
-            Tạo khóa học
+            Lưu thay đổi
           </Button>
         </DialogFooter>
       </DialogContent>

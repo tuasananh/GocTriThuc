@@ -1,6 +1,5 @@
 import { http, HttpResponse, delay } from 'msw';
-import type { CourseDto } from '@/types';
-import type { UserDto } from '@/types';
+import type { CourseDto, UserDto } from '@/types';
 
 // ── Fake Data ─────────────────────────────────────────────────
 
@@ -48,8 +47,21 @@ export const courseHandlers = [
     const size = Number(url.searchParams.get('size') ?? 12);
     const search = url.searchParams.get('search') ?? '';
     const visibility = url.searchParams.get('visibility') ?? 'public';
+    const own = url.searchParams.get('own') === 'true';
 
-    let filtered = mockCourses.filter((c) => c.visibility === visibility && c.isPublished);
+    let filtered = mockCourses;
+    if (own) {
+      // Current mock user is vinh_nc (id: '1')
+      filtered = filtered.filter((c) => c.author.id === '1');
+    }
+    if (visibility) {
+      filtered = filtered.filter((c) => c.visibility === visibility);
+    }
+    // Only check isPublished for general public/restricted queries (not for own drafts)
+    if (!own) {
+      filtered = filtered.filter((c) => c.isPublished);
+    }
+
     if (search) {
       filtered = filtered.filter((c) => c.title.toLowerCase().includes(search.toLowerCase()));
     }
@@ -93,6 +105,21 @@ export const courseHandlers = [
       updatedAt: new Date().toISOString(),
     };
     return HttpResponse.json(newCourse, { status: 201 });
+  }),
+
+  // ── PATCH /api/courses/:id ──────────────────────────────────
+  http.patch('/api/courses/:id', async ({ request, params }) => {
+    await delay(300);
+    const body = (await request.json()) as Partial<CourseDto>;
+    const courseIndex = mockCourses.findIndex((c) => c.id === params.id);
+    if (courseIndex === -1) return HttpResponse.json(null, { status: 404 });
+
+    mockCourses[courseIndex] = {
+      ...mockCourses[courseIndex],
+      ...body,
+      updatedAt: new Date().toISOString(),
+    };
+    return HttpResponse.json(mockCourses[courseIndex]);
   }),
 
   // ── GET /api/courses/:id/access-status ─────────────────────

@@ -1,5 +1,6 @@
 import { useState, useCallback, useEffect } from 'react';
 import { Plus, Search, BookOpen } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { PageShell } from '@/components/PageShell';
 import { SectionHeader } from '@/components/SectionHeader';
 import { SkeletonCard } from '@/components/SkeletonCard';
@@ -9,20 +10,21 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { api } from '@/lib/api';
-import { PERMISSION } from '@/lib/permissions';
-import { usePermission } from '@/lib/permissions';
+import { PERMISSION, usePermission } from '@/lib/permissions';
+import { ROUTES } from '@/lib/routes';
 import type { PageResponse, CourseDto } from '@/types';
 import { CourseCard } from './_components/CourseCard';
 import { CreateCourseModal } from './_components/CreateCourseModal';
 
 export function CourseListPage() {
+  const navigate = useNavigate();
   const [courses, setCourses] = useState<PageResponse<CourseDto> | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [page, setPage] = useState(0);
-  const [visibility, setVisibility] = useState<'public' | 'restricted'>('public');
+  const [visibility, setVisibility] = useState<'public' | 'restricted' | 'private'>('public');
   const [showCreate, setShowCreate] = useState(false);
 
   // Debounce search query
@@ -43,6 +45,7 @@ export function CourseListPage() {
           page,
           size: 12,
           visibility,
+          own: visibility === 'private' ? true : undefined,
         },
       });
       setCourses(res.data);
@@ -100,13 +103,14 @@ export function CourseListPage() {
         <Tabs
           value={visibility}
           onValueChange={(v) => {
-            setVisibility(v as 'public' | 'restricted');
+            setVisibility(v as 'public' | 'restricted' | 'private');
             setPage(0);
           }}
         >
           <TabsList>
             <TabsTrigger value="public">Công khai</TabsTrigger>
             <TabsTrigger value="restricted">Giới hạn</TabsTrigger>
+            {canCreateCourse && <TabsTrigger value="private">Riêng tư</TabsTrigger>}
           </TabsList>
         </Tabs>
       </div>
@@ -141,7 +145,10 @@ export function CourseListPage() {
             variant="outline"
             aria-label="Trang trước"
             disabled={page === 0}
-            onClick={() => setPage((p) => p - 1)}
+            onClick={() => {
+              setPage((p) => p - 1);
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }}
           >
             ←
           </Button>
@@ -152,7 +159,10 @@ export function CourseListPage() {
             variant="outline"
             aria-label="Trang sau"
             disabled={page >= courses.totalPages - 1}
-            onClick={() => setPage((p) => p + 1)}
+            onClick={() => {
+              setPage((p) => p + 1);
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }}
           >
             →
           </Button>
@@ -162,8 +172,9 @@ export function CourseListPage() {
       <CreateCourseModal
         open={showCreate}
         onClose={() => setShowCreate(false)}
-        onCreated={() => {
+        onCreated={(course) => {
           fetchCourses();
+          navigate(ROUTES.INSTRUCTOR_COURSE_EDITOR(course.id));
         }}
       />
     </PageShell>
