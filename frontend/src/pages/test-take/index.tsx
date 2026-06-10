@@ -155,6 +155,8 @@ export function TestTakePage() {
     );
   }
 
+  // NOTE: Ngoại lệ Layout - Không sử dụng <PageShell> ở màn hình này
+  // do đặc thù UX/UI của trang làm bài thi cần không gian rộng và header dính (sticky) độc lập.
   return (
     <div className="min-h-screen bg-muted/20 pb-20">
       {/* Sticky Header */}
