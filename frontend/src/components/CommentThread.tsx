@@ -4,6 +4,8 @@ import { ROUTES } from '@/lib/routes';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
+import { EmptyState } from '@/components/EmptyState';
+import { MessageSquare } from 'lucide-react';
 import type { CommentDto } from '@/types/comment';
 import { Loader2 } from 'lucide-react';
 
@@ -12,16 +14,35 @@ interface CommentItemProps {
   depth: number;
   currentUserId?: string;
   onReply: (content: string, parentId: string) => Promise<void>;
+  onEdit: (id: string, newContent: string) => Promise<void>;
   onDelete: (id: string) => Promise<void>;
 }
 
-function CommentItem({ comment, depth, currentUserId, onReply, onDelete }: CommentItemProps) {
+function CommentItem({
+  comment,
+  depth,
+  currentUserId,
+  onReply,
+  onEdit,
+  onDelete,
+}: CommentItemProps) {
   const [showReply, setShowReply] = useState(false);
   const [replyContent, setReplyContent] = useState('');
+
+  const [isEditing, setIsEditing] = useState(false);
+  const [editContent, setEditContent] = useState(comment.content);
+
   const [submitting, setSubmitting] = useState(false);
 
   // Depth check for Reddit-style redirection
   const isDeep = depth >= 5;
+
+  const [isEditable] = useState(() => {
+    if (comment.author.id === currentUserId) {
+      return Date.now() - new Date(comment.createdAt).getTime() <= 15 * 60 * 1000;
+    }
+    return false;
+  });
 
   const handleReplySubmit = async () => {
     if (!replyContent.trim()) return;
@@ -30,6 +51,20 @@ function CommentItem({ comment, depth, currentUserId, onReply, onDelete }: Comme
       await onReply(replyContent, comment.id);
       setReplyContent('');
       setShowReply(false);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleEditSubmit = async () => {
+    if (!editContent.trim() || editContent === comment.content) {
+      setIsEditing(false);
+      return;
+    }
+    setSubmitting(true);
+    try {
+      await onEdit(comment.id, editContent);
+      setIsEditing(false);
     } finally {
       setSubmitting(false);
     }
@@ -55,8 +90,45 @@ function CommentItem({ comment, depth, currentUserId, onReply, onDelete }: Comme
         </Avatar>
         <div className="flex-1">
           <div className="bg-muted/40 rounded-xl px-4 py-3">
-            <p className="text-sm font-semibold">{comment.author.displayName}</p>
-            <p className="text-sm mt-1 whitespace-pre-wrap">{comment.content}</p>
+            <div className="flex items-center gap-2">
+              <p className="text-sm font-semibold">{comment.author.displayName}</p>
+              {comment.editedAt && (
+                <span className="text-xs text-muted-foreground/80">(Đã chỉnh sửa)</span>
+              )}
+            </div>
+
+            {isEditing ? (
+              <div className="mt-2 space-y-2">
+                <Textarea
+                  className="min-h-[60px] text-sm resize-none"
+                  value={editContent}
+                  onChange={(e) => setEditContent(e.target.value)}
+                  autoFocus
+                />
+                <div className="flex gap-2 justify-end">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      setIsEditing(false);
+                      setEditContent(comment.content);
+                    }}
+                    disabled={submitting}
+                  >
+                    Hủy
+                  </Button>
+                  <Button
+                    size="sm"
+                    onClick={handleEditSubmit}
+                    disabled={!editContent.trim() || submitting}
+                  >
+                    {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Lưu thay đổi'}
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <p className="text-sm mt-1 whitespace-pre-wrap">{comment.content}</p>
+            )}
           </div>
 
           {isDeep ? (
@@ -74,6 +146,14 @@ function CommentItem({ comment, depth, currentUserId, onReply, onDelete }: Comme
               >
                 Trả lời
               </button>
+              {isEditable && !isEditing && (
+                <button
+                  onClick={() => setIsEditing(true)}
+                  className="text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  Sửa
+                </button>
+              )}
               {comment.author.id === currentUserId && (
                 <button
                   onClick={() => onDelete(comment.id)}
@@ -118,6 +198,7 @@ function CommentItem({ comment, depth, currentUserId, onReply, onDelete }: Comme
               depth={depth + 1}
               currentUserId={currentUserId}
               onReply={onReply}
+              onEdit={onEdit}
               onDelete={onDelete}
             />
           ))}
@@ -132,6 +213,7 @@ export interface CommentThreadProps {
   currentUserId?: string;
   onPostComment: (content: string) => Promise<void>;
   onReply: (content: string, parentId: string) => Promise<void>;
+  onEdit: (id: string, newContent: string) => Promise<void>;
   onDelete: (id: string) => Promise<void>;
 }
 
@@ -140,6 +222,7 @@ export function CommentThread({
   currentUserId,
   onPostComment,
   onReply,
+  onEdit,
   onDelete,
 }: CommentThreadProps) {
   const [newComment, setNewComment] = useState('');
@@ -194,13 +277,16 @@ export function CommentThread({
             depth={0}
             currentUserId={currentUserId}
             onReply={onReply}
+            onEdit={onEdit}
             onDelete={onDelete}
           />
         ))}
         {comments.length === 0 && (
-          <p className="text-center text-muted-foreground py-8">
-            Chưa có bình luận nào. Hãy là người đầu tiên tham gia thảo luận!
-          </p>
+          <EmptyState
+            icon={MessageSquare}
+            title="Chưa có bình luận nào"
+            description="Hãy là người đầu tiên tham gia thảo luận!"
+          />
         )}
       </div>
     </div>
