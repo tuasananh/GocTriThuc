@@ -187,7 +187,8 @@ function CommentItem({
                     <AlertDialogHeader>
                       <AlertDialogTitle>Xóa bình luận này?</AlertDialogTitle>
                       <AlertDialogDescription>
-                        Bình luận và tất cả phản hồi bên dưới sẽ bị xóa vĩnh viễn. Hành động này không thể hoàn tác.
+                        Bình luận và tất cả phản hồi bên dưới sẽ bị xóa vĩnh viễn. Hành động này
+                        không thể hoàn tác.
                       </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
