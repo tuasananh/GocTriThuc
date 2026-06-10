@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { ROUTES } from '@/lib/routes';
+import { useIsAdmin } from '@/lib/permissions';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -43,6 +44,7 @@ function CommentItem({
   const [editContent, setEditContent] = useState(comment.content);
 
   const [submitting, setSubmitting] = useState(false);
+  const isAdmin = useIsAdmin();
 
   // Depth check for Reddit-style redirection
   const isDeep = depth >= 5;
@@ -176,7 +178,7 @@ function CommentItem({
                   Sửa
                 </button>
               )}
-              {comment.author.id === currentUserId && (
+              {(comment.author.id === currentUserId || isAdmin) && (
                 <AlertDialog>
                   <AlertDialogTrigger asChild>
                     <button className="text-xs font-medium text-destructive/80 hover:text-destructive transition-colors">
