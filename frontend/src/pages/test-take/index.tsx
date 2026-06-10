@@ -6,6 +6,7 @@ import { ROUTES } from '@/lib/routes';
 import type { QuestionStudentDto, TestSessionDto, TestDto } from '@/types';
 import { PageShell } from '@/components/PageShell';
 import { ErrorState } from '@/components/ErrorState';
+import { SkeletonCard } from '@/components/SkeletonCard';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Loader2, ArrowRight, ArrowLeft } from 'lucide-react';
@@ -120,9 +121,19 @@ export function TestTakePage() {
   if (loading) {
     return (
       <PageShell>
-        <div className="flex flex-col items-center justify-center h-[50vh] space-y-4">
-          <Loader2 className="w-10 h-10 animate-spin text-primary" />
-          <p className="text-muted-foreground">Đang chuẩn bị bài thi...</p>
+        <div className="mb-8 mt-4">
+          <div className="h-8 w-64 bg-muted animate-pulse rounded mb-2"></div>
+          <div className="h-4 w-32 bg-muted animate-pulse rounded"></div>
+        </div>
+        <div className="grid gap-8 lg:grid-cols-4 items-start">
+          <div className="lg:col-span-3 space-y-6">
+            {Array.from({ length: 3 }).map((_, i) => (
+              <SkeletonCard key={i} />
+            ))}
+          </div>
+          <div className="hidden lg:block lg:col-span-1">
+            <SkeletonCard />
+          </div>
         </div>
       </PageShell>
     );
