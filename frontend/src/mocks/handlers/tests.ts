@@ -150,4 +150,75 @@ export const testsHandlers = [
 
     return HttpResponse.json({ success: true, sessionId });
   }),
+
+  // Xem kết quả bài thi
+  http.get('/api/tests/sessions/:sessionId/result', async ({ params }) => {
+    const { sessionId } = params;
+    const sessions = getSessions();
+    const session = sessions.find((s: Record<string, unknown>) => s.id === sessionId);
+
+    // Mock questions mirroring the ones in tests.ts
+    const mockQuestions = [
+      {
+        id: 'q1',
+        statement: 'React là thư viện của công ty nào?',
+        choices: ['Google', 'Meta (Facebook)', 'Microsoft', 'Twitter'],
+        correctChoices: [1],
+        point: 1,
+      },
+      {
+        id: 'q2',
+        statement: 'Các hook cơ bản trong React là gì? (Chọn nhiều)',
+        choices: ['useState', 'useForm', 'useEffect', 'useMouse'],
+        correctChoices: [0, 2],
+        point: 1,
+      },
+      {
+        id: 'q3',
+        statement: 'TypeScript có hỗ trợ interface không?',
+        choices: ['Có', 'Không'],
+        correctChoices: [0],
+        point: 1,
+      },
+    ];
+
+    const savedAnswers = getAnswers();
+    const sessionAnswers = session ? (savedAnswers[sessionId as string] ?? {}) : {};
+
+    const answers = mockQuestions.map((q) => {
+      const studentAnswer: number[] = sessionAnswers[q.id] ?? null;
+      const isCorrect =
+        studentAnswer !== null &&
+        studentAnswer.length === q.correctChoices.length &&
+        studentAnswer.every((a) => q.correctChoices.includes(a));
+      return {
+        questionId: q.id,
+        statement: q.statement,
+        choices: q.choices,
+        correctChoices: q.correctChoices,
+        studentAnswer,
+        isCorrect,
+        point: q.point,
+      };
+    });
+
+    const totalScore = answers.filter((a) => a.isCorrect).length;
+    const maxScore = mockQuestions.length;
+
+    // Calculate duration
+    const startedAtTs = session
+      ? (session.startedAtTs as number)
+      : Math.floor(Date.now() / 1000) - 300;
+    const submittedAtTs = Math.floor(Date.now() / 1000);
+    const duration = submittedAtTs - startedAtTs;
+
+    return HttpResponse.json({
+      sessionId,
+      totalScore,
+      maxScore,
+      percent: Math.round((totalScore / maxScore) * 100),
+      duration,
+      answers,
+    });
+  }),
 ];
