@@ -72,7 +72,9 @@ export function CommentThreadSinglePage() {
             <CommentThread
               comments={[comment]}
               currentUserId={currentUserId}
-              onPostComment={async () => {}} // Placeholder cho luồng xem chi tiết
+              // Theo thiết kế, trang này chỉ dùng để xem (view-only),
+              // mọi action thực tế sẽ được thực hiện trên trang Classroom
+              onPostComment={async () => {}}
               onReply={async () => {}}
               onEdit={async () => {}}
               onDelete={async () => {}}
