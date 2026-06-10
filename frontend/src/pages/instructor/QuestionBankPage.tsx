@@ -13,12 +13,7 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -73,9 +68,7 @@ export function QuestionBankPage() {
   const handleSaved = (saved: QuestionDto) => {
     if (editingQuestion) {
       // Cập nhật trong list
-      setQuestions((prev) =>
-        prev.map((q) => (q.id === saved.id ? saved : q)),
-      );
+      setQuestions((prev) => prev.map((q) => (q.id === saved.id ? saved : q)));
       setEditingQuestion(null);
     } else {
       // Thêm câu hỏi mới vào đầu danh sách
@@ -150,13 +143,7 @@ export function QuestionBankPage() {
         )}
 
         {/* ── Danh sách câu hỏi ──────────────────────────────────── */}
-        <div
-          className={
-            showCreateForm || editingQuestion
-              ? 'lg:col-span-2'
-              : 'lg:col-span-3'
-          }
-        >
+        <div className={showCreateForm || editingQuestion ? 'lg:col-span-2' : 'lg:col-span-3'}>
           {/* Search bar */}
           <div className="relative mb-4">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -178,9 +165,7 @@ export function QuestionBankPage() {
           )}
 
           {/* Error state */}
-          {!loading && error && (
-            <ErrorState message={error} onRetry={fetchQuestions} />
-          )}
+          {!loading && error && <ErrorState message={error} onRetry={fetchQuestions} />}
 
           {/* Empty state */}
           {!loading && !error && questions.length === 0 && (
@@ -228,10 +213,7 @@ export function QuestionBankPage() {
       </div>
 
       {/* Edit modal (khi màn nhỏ, hiển thị dialog thay vì panel bên cạnh) */}
-      <Dialog
-        open={!!editingQuestion}
-        onOpenChange={(open) => !open && setEditingQuestion(null)}
-      >
+      <Dialog open={!!editingQuestion} onOpenChange={(open) => !open && setEditingQuestion(null)}>
         <DialogContent className="sm:max-w-lg">
           <DialogHeader>
             <DialogTitle>Sửa câu hỏi</DialogTitle>
@@ -241,9 +223,7 @@ export function QuestionBankPage() {
               key={`modal-${editingQuestion.id}`}
               initialData={editingQuestion}
               onSaved={(saved) => {
-                setQuestions((prev) =>
-                  prev.map((q) => (q.id === saved.id ? saved : q)),
-                );
+                setQuestions((prev) => prev.map((q) => (q.id === saved.id ? saved : q)));
                 setEditingQuestion(null);
               }}
             />
@@ -324,9 +304,8 @@ function QuestionCard({
                 <AlertDialogHeader>
                   <AlertDialogTitle>Xóa câu hỏi này?</AlertDialogTitle>
                   <AlertDialogDescription>
-                    Câu hỏi sẽ bị xóa vĩnh viễn khỏi ngân hàng đề và tất cả
-                    bài kiểm tra đang sử dụng nó. Hành động này không thể hoàn
-                    tác.
+                    Câu hỏi sẽ bị xóa vĩnh viễn khỏi ngân hàng đề và tất cả bài kiểm tra đang sử
+                    dụng nó. Hành động này không thể hoàn tác.
                   </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>

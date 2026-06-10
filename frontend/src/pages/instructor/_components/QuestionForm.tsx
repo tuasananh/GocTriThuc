@@ -21,15 +21,9 @@ export function QuestionForm({ onSaved, initialData }: QuestionFormProps) {
   const isEditing = !!initialData;
 
   const [statement, setStatement] = useState(initialData?.statement ?? '');
-  const [choices, setChoices] = useState<string[]>(
-    initialData?.choices ?? ['', ''],
-  );
-  const [correctChoices, setCorrectChoices] = useState<number[]>(
-    initialData?.correctChoices ?? [],
-  );
-  const [isSingleChoice, setIsSingleChoice] = useState(
-    initialData?.isSingleChoice ?? true,
-  );
+  const [choices, setChoices] = useState<string[]>(initialData?.choices ?? ['', '']);
+  const [correctChoices, setCorrectChoices] = useState<number[]>(initialData?.correctChoices ?? []);
+  const [isSingleChoice, setIsSingleChoice] = useState(initialData?.isSingleChoice ?? true);
   const [saving, setSaving] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -61,9 +55,7 @@ export function QuestionForm({ onSaved, initialData }: QuestionFormProps) {
   const removeChoice = (idx: number) => {
     setChoices((prev) => prev.filter((_, i) => i !== idx));
     // Cập nhật correctChoices: bỏ idx, giảm index > idx xuống 1
-    setCorrectChoices((prev) =>
-      prev.filter((i) => i !== idx).map((i) => (i > idx ? i - 1 : i)),
-    );
+    setCorrectChoices((prev) => prev.filter((i) => i !== idx).map((i) => (i > idx ? i - 1 : i)));
   };
 
   // ── Validate trước khi submit ────────────────────────────────
@@ -107,10 +99,7 @@ export function QuestionForm({ onSaved, initialData }: QuestionFormProps) {
     try {
       let saved: QuestionDto;
       if (isEditing && initialData) {
-        const res = await api.put<QuestionDto>(
-          `/api/questions/${initialData.id}`,
-          payload,
-        );
+        const res = await api.put<QuestionDto>(`/api/questions/${initialData.id}`, payload);
         saved = res.data;
         toast.success('Đã cập nhật câu hỏi');
       } else {
@@ -164,9 +153,7 @@ export function QuestionForm({ onSaved, initialData }: QuestionFormProps) {
             if (errors.statement) setErrors((p) => ({ ...p, statement: '' }));
           }}
         />
-        {errors.statement && (
-          <p className="text-xs text-destructive mt-1">{errors.statement}</p>
-        )}
+        {errors.statement && <p className="text-xs text-destructive mt-1">{errors.statement}</p>}
       </div>
 
       {/* ── Toggle đơn / nhiều đáp án ────────────────────────── */}
@@ -231,15 +218,17 @@ export function QuestionForm({ onSaved, initialData }: QuestionFormProps) {
                   title={isCorrect ? 'Đáp án đúng' : 'Chọn làm đáp án đúng'}
                 >
                   {isCorrect && (
-                    <svg
-                      viewBox="0 0 12 12"
-                      className="w-3 h-3 fill-current"
-                      aria-hidden
-                    >
+                    <svg viewBox="0 0 12 12" className="w-3 h-3 fill-current" aria-hidden>
                       {isSingleChoice ? (
                         <circle cx="6" cy="6" r="3" />
                       ) : (
-                        <path d="M2 6l3 3 5-5" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" />
+                        <path
+                          d="M2 6l3 3 5-5"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          fill="none"
+                          strokeLinecap="round"
+                        />
                       )}
                     </svg>
                   )}
@@ -252,8 +241,7 @@ export function QuestionForm({ onSaved, initialData }: QuestionFormProps) {
                     const next = [...choices];
                     next[i] = e.target.value;
                     setChoices(next);
-                    if (errors.choices)
-                      setErrors((p) => ({ ...p, choices: '' }));
+                    if (errors.choices) setErrors((p) => ({ ...p, choices: '' }));
                   }}
                   placeholder={`Đáp án ${i + 1}`}
                   className={`flex-1 border-0 bg-transparent shadow-none focus-visible:ring-0 p-0 h-auto text-sm ${
@@ -293,20 +281,14 @@ export function QuestionForm({ onSaved, initialData }: QuestionFormProps) {
           </Button>
         )}
 
-        {errors.choices && (
-          <p className="text-xs text-destructive">{errors.choices}</p>
-        )}
+        {errors.choices && <p className="text-xs text-destructive">{errors.choices}</p>}
         {errors.correctChoices && (
           <p className="text-xs text-destructive">{errors.correctChoices}</p>
         )}
       </div>
 
       {/* ── Nút Lưu ────────────────────────────────────────────── */}
-      <Button
-        onClick={submit}
-        disabled={!canSubmit}
-        className="w-full transition-all duration-200"
-      >
+      <Button onClick={submit} disabled={!canSubmit} className="w-full transition-all duration-200">
         {saving ? (
           <>
             <Loader2 className="w-4 h-4 mr-2 animate-spin" />
