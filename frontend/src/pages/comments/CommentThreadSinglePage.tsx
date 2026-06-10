@@ -31,7 +31,7 @@ export function CommentThreadSinglePage() {
         setLoading(false);
       }
     };
-    
+
     if (id) {
       fetchComment();
     }
@@ -40,9 +40,9 @@ export function CommentThreadSinglePage() {
   return (
     <PageShell>
       <div className="mb-6">
-        <Button 
-          variant="ghost" 
-          size="sm" 
+        <Button
+          variant="ghost"
+          size="sm"
           onClick={() => navigate(-1)}
           className="gap-2 -ml-3 text-muted-foreground hover:text-foreground"
         >
@@ -65,11 +65,11 @@ export function CommentThreadSinglePage() {
         )}
 
         {!loading && error && (
-           <ErrorState 
-             icon={<MessageSquare className="w-12 h-12 text-muted-foreground" />}
-             title="Không tìm thấy"
-             message={error} 
-           />
+          <ErrorState
+            icon={<MessageSquare className="w-12 h-12 text-muted-foreground" />}
+            title="Không tìm thấy"
+            message={error}
+          />
         )}
 
         {!loading && comment && (
