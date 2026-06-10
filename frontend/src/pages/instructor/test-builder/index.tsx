@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { api } from '@/lib/api';
@@ -18,6 +18,8 @@ import {
 } from '@/components/ui/select';
 import { Plus, ArrowLeft } from 'lucide-react';
 import { EmptyState } from '@/components/EmptyState';
+import { ErrorState } from '@/components/ErrorState';
+import { SkeletonCard } from '@/components/SkeletonCard';
 import { TestQuestionItem } from './_components/TestQuestionItem';
 import { QuestionPickerModal } from './_components/QuestionPickerModal';
 
@@ -33,31 +35,36 @@ export function TestBuilderPage() {
   const [statement, setStatement] = useState('');
   const [timeLimit, setTimeLimit] = useState(1800); // 30 min default
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
-  useEffect(() => {
+  const fetchData = useCallback(async () => {
     if (!lessonId) return;
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     setLoading(true);
-    api
-      .get<LessonDetailDto>(`/api/lessons/${lessonId}`)
-      .then(async (r) => {
-        if (r.data.test) {
-          setTestId(r.data.test.testId);
-          setStatement(r.data.test.statement || '');
-          setTimeLimit(r.data.test.timeLimit || 1800);
-          const qr = await api.get<TestQuestionItemType[]>(
-            `/api/tests/${r.data.test.testId}/questions`,
-          );
-          setQuestions(qr.data);
-        }
-      })
-      .catch((err) => {
-        console.error('Failed to load test details', err);
-        toast.error('Không thể tải dữ liệu bài kiểm tra');
-      })
-      .finally(() => setLoading(false));
+    setError(null);
+    try {
+      const r = await api.get<LessonDetailDto>(`/api/lessons/${lessonId}`);
+      if (r.data.test) {
+        setTestId(r.data.test.testId);
+        setStatement(r.data.test.statement || '');
+        setTimeLimit(r.data.test.timeLimit || 1800);
+        const qr = await api.get<TestQuestionItemType[]>(
+          `/api/tests/${r.data.test.testId}/questions`,
+        );
+        setQuestions(qr.data);
+      }
+    } catch (err) {
+      console.error('Failed to load test details', err);
+      setError('Không thể tải dữ liệu bài kiểm tra. Vui lòng kiểm tra kết nối.');
+    } finally {
+      setLoading(false);
+    }
   }, [lessonId]);
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    fetchData();
+  }, [fetchData]);
 
   const saveSettings = async () => {
     setSaving(true);
@@ -86,7 +93,32 @@ export function TestBuilderPage() {
   if (loading) {
     return (
       <PageShell>
-        <div className="flex items-center justify-center h-64">Loading...</div>
+        <div className="mb-6">
+          <Button variant="ghost" disabled className="mb-4 -ml-4">
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Quay lại
+          </Button>
+          <div className="h-8 w-64 bg-muted animate-pulse rounded mb-2"></div>
+          <div className="h-4 w-96 bg-muted animate-pulse rounded"></div>
+        </div>
+        <div className="grid gap-6 lg:grid-cols-3">
+          <div className="lg:col-span-2 space-y-4">
+            {Array.from({ length: 3 }).map((_, i) => (
+              <SkeletonCard key={i} />
+            ))}
+          </div>
+          <div className="space-y-4">
+            <SkeletonCard />
+          </div>
+        </div>
+      </PageShell>
+    );
+  }
+
+  if (error) {
+    return (
+      <PageShell>
+        <ErrorState message={error} onRetry={fetchData} />
       </PageShell>
     );
   }

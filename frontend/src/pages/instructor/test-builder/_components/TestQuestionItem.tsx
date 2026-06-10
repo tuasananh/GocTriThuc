@@ -3,6 +3,17 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Trash2, CheckCircle2 } from 'lucide-react';
 import type { QuestionDto } from '@/types';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 
 interface TestQuestionItemProps {
   question: QuestionDto & { point?: number; order?: number };
@@ -39,15 +50,36 @@ export function TestQuestionItem({ question, index, onRemove }: TestQuestionItem
               {question.statement}
             </h4>
           </div>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
-            onClick={onRemove}
-            title="Xóa khỏi đề thi"
-          >
-            <Trash2 className="w-4 h-4" />
-          </Button>
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
+                title="Xóa khỏi đề thi"
+              >
+                <Trash2 className="w-4 h-4" />
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Xóa câu hỏi này?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  Hành động này sẽ xóa câu hỏi khỏi bài kiểm tra hiện tại. Bạn có chắc chắn muốn
+                  tiếp tục?
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Hủy</AlertDialogCancel>
+                <AlertDialogAction
+                  onClick={onRemove}
+                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                >
+                  Xóa câu hỏi
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         </div>
 
         <div className="space-y-2 mt-4">
