@@ -20,6 +20,7 @@ export type {
   CourseProgressDto,
 } from './course';
 export type {
+  TestDto,
   QuestionDto,
   QuestionStudentDto,
   CreateQuestionRequest,
