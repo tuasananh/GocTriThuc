@@ -160,6 +160,12 @@ export const moduleHandlers = [
       detail.blog = {
         content: '<h2>Nội dung bài giảng</h2><p>Đây là nội dung blog mẫu.</p>',
       };
+    } else if (lessonType === 'test') {
+      detail.test = {
+        testId: `test-${id}`,
+        statement: 'Đây là bài kiểm tra mẫu. Chọn đáp án đúng cho các câu hỏi sau.',
+        timeLimit: 1800,
+      };
     }
 
     return HttpResponse.json(detail);
@@ -223,6 +229,16 @@ export const moduleHandlers = [
       moduleId: '101',
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
+    });
+  }),
+
+  // ── PUT /api/lessons/:id/test ─────────────────────────────
+  http.put('/api/lessons/:id/test', async ({ request, params }) => {
+    await delay(200);
+    const body = (await request.json()) as { statement: string; timeLimit: number };
+    return HttpResponse.json({
+      testId: `test-${params.id}`,
+      ...body,
     });
   }),
 
