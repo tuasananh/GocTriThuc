@@ -46,7 +46,9 @@ export function TestBuilderPage() {
           setTestId(r.data.test.testId);
           setStatement(r.data.test.statement || '');
           setTimeLimit(r.data.test.timeLimit || 1800);
-          const qr = await api.get<TestQuestionItemType[]>(`/api/tests/${r.data.test.testId}/questions`);
+          const qr = await api.get<TestQuestionItemType[]>(
+            `/api/tests/${r.data.test.testId}/questions`,
+          );
           setQuestions(qr.data);
         }
       })
@@ -154,11 +156,7 @@ export function TestBuilderPage() {
               <EmptyState
                 title="Chưa có câu hỏi nào"
                 description="Hãy thêm câu hỏi từ Ngân hàng đề để bắt đầu xây dựng bài kiểm tra."
-                action={
-                  <Button onClick={() => setShowPicker(true)}>
-                    Thêm câu hỏi ngay
-                  </Button>
-                }
+                action={<Button onClick={() => setShowPicker(true)}>Thêm câu hỏi ngay</Button>}
               />
             </div>
           ) : (
