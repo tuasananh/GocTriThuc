@@ -65,12 +65,7 @@ export function CommentThreadSinglePage() {
           </div>
         )}
 
-        {!loading && error && (
-           <ErrorState 
-             title="Không tìm thấy"
-             message={error} 
-           />
-        )}
+        {!loading && error && <ErrorState title="Không tìm thấy" message={error} />}
 
         {!loading && comment && (
           <div className="bg-card rounded-xl p-6 border shadow-sm">
