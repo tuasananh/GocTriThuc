@@ -76,6 +76,8 @@ export function TestBuilderPage() {
   };
 
   const removeQuestion = async (questionId: string) => {
+    if (!testId) return;
+
     try {
       await api.delete(`/api/tests/${testId}/questions/${questionId}`);
       setQuestions((q) => q.filter((x) => x.id !== questionId));
