@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { api } from '@/lib/api';
-import type { LessonDetailDto, QuestionDto } from '@/types';
+import type { LessonDetailDto, TestQuestionDto } from '@/types';
 import { PageShell } from '@/components/PageShell';
 import { SectionHeader } from '@/components/SectionHeader';
 import { Button } from '@/components/ui/button';
@@ -23,14 +23,12 @@ import { SkeletonCard } from '@/components/SkeletonCard';
 import { TestQuestionItem } from './_components/TestQuestionItem';
 import { QuestionPickerModal } from './_components/QuestionPickerModal';
 
-type TestQuestionItemType = QuestionDto & { point: number; order: number };
-
 export function TestBuilderPage() {
   const { lessonId } = useParams<{ lessonId: string }>();
   const navigate = useNavigate();
 
   const [testId, setTestId] = useState<string | null>(null);
-  const [questions, setQuestions] = useState<TestQuestionItemType[]>([]);
+  const [questions, setQuestions] = useState<TestQuestionDto[]>([]);
   const [showPicker, setShowPicker] = useState(false);
   const [statement, setStatement] = useState('');
   const [timeLimit, setTimeLimit] = useState(1800); // 30 min default
@@ -48,9 +46,7 @@ export function TestBuilderPage() {
         setTestId(r.data.test.testId);
         setStatement(r.data.test.statement || '');
         setTimeLimit(r.data.test.timeLimit || 1800);
-        const qr = await api.get<TestQuestionItemType[]>(
-          `/api/tests/${r.data.test.testId}/questions`,
-        );
+        const qr = await api.get<TestQuestionDto[]>(`/api/tests/${r.data.test.testId}/questions`);
         setQuestions(qr.data);
       }
     } catch (err) {
