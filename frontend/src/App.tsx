@@ -11,6 +11,7 @@ import { CourseEditorPage } from './pages/instructor/course-editor';
 import { LessonEditorPage } from './pages/instructor/lesson-editor';
 import { TestTakePage } from '@/pages/test-take';
 import { TestBuilderPage } from './pages/instructor/test-builder';
+import { QuestionBankPage } from './pages/instructor/QuestionBankPage';
 import { GuestRoute } from '@/components/GuestRoute';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { AuthProvider } from './providers/AuthProvider';
@@ -60,10 +61,7 @@ function App() {
                 element={<ProtectedRoute requiredPermission={PERMISSION.MANAGE_OWN_COURSES} />}
               >
                 <Route element={<MainLayout />}>
-                  {/* Thêm các trang instructor ở đây:
-                    <Route path={ROUTES.INSTRUCTOR_DASHBOARD} element={<InstructorDashboard />} />
-                    <Route path={ROUTES.QUESTION_BANK} element={<QuestionBankPage />} />
-                  */}
+                  <Route path={ROUTES.QUESTION_BANK} element={<QuestionBankPage />} />
                   <Route
                     path={ROUTES.INSTRUCTOR_COURSE_EDITOR(':id')}
                     element={<CourseEditorPage />}
