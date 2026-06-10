@@ -1,13 +1,23 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { ROUTES } from '@/lib/routes';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { EmptyState } from '@/components/EmptyState';
-import { MessageSquare } from 'lucide-react';
-import type { CommentDto } from '@/types/comment';
-import { Loader2 } from 'lucide-react';
+import { MessageSquare, Loader2 } from 'lucide-react';
+import type { CommentDto } from '@/types';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 
 interface CommentItemProps {
   comment: CommentDto;
@@ -37,12 +47,24 @@ function CommentItem({
   // Depth check for Reddit-style redirection
   const isDeep = depth >= 5;
 
-  const [isEditable] = useState(() => {
+  const [isEditable, setIsEditable] = useState(() => {
     if (comment.author.id === currentUserId) {
       return Date.now() - new Date(comment.createdAt).getTime() <= 15 * 60 * 1000;
     }
     return false;
   });
+
+  useEffect(() => {
+    if (!isEditable) return;
+    const remaining = 15 * 60 * 1000 - (Date.now() - new Date(comment.createdAt).getTime());
+    if (remaining <= 0) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setIsEditable(false);
+      return;
+    }
+    const timer = setTimeout(() => setIsEditable(false), remaining);
+    return () => clearTimeout(timer);
+  }, [isEditable, comment.createdAt]);
 
   const handleReplySubmit = async () => {
     if (!replyContent.trim()) return;
@@ -155,12 +177,30 @@ function CommentItem({
                 </button>
               )}
               {comment.author.id === currentUserId && (
-                <button
-                  onClick={() => onDelete(comment.id)}
-                  className="text-xs font-medium text-destructive/80 hover:text-destructive transition-colors"
-                >
-                  Xóa
-                </button>
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <button className="text-xs font-medium text-destructive/80 hover:text-destructive transition-colors">
+                      Xóa
+                    </button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Xóa bình luận này?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        Bình luận và tất cả phản hồi bên dưới sẽ bị xóa vĩnh viễn. Hành động này không thể hoàn tác.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Hủy</AlertDialogCancel>
+                      <AlertDialogAction
+                        onClick={() => onDelete(comment.id)}
+                        className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                      >
+                        Xóa vĩnh viễn
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
               )}
               <span className="text-xs text-muted-foreground/60 ml-auto">
                 {new Date(comment.createdAt).toLocaleDateString('vi-VN')}
