@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { Clock } from 'lucide-react';
 
 interface TestCountdownProps {
@@ -8,35 +8,44 @@ interface TestCountdownProps {
 
 export function TestCountdown({ initialSeconds, onTimeout }: TestCountdownProps) {
   const [secondsLeft, setSecondsLeft] = useState(initialSeconds);
+  const onTimeoutRef = useRef(onTimeout);
+
+  useEffect(() => {
+    onTimeoutRef.current = onTimeout;
+  }, [onTimeout]);
 
   useEffect(() => {
     // If we've already timed out on init
     if (initialSeconds <= 0) {
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setSecondsLeft(0);
-      onTimeout();
+      onTimeoutRef.current();
       return;
     }
 
     setSecondsLeft(initialSeconds);
-  }, [initialSeconds, onTimeout]);
+  }, [initialSeconds]);
 
   useEffect(() => {
-    if (secondsLeft <= 0) return;
+    if (initialSeconds <= 0) return;
+
+    // Calculate absolute end time to prevent drift if browser throttles setInterval
+    const endTime = Date.now() + initialSeconds * 1000;
 
     const interval = setInterval(() => {
-      setSecondsLeft((prev) => {
-        if (prev <= 1) {
-          clearInterval(interval);
-          onTimeout();
-          return 0;
-        }
-        return prev - 1;
-      });
+      const remaining = Math.round((endTime - Date.now()) / 1000);
+
+      if (remaining <= 0) {
+        clearInterval(interval);
+        setSecondsLeft(0);
+        onTimeoutRef.current();
+      } else {
+        setSecondsLeft(remaining);
+      }
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [secondsLeft, onTimeout]);
+  }, [initialSeconds]);
 
   const m = Math.floor(secondsLeft / 60);
   const s = secondsLeft % 60;

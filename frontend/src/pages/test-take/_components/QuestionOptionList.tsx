@@ -1,6 +1,7 @@
 import { Label } from '@/components/ui/label';
 
 interface QuestionOptionListProps {
+  questionId: string;
   choices: string[];
   isSingleChoice: boolean;
   selectedAnswers: number[];
@@ -8,6 +9,7 @@ interface QuestionOptionListProps {
 }
 
 export function QuestionOptionList({
+  questionId,
   choices,
   isSingleChoice,
   selectedAnswers,
@@ -46,8 +48,8 @@ export function QuestionOptionList({
             <div className="flex h-5 items-center">
               <input
                 type={isSingleChoice ? 'radio' : 'checkbox'}
-                name={isSingleChoice ? 'question-options' : `option-${index}`}
-                className={`w-4 h-4 text-primary bg-background border-input ring-offset-background focus:ring-2 focus:ring-ring focus:ring-offset-2 ${
+                name={isSingleChoice ? `question-${questionId}` : `option-${questionId}-${index}`}
+                className={`w-4 h-4 accent-primary text-primary bg-background border-input ring-offset-background focus:ring-2 focus:ring-ring focus:ring-offset-2 ${
                   isSingleChoice ? 'rounded-full' : 'rounded-sm'
                 }`}
                 checked={isSelected}

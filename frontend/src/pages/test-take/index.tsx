@@ -199,6 +199,7 @@ export function TestTakePage() {
                 </CardHeader>
                 <CardContent className="pt-6">
                   <QuestionOptionList
+                    questionId={q.id}
                     choices={q.choices}
                     isSingleChoice={q.isSingleChoice}
                     selectedAnswers={answers[q.id] || []}
