@@ -9,6 +9,7 @@ import { ProfilePage } from '@/pages/profile';
 import { LessonPage } from '@/pages/lessons';
 import { CourseEditorPage } from './pages/instructor/course-editor';
 import { LessonEditorPage } from './pages/instructor/lesson-editor';
+import { TestTakePage } from '@/pages/test-take';
 import { TestBuilderPage } from './pages/instructor/test-builder';
 import { GuestRoute } from '@/components/GuestRoute';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
@@ -49,6 +50,7 @@ function App() {
                   <Route path={ROUTES.DASHBOARD} element={<Dashboard />} />
                   <Route path={ROUTES.PROFILE} element={<ProfilePage />} />
                   <Route path={ROUTES.LESSON(':courseId', ':lessonId')} element={<LessonPage />} />
+                  <Route path={ROUTES.TEST_TAKE(':testId')} element={<TestTakePage />} />
                   {/* <Route path={ROUTES.CLASSROOM(':id')} element={<ClassroomPage />} /> */}
                 </Route>
               </Route>
