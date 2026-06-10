@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { toast } from 'sonner';
-import { BookOpen, Edit2, Trash2, Plus, Search, CheckCircle2, XCircle } from 'lucide-react';
+import { BookOpen, Edit2, Trash2, Plus, Search, CheckCircle2, XCircle, ChevronLeft, ChevronRight } from 'lucide-react';
 import { api } from '@/lib/api';
 import type { QuestionDto, PageResponse } from '@/types';
 import { PageShell } from '@/components/PageShell';
@@ -33,6 +33,8 @@ export function QuestionBankPage() {
   const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
+  const [page, setPage] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [editingQuestion, setEditingQuestion] = useState<QuestionDto | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
@@ -45,9 +47,12 @@ export function QuestionBankPage() {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // ── Debounce search ───────────────────────────────────────────
+  // ── Debounce search + reset page ─────────────────────────────
   useEffect(() => {
-    const timer = setTimeout(() => setDebouncedSearch(search), 400);
+    const timer = setTimeout(() => {
+      setDebouncedSearch(search);
+      setPage(0); // Reset về trang đầu khi thay đổi search
+    }, 400);
     return () => clearTimeout(timer);
   }, [search]);
 
@@ -57,15 +62,16 @@ export function QuestionBankPage() {
     setError(null);
     try {
       const res = await api.get<PageResponse<QuestionDto>>('/api/questions', {
-        params: { search: debouncedSearch, size: 50 },
+        params: { search: debouncedSearch, page, size: 20 },
       });
       setQuestions(res.data.content ?? []);
+      setTotalPages(res.data.totalPages ?? 0);
     } catch {
       setError('Không thể tải danh sách câu hỏi. Vui lòng thử lại.');
     } finally {
       setLoading(false);
     }
-  }, [debouncedSearch]);
+  }, [debouncedSearch, page]);
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -204,7 +210,7 @@ export function QuestionBankPage() {
           {!loading && !error && questions.length > 0 && (
             <div className="space-y-4">
               <p className="text-sm text-muted-foreground">
-                {questions.length} câu hỏi
+                {questions.length} câu hỏi trên trang này
                 {debouncedSearch && ` phù hợp với "${debouncedSearch}"`}
               </p>
               {questions.map((q) => (
@@ -219,6 +225,37 @@ export function QuestionBankPage() {
                   onDelete={() => handleDelete(q.id)}
                 />
               ))}
+
+              {/* ── Phân trang ─────────────────────────────────── */}
+              {totalPages > 1 && (
+                <div className="flex items-center justify-center gap-2 pt-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="gap-1"
+                    disabled={page === 0}
+                    onClick={() => setPage((p) => p - 1)}
+                  >
+                    <ChevronLeft className="w-4 h-4" />
+                    Trước
+                  </Button>
+
+                  <span className="text-sm text-muted-foreground px-2">
+                    Trang {page + 1} / {totalPages}
+                  </span>
+
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="gap-1"
+                    disabled={page >= totalPages - 1}
+                    onClick={() => setPage((p) => p + 1)}
+                  >
+                    Sau
+                    <ChevronRight className="w-4 h-4" />
+                  </Button>
+                </div>
+              )}
             </div>
           )}
         </div>

@@ -1,9 +1,8 @@
 import { useState } from 'react';
-import axios from 'axios';
 import { toast } from 'sonner';
 import { Plus, X, Loader2, HelpCircle } from 'lucide-react';
 import { api } from '@/lib/api';
-import type { QuestionDto } from '@/types';
+import type { QuestionDto, ApiError } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -130,8 +129,9 @@ export function QuestionForm({ onSaved, initialData }: QuestionFormProps) {
       }
       onSaved(saved);
     } catch (err: unknown) {
-      if (axios.isAxiosError(err)) {
-        const apiErrors = err.response?.data?.errors ?? {};
+      if (err && typeof err === 'object' && 'response' in err) {
+        const axiosErr = err as { response?: { data?: ApiError } };
+        const apiErrors = axiosErr.response?.data?.errors ?? {};
         if (Object.keys(apiErrors).length > 0) {
           setErrors(apiErrors);
         } else {
