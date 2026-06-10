@@ -1,7 +1,7 @@
 import { useParams, useNavigate } from 'react-router-dom';
 import { PageShell } from '@/components/PageShell';
 import { SectionHeader } from '@/components/SectionHeader';
-import { ArrowLeft, Loader2, MessageSquare } from 'lucide-react';
+import { ArrowLeft, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { CommentThread } from '@/components/CommentThread';
 import { useState, useEffect } from 'react';
@@ -13,7 +13,8 @@ import { useAuth } from '@/contexts/AuthContext';
 export function CommentThreadSinglePage() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const auth = useAuth();
+  const currentUserId = auth?.isAuthenticated ? auth.user.id : undefined;
   const [comment, setComment] = useState<CommentDto | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -65,18 +66,17 @@ export function CommentThreadSinglePage() {
         )}
 
         {!loading && error && (
-          <ErrorState
-            icon={<MessageSquare className="w-12 h-12 text-muted-foreground" />}
-            title="Không tìm thấy"
-            message={error}
-          />
+           <ErrorState 
+             title="Không tìm thấy"
+             message={error} 
+           />
         )}
 
         {!loading && comment && (
           <div className="bg-card rounded-xl p-6 border shadow-sm">
             <CommentThread
               comments={[comment]}
-              currentUserId={user?.id}
+              currentUserId={currentUserId}
               onPostComment={async () => {}} // Placeholder cho luồng xem chi tiết
               onReply={async () => {}}
               onEdit={async () => {}}
