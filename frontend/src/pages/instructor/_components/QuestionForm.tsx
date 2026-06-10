@@ -89,10 +89,26 @@ export function QuestionForm({ onSaved, initialData }: QuestionFormProps) {
     setSaving(true);
     setErrors({});
 
+    // Fix: Loại bỏ các đáp án rỗng và ánh xạ lại index của correctChoices
+    const validChoicesWithOldIndex = choices
+      .map((c, i) => ({ text: c.trim(), oldIndex: i }))
+      .filter((c) => c.text !== '');
+
+    const finalChoices = validChoicesWithOldIndex.map((c) => c.text);
+    const finalCorrectChoices = correctChoices
+      .map((oldIdx) => validChoicesWithOldIndex.findIndex((c) => c.oldIndex === oldIdx))
+      .filter((newIdx) => newIdx !== -1);
+
+    if (finalCorrectChoices.length === 0) {
+      setErrors({ correctChoices: 'Vui lòng chọn ít nhất 1 đáp án đúng không rỗng.' });
+      setSaving(false);
+      return;
+    }
+
     const payload = {
       statement: statement.trim(),
-      choices: choices.map((c) => c.trim()),
-      correctChoices,
+      choices: finalChoices,
+      correctChoices: finalCorrectChoices,
       isSingleChoice,
     };
 

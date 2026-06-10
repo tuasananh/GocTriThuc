@@ -36,6 +36,14 @@ export function QuestionBankPage() {
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [editingQuestion, setEditingQuestion] = useState<QuestionDto | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [isDesktop, setIsDesktop] = useState(window.innerWidth >= 1024);
+
+  // ── Handle screen resize cho Responsive Dialog ───────────────
+  useEffect(() => {
+    const handleResize = () => setIsDesktop(window.innerWidth >= 1024);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   // ── Debounce search ───────────────────────────────────────────
   useEffect(() => {
@@ -112,7 +120,7 @@ export function QuestionBankPage() {
 
       <div className="mt-6 grid gap-6 lg:grid-cols-3">
         {/* ── Panel tạo / sửa câu hỏi ───────────────────────────── */}
-        {(showCreateForm || editingQuestion) && (
+        {(showCreateForm || (editingQuestion && isDesktop)) && (
           <div className="lg:col-span-1">
             <Card className="border-primary/20 shadow-sm sticky top-6">
               <CardHeader className="bg-primary/5 border-b pb-4">
@@ -143,7 +151,11 @@ export function QuestionBankPage() {
         )}
 
         {/* ── Danh sách câu hỏi ──────────────────────────────────── */}
-        <div className={showCreateForm || editingQuestion ? 'lg:col-span-2' : 'lg:col-span-3'}>
+        <div
+          className={
+            showCreateForm || (editingQuestion && isDesktop) ? 'lg:col-span-2' : 'lg:col-span-3'
+          }
+        >
           {/* Search bar */}
           <div className="relative mb-4">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -213,7 +225,10 @@ export function QuestionBankPage() {
       </div>
 
       {/* Edit modal (khi màn nhỏ, hiển thị dialog thay vì panel bên cạnh) */}
-      <Dialog open={!!editingQuestion} onOpenChange={(open) => !open && setEditingQuestion(null)}>
+      <Dialog
+        open={!!editingQuestion && !isDesktop}
+        onOpenChange={(open) => !open && setEditingQuestion(null)}
+      >
         <DialogContent className="sm:max-w-lg">
           <DialogHeader>
             <DialogTitle>Sửa câu hỏi</DialogTitle>
