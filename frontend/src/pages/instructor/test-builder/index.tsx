@@ -41,21 +41,13 @@ export function TestBuilderPage() {
     setLoading(true);
     api
       .get<LessonDetailDto>(`/api/lessons/${lessonId}`)
-      .then((r) => {
-        // Assume we can get courseId from somewhere to navigate back, but LessonDetailDto might not have it directly.
-        // We'll use window.history.back() or similar if courseId is missing, but let's check if we can get it.
-        // Actually, instructor pages usually have courseId. If not, we just navigate back.
+      .then(async (r) => {
         if (r.data.test) {
           setTestId(r.data.test.testId);
           setStatement(r.data.test.statement || '');
           setTimeLimit(r.data.test.timeLimit || 1800);
-          return api.get<TestQuestionItemType[]>(`/api/tests/${r.data.test.testId}/questions`);
-        }
-        return { data: [] };
-      })
-      .then((r) => {
-        if (r && r.data) {
-          setQuestions(r.data);
+          const qr = await api.get<TestQuestionItemType[]>(`/api/tests/${r.data.test.testId}/questions`);
+          setQuestions(qr.data);
         }
       })
       .catch((err) => {
@@ -162,10 +154,11 @@ export function TestBuilderPage() {
               <EmptyState
                 title="Chưa có câu hỏi nào"
                 description="Hãy thêm câu hỏi từ Ngân hàng đề để bắt đầu xây dựng bài kiểm tra."
-                action={{
-                  label: 'Thêm câu hỏi ngay',
-                  onClick: () => setShowPicker(true),
-                }}
+                action={
+                  <Button onClick={() => setShowPicker(true)}>
+                    Thêm câu hỏi ngay
+                  </Button>
+                }
               />
             </div>
           ) : (
