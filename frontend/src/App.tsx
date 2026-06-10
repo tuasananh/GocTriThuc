@@ -10,6 +10,7 @@ import { LessonPage } from '@/pages/lessons';
 import { CourseEditorPage } from './pages/instructor/course-editor';
 import { LessonEditorPage } from './pages/instructor/lesson-editor';
 import { TestTakePage } from '@/pages/test-take';
+import { TestBuilderPage } from './pages/instructor/test-builder';
 import { GuestRoute } from '@/components/GuestRoute';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { AuthProvider } from './providers/AuthProvider';
@@ -70,6 +71,10 @@ function App() {
                   <Route
                     path={ROUTES.INSTRUCTOR_LESSON_EDITOR(':lessonId')}
                     element={<LessonEditorPage />}
+                  />
+                  <Route
+                    path={ROUTES.INSTRUCTOR_TEST_BUILDER(':lessonId')}
+                    element={<TestBuilderPage />}
                   />
                 </Route>
               </Route>

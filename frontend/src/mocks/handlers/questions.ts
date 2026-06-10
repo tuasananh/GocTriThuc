@@ -89,6 +89,12 @@ export const questionHandlers = [
     return new HttpResponse(null, { status: 201 });
   }),
 
+  // ── DELETE /api/tests/:testId/questions/:questionId ─────────
+  http.delete('/api/tests/:testId/questions/:questionId', async () => {
+    await delay(200);
+    return new HttpResponse(null, { status: 204 });
+  }),
+
   // ── POST /api/tests/:id/sessions (start quiz) ─────────────
   http.post('/api/tests/:testId/sessions', async ({ params }) => {
     await delay(300);
