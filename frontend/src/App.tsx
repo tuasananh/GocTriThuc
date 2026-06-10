@@ -11,6 +11,7 @@ import { CourseEditorPage } from './pages/instructor/course-editor';
 import { LessonEditorPage } from './pages/instructor/lesson-editor';
 import { TestTakePage } from '@/pages/test-take';
 import { TestBuilderPage } from './pages/instructor/test-builder';
+import { CommentThreadSinglePage } from '@/pages/comments';
 import { GuestRoute } from '@/components/GuestRoute';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { AuthProvider } from './providers/AuthProvider';
@@ -51,6 +52,7 @@ function App() {
                   <Route path={ROUTES.PROFILE} element={<ProfilePage />} />
                   <Route path={ROUTES.LESSON(':courseId', ':lessonId')} element={<LessonPage />} />
                   <Route path={ROUTES.TEST_TAKE(':testId')} element={<TestTakePage />} />
+                  <Route path="/comments/thread/:id" element={<CommentThreadSinglePage />} />
                   {/* <Route path={ROUTES.CLASSROOM(':id')} element={<ClassroomPage />} /> */}
                 </Route>
               </Route>

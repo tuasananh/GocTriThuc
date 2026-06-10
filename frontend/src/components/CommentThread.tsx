@@ -6,6 +6,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { EmptyState } from '@/components/EmptyState';
+import { cn } from '@/lib/utils';
 import { MessageSquare, Loader2 } from 'lucide-react';
 import type { CommentDto } from '@/types';
 import {
@@ -104,7 +105,7 @@ function CommentItem({
   };
 
   return (
-    <div className={`mt-4 ${depth > 0 ? 'pl-4 border-l-2 border-border/50' : ''}`}>
+    <div className={cn('mt-4', depth > 0 && 'pl-4 border-l-2 border-border/50')}>
       <div className="flex gap-3 items-start">
         <Avatar className="h-8 w-8 mt-1">
           <AvatarImage src={comment.author.avatarUrl || ''} />
