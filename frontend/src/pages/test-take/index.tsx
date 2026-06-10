@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { api } from '@/lib/api';
 import { ROUTES } from '@/lib/routes';
-import type { QuestionStudentDto, TestSessionDto } from '@/types';
+import type { QuestionStudentDto, TestSessionDto, TestDto } from '@/types';
 import { PageShell } from '@/components/PageShell';
 import { ErrorState } from '@/components/ErrorState';
 import { Button } from '@/components/ui/button';
@@ -12,17 +12,11 @@ import { Loader2, ArrowRight, ArrowLeft } from 'lucide-react';
 import { TestCountdown } from './_components/TestCountdown';
 import { QuestionOptionList } from './_components/QuestionOptionList';
 
-interface TestInfo {
-  id: string;
-  statement: string;
-  timeLimit: number;
-}
-
 export function TestTakePage() {
   const { testId } = useParams<{ testId: string }>();
   const navigate = useNavigate();
 
-  const [testInfo, setTestInfo] = useState<TestInfo | null>(null);
+  const [testInfo, setTestInfo] = useState<TestDto | null>(null);
   const [session, setSession] = useState<TestSessionDto | null>(null);
   const [questions, setQuestions] = useState<QuestionStudentDto[]>([]);
   const [answers, setAnswers] = useState<Record<string, number[]>>({});
@@ -38,7 +32,7 @@ export function TestTakePage() {
     try {
       // Gọi 3 API đồng thời như trong tài liệu thiết kế Day 9
       const [testRes, sessionRes, qRes] = await Promise.all([
-        api.get<TestInfo>(`/api/tests/${testId}`),
+        api.get<TestDto>(`/api/tests/${testId}`),
         api.post<TestSessionDto>(`/api/tests/${testId}/sessions`),
         api.get<QuestionStudentDto[]>(`/api/tests/${testId}/questions`),
       ]);

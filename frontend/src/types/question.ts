@@ -2,6 +2,12 @@
 // Question & Test DTOs
 // ============================================================
 
+export interface TestDto {
+  id: string;
+  statement: string;
+  timeLimit: number;
+}
+
 /** Câu hỏi nhìn từ phía Instructor (bao gồm đáp án đúng) */
 export interface QuestionDto {
   id: string;
