@@ -65,10 +65,12 @@ public class CourseController {
       @RequestParam(value = "search", required = false) String search,
       @RequestParam(value = "visibility", required = false) CourseVisibility visibility,
       @RequestParam(value = "own", required = false) Boolean own,
+      @RequestParam(value = "enrolled", required = false) Boolean enrolled,
       @PageableDefault() Pageable pageable) {
 
     validateSort(pageable);
-    Page<Course> courses = courseService.listCourses(principal, search, visibility, own, pageable);
+    Page<Course> courses =
+        courseService.listCourses(principal, search, visibility, own, enrolled, pageable);
     Page<CourseResponse> response = courses.map(CourseResponse::from);
     return ResponseEntity.ok(response);
   }

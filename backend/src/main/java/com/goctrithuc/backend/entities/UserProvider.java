@@ -2,6 +2,7 @@ package com.goctrithuc.backend.entities;
 
 import jakarta.persistence.*;
 import java.time.ZonedDateTime;
+import org.hibernate.annotations.Generated;
 
 @Entity
 @Table(
@@ -24,9 +25,11 @@ public class UserProvider {
   private String providerUserId;
 
   @Column(name = "created_at", nullable = false, updatable = false, insertable = false)
+  @Generated
   private ZonedDateTime createdAt;
 
   @Column(name = "updated_at", nullable = false, insertable = false)
+  @Generated
   private ZonedDateTime updatedAt;
 
   protected UserProvider() {}
