@@ -34,4 +34,11 @@ public interface TestQuestionRepository extends JpaRepository<TestQuestionEntity
           + "JOIN McQuestionEntity mc ON mc.id = q.id "
           + "WHERE tq.id.testId = :testId ORDER BY tq.order ASC")
   List<Object[]> findWithDetailsByTestId(@Param("testId") Long testId);
+
+  @Query(
+      "SELECT tq, q, mc FROM TestQuestionEntity tq "
+          + "JOIN QuestionEntity q ON tq.id.questionId = q.id "
+          + "JOIN McQuestionEntity mc ON mc.id = tq.id.questionId "
+          + "WHERE tq.id.testId IN :testIds ORDER BY tq.id.testId, tq.order ASC")
+  List<Object[]> findWithDetailsByTestIds(@Param("testIds") List<Long> testIds);
 }

@@ -1,5 +1,6 @@
 package com.goctrithuc.backend.services;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.*;
 
@@ -79,5 +80,30 @@ public class QuizScoringServiceTest {
     assertThatThrownBy(() -> service.validateAnswerBounds(1L, null))
         .isInstanceOf(ResponseStatusException.class)
         .hasMessageContaining("Choices selection cannot be null");
+  }
+
+  @Test
+  void calculateResults_batchesQuestionsAndAnswersAcrossSessions() {
+    LessonTestEntity firstTest = mock(LessonTestEntity.class);
+    LessonTestEntity secondTest = mock(LessonTestEntity.class);
+    when(firstTest.getId()).thenReturn(10L);
+    when(secondTest.getId()).thenReturn(20L);
+
+    TestSessionEntity firstSession = mock(TestSessionEntity.class);
+    TestSessionEntity secondSession = mock(TestSessionEntity.class);
+    when(firstSession.getId()).thenReturn(100L);
+    when(firstSession.getTest()).thenReturn(firstTest);
+    when(secondSession.getId()).thenReturn(200L);
+    when(secondSession.getTest()).thenReturn(secondTest);
+    when(testQuestionRepo.findWithDetailsByTestIds(List.of(10L, 20L))).thenReturn(List.of());
+    when(testSessionAnswerRepository.findBySessionIds(List.of(100L, 200L))).thenReturn(List.of());
+
+    var results = service.calculateResults(List.of(firstSession, secondSession));
+
+    assertThat(results).containsOnlyKeys(100L, 200L);
+    verify(testQuestionRepo, times(1)).findWithDetailsByTestIds(List.of(10L, 20L));
+    verify(testSessionAnswerRepository, times(1)).findBySessionIds(List.of(100L, 200L));
+    verify(testQuestionRepo, never()).findWithDetailsByTestId(anyLong());
+    verify(testSessionAnswerRepository, never()).findBySessionId(anyLong());
   }
 }

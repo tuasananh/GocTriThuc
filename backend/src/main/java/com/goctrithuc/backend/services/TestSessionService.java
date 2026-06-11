@@ -6,6 +6,8 @@ import com.goctrithuc.backend.repositories.*;
 import java.time.ZonedDateTime;
 import java.util.*;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -227,5 +229,30 @@ public class TestSessionService {
 
     List<TestSessionEntity> sessions = testSessionRepo.findWithUserByTestId(testId);
     return sessions.stream().map(TestSessionSummaryResponse::from).toList();
+  }
+
+  @Transactional(readOnly = true)
+  public Page<MyTestSessionResponse> getMyTestSessions(Long userId, Pageable pageable) {
+    Page<TestSessionEntity> sessions =
+        testSessionRepo.findCompletedWithTestAndCourseByUserId(userId, pageable);
+    Map<Long, TestResultResponse> results =
+        quizScoringService.calculateResults(sessions.getContent());
+
+    return sessions.map(
+        session -> {
+          TestResultResponse result = results.get(session.getId());
+          LessonEntity lesson = session.getTest().getLesson();
+          Course course = lesson.getModule().getCourse();
+          return new MyTestSessionResponse(
+              session.getId(),
+              session.getTest().getId(),
+              lesson.getTitle(),
+              course.getTitle(),
+              course.getId(),
+              result.score(),
+              result.correctCount(),
+              result.totalQuestions(),
+              session.getSubmittedAt());
+        });
   }
 }

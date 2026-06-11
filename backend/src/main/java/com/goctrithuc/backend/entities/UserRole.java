@@ -9,6 +9,7 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.MapsId;
 import jakarta.persistence.Table;
 import java.time.ZonedDateTime;
+import org.hibernate.annotations.Generated;
 
 @Entity
 @Table(name = "user_role")
@@ -27,9 +28,11 @@ public class UserRole {
   private Role role;
 
   @Column(name = "created_at", nullable = false, insertable = false, updatable = false)
+  @Generated
   private ZonedDateTime createdAt;
 
   @Column(name = "updated_at", nullable = false, insertable = false, updatable = false)
+  @Generated
   private ZonedDateTime updatedAt;
 
   protected UserRole() {}

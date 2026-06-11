@@ -3,6 +3,7 @@ package com.goctrithuc.backend.entities;
 import jakarta.persistence.*;
 import java.time.ZonedDateTime;
 import java.util.Map;
+import org.hibernate.annotations.Generated;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
@@ -27,9 +28,11 @@ public class LessonTestEntity {
   private Map<String, Object> settings;
 
   @Column(name = "created_at", nullable = false, insertable = false, updatable = false)
+  @Generated
   private ZonedDateTime createdAt;
 
   @Column(name = "updated_at", nullable = false, insertable = false)
+  @Generated
   private ZonedDateTime updatedAt;
 
   protected LessonTestEntity() {}

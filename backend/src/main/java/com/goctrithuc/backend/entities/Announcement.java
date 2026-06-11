@@ -5,25 +5,25 @@ import java.time.ZonedDateTime;
 import org.hibernate.annotations.Generated;
 
 @Entity
-@Table(name = "questions")
-public class QuestionEntity {
+@Table(name = "announcements")
+public class Announcement {
 
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
 
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "course_id", nullable = false)
+  private Course course;
+
   @Column(name = "author_id", nullable = false)
   private Long authorId;
 
   @Column(nullable = false)
-  private String statement;
+  private String title;
 
-  @Column(name = "question_type", nullable = false)
-  @Convert(converter = QuestionTypeJpaConverter.class)
-  private QuestionType questionType;
-
-  @OneToOne(mappedBy = "question", fetch = FetchType.LAZY, cascade = CascadeType.REMOVE)
-  private McQuestionEntity mcQuestion;
+  @Column(nullable = false)
+  private String content;
 
   @Column(name = "created_at", nullable = false, insertable = false, updatable = false)
   @Generated
@@ -33,16 +33,25 @@ public class QuestionEntity {
   @Generated
   private ZonedDateTime updatedAt;
 
-  protected QuestionEntity() {}
+  protected Announcement() {}
 
-  public QuestionEntity(Long authorId, String statement, QuestionType questionType) {
+  public Announcement(Course course, Long authorId, String title, String content) {
+    this.course = course;
     this.authorId = authorId;
-    this.statement = statement;
-    this.questionType = questionType;
+    this.title = title;
+    this.content = content;
   }
 
   public Long getId() {
     return id;
+  }
+
+  public Course getCourse() {
+    return course;
+  }
+
+  public void setCourse(Course course) {
+    this.course = course;
   }
 
   public Long getAuthorId() {
@@ -53,20 +62,20 @@ public class QuestionEntity {
     this.authorId = authorId;
   }
 
-  public String getStatement() {
-    return statement;
+  public String getTitle() {
+    return title;
   }
 
-  public void setStatement(String statement) {
-    this.statement = statement;
+  public void setTitle(String title) {
+    this.title = title;
   }
 
-  public QuestionType getQuestionType() {
-    return questionType;
+  public String getContent() {
+    return content;
   }
 
-  public void setQuestionType(QuestionType questionType) {
-    this.questionType = questionType;
+  public void setContent(String content) {
+    this.content = content;
   }
 
   public ZonedDateTime getCreatedAt() {
@@ -75,9 +84,5 @@ public class QuestionEntity {
 
   public ZonedDateTime getUpdatedAt() {
     return updatedAt;
-  }
-
-  public McQuestionEntity getMcQuestion() {
-    return mcQuestion;
   }
 }

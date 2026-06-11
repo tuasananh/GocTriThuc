@@ -77,6 +77,20 @@ export const questionHandlers = [
     return new HttpResponse(null, { status: 204 });
   }),
 
+  // ── PUT /api/questions/:id ─────────────────────────────────────────────────
+  http.put('/api/questions/:id', async ({ request, params }) => {
+    await delay(300);
+    const body = (await request.json()) as Record<string, unknown>;
+    const existing = mockQuestions.find((q) => q.id === params.id);
+    return HttpResponse.json({
+      ...(existing ?? {}),
+      id: params.id,
+      ...body,
+      questionType: 'multiple_choice',
+      updatedAt: new Date().toISOString(),
+    });
+  }),
+
   // ── GET /api/tests/:id/questions ───────────────────────────
   http.get('/api/tests/:testId/questions', async () => {
     await delay(300);

@@ -2,6 +2,7 @@ package com.goctrithuc.backend.entities;
 
 import jakarta.persistence.*;
 import java.time.ZonedDateTime;
+import org.hibernate.annotations.Generated;
 
 @Entity
 @Table(name = "files")
@@ -30,9 +31,11 @@ public class File {
   private Long sizeBytes;
 
   @Column(name = "created_at", nullable = false, updatable = false, insertable = false)
+  @Generated
   private ZonedDateTime createdAt;
 
   @Column(name = "updated_at", nullable = false, insertable = false)
+  @Generated
   private ZonedDateTime updatedAt;
 
   protected File() {}
