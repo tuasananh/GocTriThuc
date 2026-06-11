@@ -84,7 +84,7 @@ export const announcementsHandlers = [
     const { id } = params;
     const allComments = getComments();
 
-    // Lá»c ra cÃ¡c comment thuá»™c vá» announcement nÃ y
+    // Lá»c ra cÃ¡c comment thuá»™c vá» announcement nÃ y
     const filtered = allComments.filter((c) => c.referenceId === id);
 
     // Dá»±ng cÃ¢y (tree)
