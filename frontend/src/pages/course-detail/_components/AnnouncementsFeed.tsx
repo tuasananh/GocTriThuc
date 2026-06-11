@@ -20,7 +20,7 @@ export function AnnouncementsFeed({ courseId, isAuthor }: { courseId: string; is
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const auth = useAuth();
-  const currentUserId = auth?.user?.id;
+  const currentUserId = auth && auth.isAuthenticated ? auth.user.id : undefined;
 
   const fetchAnnouncements = useCallback(async () => {
     setLoading(true);
