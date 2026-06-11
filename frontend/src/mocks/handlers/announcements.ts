@@ -33,9 +33,7 @@ export const announcementsHandlers = [
     const allAnnouncements = getAnnouncements();
     const filtered = allAnnouncements.filter((a) => a.courseId === courseId);
     // Sort desc by createdAt
-    filtered.sort(
-      (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
-    );
+    filtered.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
     const start = page * size;
     const paginated = filtered.slice(start, start + size);
@@ -97,9 +95,7 @@ export const announcementsHandlers = [
           ...c,
           replies: buildTree(c.id),
         }))
-        .sort(
-          (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
-        );
+        .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
     };
 
     const roots = buildTree(null);
