@@ -80,10 +80,11 @@ const insertMathBlockItem = (editor: typeof schema.BlockNoteEditor) => ({
 
 interface RichTextEditorProps {
   storageKey?: string;
+  initialHtml?: string;
   onChange?: (editor: typeof schema.BlockNoteEditor) => void;
 }
 
-export function RichTextEditor({ storageKey, onChange }: RichTextEditorProps) {
+export function RichTextEditor({ storageKey, initialHtml, onChange }: RichTextEditorProps) {
   const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastSaveTimeRef = useRef<number>(0);
 
@@ -112,6 +113,26 @@ export function RichTextEditor({ storageKey, onChange }: RichTextEditorProps) {
     schema,
     initialContent,
   });
+
+  useEffect(() => {
+    let cancelled = false;
+    async function loadHtml() {
+      if (initialHtml && (!storageKey || !localStorage.getItem(storageKey))) {
+        try {
+          const blocks = await editor.tryParseHTMLToBlocks(initialHtml);
+          if (!cancelled) {
+            editor.replaceBlocks(editor.document, blocks);
+          }
+        } catch (e) {
+          console.error('Failed to parse initialHtml', e);
+        }
+      }
+    }
+    loadHtml();
+    return () => {
+      cancelled = true;
+    };
+  }, [initialHtml, editor, storageKey]);
 
   const saveToStorage = useCallback(() => {
     if (!storageKey) return;

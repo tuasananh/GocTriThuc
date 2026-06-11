@@ -6,7 +6,9 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Trash2, CheckCircle2 } from 'lucide-react';
+import { Trash2, CheckCircle2 } from 'lucide-react';
 import type { QuestionDto } from '@/types';
+import { RichTextViewer } from '@/components/rich-text-editor/RichTextViewer';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -80,9 +82,9 @@ export function TestQuestionItem({
                 </Badge>
               )}
             </div>
-            <h4 className="font-medium text-foreground whitespace-pre-wrap">
-              {question.statement}
-            </h4>
+            <div className="font-medium text-foreground whitespace-pre-wrap">
+              <RichTextViewer htmlContent={question.statement} />
+            </div>
           </div>
           <AlertDialog>
             <AlertDialogTrigger asChild>

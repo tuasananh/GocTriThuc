@@ -7,6 +7,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import { RichTextViewer } from '@/components/rich-text-editor/RichTextViewer';
 
 export function QuestionPickerModal({
   open,
@@ -127,7 +128,12 @@ export function QuestionPickerModal({
                         </Badge>
                       )}
                     </div>
-                    <p className="font-medium text-sm line-clamp-2 mb-2">{q.statement}</p>
+                    <div className="max-h-[3.5rem] overflow-hidden relative mb-2">
+                      <div className="font-medium text-sm">
+                        <RichTextViewer htmlContent={q.statement} />
+                      </div>
+                      <div className="absolute bottom-0 left-0 right-0 h-4 bg-gradient-to-t from-card to-transparent pointer-events-none" />
+                    </div>
                     <div className="text-xs text-muted-foreground space-y-1">
                       {q.choices.slice(0, 2).map((choice, i) => (
                         <div key={i} className="flex items-center gap-1.5 truncate">

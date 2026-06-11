@@ -12,6 +12,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Loader2, ArrowRight, ArrowLeft } from 'lucide-react';
 import { TestCountdown } from './_components/TestCountdown';
 import { QuestionOptionList } from './_components/QuestionOptionList';
+import { RichTextViewer } from '@/components/rich-text-editor/RichTextViewer';
 
 export function TestTakePage() {
   const { testId } = useParams<{ testId: string }>();
@@ -191,10 +192,10 @@ export function TestTakePage() {
             {questions.map((q, index) => (
               <Card key={q.id} id={`question-${q.id}`} className="scroll-mt-24 shadow-sm">
                 <CardHeader className="bg-muted/30 border-b pb-4">
-                  <CardTitle className="text-base flex items-start gap-2 leading-relaxed">
-                    <span className="font-bold text-primary shrink-0">Câu {index + 1}:</span>
-                    {q.statement}
-                  </CardTitle>
+                  <div className="flex items-start gap-2">
+                    <span className="font-bold text-primary shrink-0 mt-1">Câu {index + 1}:</span>
+                    <RichTextViewer htmlContent={q.statement} className="flex-1" />
+                  </div>
                 </CardHeader>
                 <CardContent className="pt-6">
                   <QuestionOptionList
