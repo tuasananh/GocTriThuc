@@ -1,4 +1,4 @@
-import { http, HttpResponse } from 'msw';
+﻿import { http, HttpResponse } from 'msw';
 import type { AnnouncementDto, CommentDto, PageResponse } from '@/types';
 
 // In-memory store cho MSW
@@ -23,7 +23,7 @@ const saveComments = (data: MockCommentDto[]) => {
 };
 
 export const announcementsHandlers = [
-  // Lấy danh sách thông báo của khóa học
+  // Láº¥y danh sÃ¡ch thÃ´ng bÃ¡o cá»§a khÃ³a há»c
   http.get('/api/courses/:courseId/announcements', ({ params, request }) => {
     const { courseId } = params;
     const url = new URL(request.url);
@@ -51,7 +51,7 @@ export const announcementsHandlers = [
     return HttpResponse.json(response);
   }),
 
-  // Đăng thông báo mới
+  // ÄÄƒng thÃ´ng bÃ¡o má»›i
   http.post('/api/courses/:courseId/announcements', async ({ params, request }) => {
     const { courseId } = params;
     const data = (await request.json()) as { title: string; content: string };
@@ -66,7 +66,7 @@ export const announcementsHandlers = [
         id: 'user-1',
         email: 'instructor@example.com',
         username: 'instructor1',
-        displayName: 'Giảng viên',
+        displayName: 'Giáº£ng viÃªn',
         role: 'teacher',
       },
       createdAt: new Date().toISOString(),
@@ -79,15 +79,15 @@ export const announcementsHandlers = [
     return HttpResponse.json(newAnnouncement, { status: 201 });
   }),
 
-  // Lấy bình luận của thông báo
+  // Láº¥y bÃ¬nh luáº­n cá»§a thÃ´ng bÃ¡o
   http.get('/api/announcements/:id/comments', ({ params }) => {
     const { id } = params;
     const allComments = getComments();
 
-    // Lọc ra các comment thuộc về announcement này
+    // Lá»c ra cÃ¡c comment thuá»™c vá» announcement nÃ y
     const filtered = allComments.filter((c) => c.referenceId === id);
 
-    // Dựng cây (tree)
+    // Dá»±ng cÃ¢y (tree)
     const buildTree = (parentId: string | null): CommentDto[] => {
       return filtered
         .filter((c) => c.parentId === parentId)
@@ -102,7 +102,7 @@ export const announcementsHandlers = [
     return HttpResponse.json(roots);
   }),
 
-  // Thêm bình luận cho thông báo
+  // ThÃªm bÃ¬nh luáº­n cho thÃ´ng bÃ¡o
   http.post('/api/announcements/:id/comments', async ({ params, request }) => {
     const { id } = params;
     const data = (await request.json()) as { content: string; parentId?: string };
@@ -112,13 +112,13 @@ export const announcementsHandlers = [
       id: `comment-${Date.now()}`,
       referenceId: id as string,
       content: data.content,
-      parentId: data.parentId || null,
+      parentId: data.parentId ?? null,
       replies: [],
       author: {
         id: 'user-1',
         email: 'user@example.com',
         username: 'user1',
-        displayName: 'Người dùng',
+        displayName: 'NgÆ°á»i dÃ¹ng',
         role: 'student',
       },
       createdAt: new Date().toISOString(),
@@ -132,7 +132,7 @@ export const announcementsHandlers = [
     return HttpResponse.json(newComment, { status: 201 });
   }),
 
-  // Sửa bình luận
+  // Sá»­a bÃ¬nh luáº­n
   http.put('/api/announcements/comments/:commentId', async ({ params, request }) => {
     const { commentId } = params;
     const data = (await request.json()) as { content: string };
@@ -152,12 +152,12 @@ export const announcementsHandlers = [
     return HttpResponse.json(allComments[commentIndex]);
   }),
 
-  // Xóa bình luận (cascade)
+  // XÃ³a bÃ¬nh luáº­n (cascade)
   http.delete('/api/announcements/comments/:commentId', ({ params }) => {
     const { commentId } = params;
     let allComments = getComments();
 
-    // Tìm tất cả children cần xóa (cascade)
+    // TÃ¬m táº¥t cáº£ children cáº§n xÃ³a (cascade)
     const toDelete = new Set<string>();
     toDelete.add(commentId as string);
 
