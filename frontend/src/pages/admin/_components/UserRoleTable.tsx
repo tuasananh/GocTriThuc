@@ -118,7 +118,7 @@ export const UserRoleTable = () => {
               <TableCell>
                 <div className="flex gap-1 flex-wrap">
                   {user.roles.map((r) => (
-                    <RoleBadge key={r} roles={[r]} />
+                    <RoleBadge key={r} role={r} />
                   ))}
                 </div>
               </TableCell>
