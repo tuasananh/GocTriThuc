@@ -136,7 +136,42 @@ export const courseHandlers = [
 
   // ── POST /api/courses/:id/access-requests ──────────────────
   http.post('/api/courses/:id/access-requests', async () => {
+    await delay(500);
+    return HttpResponse.json({}, { status: 201 });
+  }),
+
+  // ── GET /api/courses/:id/access-requests ───────────────────
+  http.get('/api/courses/:id/access-requests', async ({ params }) => {
     await delay(300);
-    return new HttpResponse(null, { status: 201 });
+    return HttpResponse.json([
+      {
+        userId: '2',
+        courseId: params.id as string,
+        userDisplayName: 'Học viên A',
+        requestedAt: '2026-06-01T10:00:00Z',
+      },
+    ]);
+  }),
+
+  // ── POST /api/courses/:courseId/access-requests/:userId/approve ──
+  http.post('/api/courses/:courseId/access-requests/:userId/approve', async () => {
+    await delay(300);
+    return HttpResponse.json({}, { status: 201 });
+  }),
+
+  // ── DELETE /api/courses/:courseId/access-requests/:userId ──
+  http.delete('/api/courses/:courseId/access-requests/:userId', async () => {
+    await delay(300);
+    return HttpResponse.json({}, { status: 204 });
+  }),
+
+  // ── GET /api/courses/:id/progress ────────────────────────────
+  http.get('/api/courses/:id/progress', async () => {
+    await delay(300);
+    return HttpResponse.json({
+      completedLessons: 4,
+      totalLessons: 10,
+      percent: 40,
+    });
   }),
 ];

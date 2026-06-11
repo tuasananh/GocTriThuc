@@ -11,6 +11,7 @@ export type {
   UpdateCourseRequest,
   AccessStatus,
   AccessStatusResponse,
+  AccessRequestDto,
   LessonType,
   ModuleDto,
   LessonDto,
@@ -37,3 +38,4 @@ export type {
 } from './comment';
 export type { FileDto } from './file';
 export { fileServeUrl } from './file';
+export type { AdminUserResponse } from './admin';
