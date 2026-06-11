@@ -153,4 +153,26 @@ export const questionHandlers = [
       })),
     });
   }),
+
+  // ── GET /api/sessions/:sessionId/result ─────────────────────────
+  http.get('/api/sessions/:sessionId/result', async ({ params }) => {
+    await delay(500);
+    return HttpResponse.json({
+      sessionId: params.sessionId as string,
+      totalScore: 8,
+      maxScore: 10,
+      percent: 80,
+      duration: 540,
+      answers: mockQuestions.map((q, i) => ({
+        questionId: q.id,
+        statement: q.statement,
+        choices: q.choices,
+        correctChoices: q.correctChoices,
+        // Make the second question incorrect for demonstration purposes
+        studentAnswer: i === 1 ? [q.choices.length > 2 ? 2 : 0] : [q.correctChoices[0]],
+        isCorrect: i !== 1,
+        point: i === 1 ? 0 : 1,
+      })),
+    });
+  }),
 ];
