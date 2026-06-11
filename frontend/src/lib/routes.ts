@@ -35,5 +35,10 @@ export const ROUTES = {
   ADMIN_USERS: '/admin/users',
 
   // ── Comments ───────────────────────────────────
-  COMMENT_THREAD: (commentId: string) => `/comments/thread/${commentId}`,
+  COMMENT_THREAD: (type: 'lesson' | 'announcement', contextId: string, commentId: string) =>
+    `/comments/thread/${type}/${contextId}/${commentId}`,
+} as const;
+
+export const ROUTE_PATTERNS = {
+  COMMENT_THREAD: '/comments/thread/:type/:contextId/:commentId',
 } as const;
