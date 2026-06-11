@@ -4,14 +4,15 @@ import { SectionHeader } from '@/components/SectionHeader';
 import { ArrowLeft, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { CommentThread } from '@/components/CommentThread';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { api } from '@/lib/api';
 import type { CommentDto } from '@/types';
 import { ErrorState } from '@/components/ErrorState';
 import { useAuth } from '@/contexts/AuthContext';
+import { toast } from 'sonner';
 
 export function CommentThreadSinglePage() {
-  const { id } = useParams();
+  const { type, contextId, commentId } = useParams();
   const navigate = useNavigate();
   const auth = useAuth();
   const currentUserId = auth?.isAuthenticated ? auth.user.id : undefined;
@@ -19,24 +20,75 @@ export function CommentThreadSinglePage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    // Note: This endpoint might not be fully implemented in MSW yet,
-    // so we handle errors gracefully to avoid breaking the UI.
-    const fetchComment = async () => {
-      try {
-        const res = await api.get(`/api/comments/${id}`);
-        setComment(res.data);
-      } catch {
-        setError('Không thể tải nhánh bình luận hoặc nhánh không tồn tại.');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    if (id) {
-      fetchComment();
+  const fetchComment = useCallback(async () => {
+    if (!type || !contextId || !commentId) return;
+    try {
+      const res = await api.get(`/api/${type}s/${contextId}/comments/${commentId}`);
+      setComment(res.data);
+    } catch {
+      setError('Không thể tải nhánh bình luận hoặc nhánh không tồn tại.');
+    } finally {
+      setLoading(false);
     }
-  }, [id]);
+  }, [type, contextId, commentId]);
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    fetchComment();
+  }, [fetchComment]);
+
+  const handlePostComment = async (content: string) => {
+    if (!commentId) return;
+    try {
+      await api.post(`/api/${type}s/${contextId}/comments`, { content, parentId: commentId });
+      toast.success('Đã gửi phản hồi');
+      fetchComment();
+    } catch {
+      toast.error('Không thể gửi phản hồi. Vui lòng thử lại.');
+    }
+  };
+
+  const handleReply = async (content: string, parentId: string) => {
+    try {
+      await api.post(`/api/${type}s/${contextId}/comments`, { content, parentId });
+      toast.success('Đã gửi phản hồi');
+      fetchComment();
+    } catch {
+      toast.error('Không thể gửi phản hồi. Vui lòng thử lại.');
+    }
+  };
+
+  const handleEdit = async (id: string, newContent: string) => {
+    try {
+      await api.put(`/api/${type}s/${contextId}/comments/${id}`, { content: newContent });
+      toast.success('Đã cập nhật bình luận');
+      fetchComment();
+    } catch {
+      toast.error('Không thể cập nhật bình luận. Vui lòng thử lại.');
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    try {
+      await api.delete(`/api/${type}s/${contextId}/comments/${id}`);
+      toast.success('Đã xóa bình luận');
+      if (id === commentId) {
+        navigate(-1);
+      } else {
+        fetchComment();
+      }
+    } catch {
+      toast.error('Không thể xóa bình luận. Vui lòng thử lại.');
+    }
+  };
+
+  if (!type || !contextId || !commentId) {
+    return (
+      <PageShell>
+        <ErrorState title="Lỗi URL" message="Đường dẫn không hợp lệ" />
+      </PageShell>
+    );
+  }
 
   return (
     <PageShell>
@@ -72,12 +124,12 @@ export function CommentThreadSinglePage() {
             <CommentThread
               comments={[comment]}
               currentUserId={currentUserId}
-              // Theo thiết kế, trang này chỉ dùng để xem (view-only),
-              // mọi action thực tế sẽ được thực hiện trên trang Classroom
-              onPostComment={async () => {}}
-              onReply={async () => {}}
-              onEdit={async () => {}}
-              onDelete={async () => {}}
+              contextType={type as 'lesson' | 'announcement'}
+              contextId={contextId}
+              onPostComment={handlePostComment}
+              onReply={handleReply}
+              onEdit={handleEdit}
+              onDelete={handleDelete}
             />
           </div>
         )}

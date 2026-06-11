@@ -25,6 +25,8 @@ interface CommentItemProps {
   comment: CommentDto;
   depth: number;
   currentUserId?: string;
+  contextType: 'lesson' | 'announcement';
+  contextId: string;
   onReply: (content: string, parentId: string) => Promise<void>;
   onEdit: (id: string, newContent: string) => Promise<void>;
   onDelete: (id: string) => Promise<void>;
@@ -34,6 +36,8 @@ function CommentItem({
   comment,
   depth,
   currentUserId,
+  contextType,
+  contextId,
   onReply,
   onEdit,
   onDelete,
@@ -158,7 +162,7 @@ function CommentItem({
 
           {isDeep ? (
             <Link
-              to={ROUTES.COMMENT_THREAD(comment.id)}
+              to={ROUTES.COMMENT_THREAD(contextType, contextId, comment.id)}
               className="text-xs text-primary hover:underline font-medium block mt-2 ml-2"
             >
               Xem riêng nhánh thảo luận này →
@@ -241,6 +245,8 @@ function CommentItem({
               comment={reply}
               depth={depth + 1}
               currentUserId={currentUserId}
+              contextType={contextType}
+              contextId={contextId}
               onReply={onReply}
               onEdit={onEdit}
               onDelete={onDelete}
@@ -255,6 +261,10 @@ function CommentItem({
 export interface CommentThreadProps {
   comments: CommentDto[];
   currentUserId?: string;
+  contextType: 'lesson' | 'announcement';
+  contextId: string;
+  hasMore?: boolean;
+  onLoadMore?: () => void;
   onPostComment: (content: string) => Promise<void>;
   onReply: (content: string, parentId: string) => Promise<void>;
   onEdit: (id: string, newContent: string) => Promise<void>;
@@ -264,6 +274,10 @@ export interface CommentThreadProps {
 export function CommentThread({
   comments,
   currentUserId,
+  contextType,
+  contextId,
+  hasMore,
+  onLoadMore,
   onPostComment,
   onReply,
   onEdit,
@@ -320,6 +334,8 @@ export function CommentThread({
             comment={comment}
             depth={0}
             currentUserId={currentUserId}
+            contextType={contextType}
+            contextId={contextId}
             onReply={onReply}
             onEdit={onEdit}
             onDelete={onDelete}
@@ -331,6 +347,14 @@ export function CommentThread({
             title="Chưa có bình luận nào"
             description="Hãy là người đầu tiên tham gia thảo luận!"
           />
+        )}
+
+        {hasMore && onLoadMore && (
+          <div className="flex justify-center mt-6">
+            <Button variant="outline" onClick={onLoadMore} className="w-full sm:w-auto">
+              Tải thêm bình luận
+            </Button>
+          </div>
         )}
       </div>
     </div>

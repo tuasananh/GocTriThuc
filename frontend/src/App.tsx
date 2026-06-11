@@ -53,7 +53,7 @@ function App() {
                   <Route path={ROUTES.LESSON(':courseId', ':lessonId')} element={<LessonPage />} />
                   <Route path={ROUTES.TEST_TAKE(':testId')} element={<TestTakePage />} />
                   <Route
-                    path={ROUTES.COMMENT_THREAD(':id')}
+                    path="/comments/thread/:type/:contextId/:commentId"
                     element={<CommentThreadSinglePage />}
                   />
                   {/* <Route path={ROUTES.CLASSROOM(':id')} element={<ClassroomPage />} /> */}
