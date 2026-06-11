@@ -927,7 +927,8 @@ public class TestSessionControllerIntegrationTest extends BaseIntegrationTest {
                 .with(
                     oauth2Login().attributes(attrs -> attrs.put("email", studentUser.getEmail()))))
         .andExpect(status().isOk())
-        .andExpect(jsonPath("$.length()").value(0));
+        .andExpect(jsonPath("$.content").isEmpty())
+        .andExpect(jsonPath("$.totalElements").value(0));
 
     // 2. Start a session
     mockMvc
@@ -944,7 +945,7 @@ public class TestSessionControllerIntegrationTest extends BaseIntegrationTest {
                 .with(
                     oauth2Login().attributes(attrs -> attrs.put("email", studentUser.getEmail()))))
         .andExpect(status().isOk())
-        .andExpect(jsonPath("$.length()").value(0));
+        .andExpect(jsonPath("$.content").isEmpty());
 
     // 3. Answer questions (q1 correct, q2 incorrect)
     SaveAnswerRequest req1 = new SaveAnswerRequest(q1.getId(), List.of(0));
@@ -982,13 +983,44 @@ public class TestSessionControllerIntegrationTest extends BaseIntegrationTest {
                 .with(
                     oauth2Login().attributes(attrs -> attrs.put("email", studentUser.getEmail()))))
         .andExpect(status().isOk())
-        .andExpect(jsonPath("$.length()").value(1))
-        .andExpect(jsonPath("$[0].testTitle").value("Lesson Test 1"))
-        .andExpect(jsonPath("$[0].courseTitle").value("Java Core"))
-        .andExpect(jsonPath("$[0].score").value(40.0)) // 4.0 / 10.0 * 100 = 40%
-        .andExpect(jsonPath("$[0].correctCount").value(1))
-        .andExpect(jsonPath("$[0].totalQuestions").value(2))
+        .andExpect(jsonPath("$.content.length()").value(1))
+        .andExpect(jsonPath("$.totalElements").value(1))
+        .andExpect(jsonPath("$.content[0].testTitle").value("Lesson Test 1"))
+        .andExpect(jsonPath("$.content[0].courseTitle").value("Java Core"))
+        .andExpect(jsonPath("$.content[0].score").value(40.0)) // 4.0 / 10.0 * 100 = 40%
+        .andExpect(jsonPath("$.content[0].correctCount").value(1))
+        .andExpect(jsonPath("$.content[0].totalQuestions").value(2))
         .andDo(print());
+
+    // 5. Add another completed session and verify pagination and newest-first ordering
+    TestSessionEntity newerSession =
+        new TestSessionEntity(studentUser, testEntity, ZonedDateTime.now().minusMinutes(1));
+    newerSession.setDone(true);
+    newerSession.setSubmittedAt(ZonedDateTime.now().plusMinutes(1));
+    newerSession = testSessionRepository.save(newerSession);
+    testSessionAnswerRepository.save(
+        new TestSessionAnswerEntity(newerSession, q1.getId(), new int[] {1}));
+
+    mockMvc
+        .perform(
+            get("/api/tests/sessions/my?size=1&page=0")
+                .with(
+                    oauth2Login().attributes(attrs -> attrs.put("email", studentUser.getEmail()))))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.content.length()").value(1))
+        .andExpect(jsonPath("$.content[0].sessionId").value(newerSession.getId().toString()))
+        .andExpect(jsonPath("$.content[0].score").value(0.0))
+        .andExpect(jsonPath("$.totalElements").value(2))
+        .andExpect(jsonPath("$.totalPages").value(2));
+
+    mockMvc
+        .perform(
+            get("/api/tests/sessions/my?size=1&page=1")
+                .with(
+                    oauth2Login().attributes(attrs -> attrs.put("email", studentUser.getEmail()))))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.content.length()").value(1))
+        .andExpect(jsonPath("$.content[0].sessionId").value(session.getId().toString()));
   }
 
   @Test

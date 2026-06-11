@@ -16,7 +16,7 @@ public class AnnouncementCommentEntity extends BaseCommentEntity {
   @JoinColumn(name = "parent_id")
   private AnnouncementCommentEntity parent;
 
-  @OneToMany(mappedBy = "parent", cascade = CascadeType.ALL, orphanRemoval = true)
+  @OneToMany(mappedBy = "parent")
   @OrderBy("createdAt ASC")
   private List<AnnouncementCommentEntity> replies = new ArrayList<>();
 

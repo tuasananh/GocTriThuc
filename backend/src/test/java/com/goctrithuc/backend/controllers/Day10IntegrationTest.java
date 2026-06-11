@@ -308,22 +308,27 @@ public class Day10IntegrationTest extends BaseIntegrationTest {
                 .content(objectMapper.writeValueAsString(editReq)))
         .andExpect(status().isForbidden());
 
-    // 5. Verify cascading deletion works
-    // Create a child reply comment
-    CommentRequest replyReq = new CommentRequest("Child reply to comment", commentId);
-    String replyRes =
-        mockMvc
-            .perform(
-                post("/api/lessons/" + lesson.getId() + "/comments")
-                    .with(oauth2Login().attributes(attrs -> attrs.put("email", student.getEmail())))
-                    .with(csrf())
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .content(objectMapper.writeValueAsString(replyReq)))
-            .andExpect(status().isCreated())
-            .andReturn()
-            .getResponse()
-            .getContentAsString();
-    Long replyId = objectMapper.readTree(replyRes).get("id").asLong();
+    // 5. Verify database cascading deletion works for a deep tree
+    java.util.List<Long> descendantIds = new java.util.ArrayList<>();
+    Long parentId = commentId;
+    for (int depth = 1; depth <= 8; depth++) {
+      CommentRequest replyReq = new CommentRequest("Reply depth " + depth, parentId);
+      String replyRes =
+          mockMvc
+              .perform(
+                  post("/api/lessons/" + lesson.getId() + "/comments")
+                      .with(
+                          oauth2Login().attributes(attrs -> attrs.put("email", student.getEmail())))
+                      .with(csrf())
+                      .contentType(MediaType.APPLICATION_JSON)
+                      .content(objectMapper.writeValueAsString(replyReq)))
+              .andExpect(status().isCreated())
+              .andReturn()
+              .getResponse()
+              .getContentAsString();
+      parentId = objectMapper.readTree(replyRes).get("id").asLong();
+      descendantIds.add(parentId);
+    }
 
     // Delete root comment
     mockMvc
@@ -333,11 +338,13 @@ public class Day10IntegrationTest extends BaseIntegrationTest {
                 .with(csrf()))
         .andExpect(status().isNoContent());
 
-    // Verify parent and child comments are both deleted
+    // Verify the root and every descendant are deleted by ON DELETE CASCADE
     org.junit.jupiter.api.Assertions.assertTrue(
         lessonCommentRepository.findById(commentId).isEmpty());
-    org.junit.jupiter.api.Assertions.assertTrue(
-        lessonCommentRepository.findById(replyId).isEmpty());
+    descendantIds.forEach(
+        id ->
+            org.junit.jupiter.api.Assertions.assertTrue(
+                lessonCommentRepository.findById(id).isEmpty()));
   }
 
   @Test

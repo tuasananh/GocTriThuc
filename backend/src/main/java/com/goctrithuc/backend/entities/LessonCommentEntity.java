@@ -16,7 +16,7 @@ public class LessonCommentEntity extends BaseCommentEntity {
   @JoinColumn(name = "parent_id")
   private LessonCommentEntity parent;
 
-  @OneToMany(mappedBy = "parent", cascade = CascadeType.ALL, orphanRemoval = true)
+  @OneToMany(mappedBy = "parent")
   @OrderBy("createdAt ASC")
   private List<LessonCommentEntity> replies = new ArrayList<>();
 
