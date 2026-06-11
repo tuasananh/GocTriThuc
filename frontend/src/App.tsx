@@ -19,7 +19,7 @@ import { ThemeProvider } from 'next-themes';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { Toaster } from '@/components/ui/sonner';
 import { lazy, Suspense } from 'react';
-import { ROUTES } from '@/lib/routes';
+import { ROUTES, ROUTE_PATTERNS } from '@/lib/routes';
 import { PERMISSION } from '@/lib/permissions';
 
 const EditorTestPage = lazy(() =>
@@ -53,7 +53,7 @@ function App() {
                   <Route path={ROUTES.LESSON(':courseId', ':lessonId')} element={<LessonPage />} />
                   <Route path={ROUTES.TEST_TAKE(':testId')} element={<TestTakePage />} />
                   <Route
-                    path="/comments/thread/:type/:contextId/:commentId"
+                    path={ROUTE_PATTERNS.COMMENT_THREAD}
                     element={<CommentThreadSinglePage />}
                   />
                   {/* <Route path={ROUTES.CLASSROOM(':id')} element={<ClassroomPage />} /> */}

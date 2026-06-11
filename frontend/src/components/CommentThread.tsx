@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { ROUTES } from '@/lib/routes';
+import { ROUTE_PATTERNS } from '@/lib/routes';
 import { useIsAdmin } from '@/lib/permissions';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
@@ -30,6 +30,7 @@ interface CommentItemProps {
   onReply: (content: string, parentId: string) => Promise<void>;
   onEdit: (id: string, newContent: string) => Promise<void>;
   onDelete: (id: string) => Promise<void>;
+  isAdmin?: boolean;
 }
 
 function CommentItem({
@@ -41,6 +42,7 @@ function CommentItem({
   onReply,
   onEdit,
   onDelete,
+  isAdmin,
 }: CommentItemProps) {
   const [showReply, setShowReply] = useState(false);
   const [replyContent, setReplyContent] = useState('');
@@ -49,7 +51,6 @@ function CommentItem({
   const [editContent, setEditContent] = useState(comment.content);
 
   const [submitting, setSubmitting] = useState(false);
-  const isAdmin = useIsAdmin();
 
   // Depth check for Reddit-style redirection
   const isDeep = depth >= 5;
@@ -162,7 +163,9 @@ function CommentItem({
 
           {isDeep ? (
             <Link
-              to={ROUTES.COMMENT_THREAD(contextType, contextId, comment.id)}
+              to={ROUTE_PATTERNS.COMMENT_THREAD.replace(':type', contextType)
+                .replace(':contextId', contextId)
+                .replace(':commentId', comment.id)}
               className="text-xs text-primary hover:underline font-medium block mt-2 ml-2"
             >
               Xem riêng nhánh thảo luận này →
@@ -250,6 +253,7 @@ function CommentItem({
               onReply={onReply}
               onEdit={onEdit}
               onDelete={onDelete}
+              isAdmin={isAdmin}
             />
           ))}
         </div>
@@ -285,6 +289,7 @@ export function CommentThread({
 }: CommentThreadProps) {
   const [newComment, setNewComment] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const isAdmin = useIsAdmin();
 
   const handleSubmit = async () => {
     if (!newComment.trim()) return;
@@ -339,6 +344,7 @@ export function CommentThread({
             onReply={onReply}
             onEdit={onEdit}
             onDelete={onDelete}
+            isAdmin={isAdmin}
           />
         ))}
         {comments.length === 0 && (
