@@ -21,6 +21,7 @@ export function TestTakePage() {
   const [session, setSession] = useState<TestSessionDto | null>(null);
   const [questions, setQuestions] = useState<QuestionStudentDto[]>([]);
   const [answers, setAnswers] = useState<Record<string, number[]>>({});
+  const [saveStatus, setSaveStatus] = useState<Record<string, 'saving' | 'saved' | 'error'>>({});
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -85,13 +86,28 @@ export function TestTakePage() {
 
     // Optimistic UI update
     setAnswers((prev) => ({ ...prev, [questionId]: newAnswers }));
+    setSaveStatus((prev) => ({ ...prev, [questionId]: 'saving' }));
 
     try {
       await api.put(`/api/tests/sessions/${session.id}/answers/${questionId}`, {
         answer: newAnswers,
       });
+      setSaveStatus((prev) => ({ ...prev, [questionId]: 'saved' }));
+      
+      // Clear 'saved' text after 2 seconds for a cleaner UI
+      setTimeout(() => {
+        setSaveStatus((prev) => {
+          if (prev[questionId] === 'saved') {
+            const next = { ...prev };
+            delete next[questionId];
+            return next;
+          }
+          return prev;
+        });
+      }, 2000);
     } catch (err) {
       console.error('Lỗi khi lưu câu trả lời', err);
+      setSaveStatus((prev) => ({ ...prev, [questionId]: 'error' }));
       toast.error('Có lỗi xảy ra khi lưu câu trả lời. Vui lòng kiểm tra mạng!');
     }
   };
@@ -206,6 +222,7 @@ export function TestTakePage() {
                     isSingleChoice={q.isSingleChoice}
                     selectedAnswers={answers[q.id] || []}
                     onAnswerChange={(ans) => handleAnswerChange(q.id, ans)}
+                    saveStatus={saveStatus[q.id]}
                   />
                 </CardContent>
               </Card>

@@ -1,5 +1,5 @@
 import { cn } from '@/lib/utils';
-import { CheckSquare, Circle, CheckCircle2, Square } from 'lucide-react';
+import { CheckSquare, Circle, CheckCircle2, Square, Loader2, Check, AlertCircle } from 'lucide-react';
 
 interface MultipleChoiceQuestionProps {
   /** ID câu hỏi — dùng để nhóm radio & accessibility */
@@ -14,6 +14,8 @@ interface MultipleChoiceQuestionProps {
   onAnswerChange: (newAnswers: number[]) => void;
   /** Khoá lựa chọn (sau khi nộp bài) */
   disabled?: boolean;
+  /** Trạng thái lưu (autosave UX) */
+  saveStatus?: 'saving' | 'saved' | 'error';
 }
 
 const OPTION_LABELS = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'];
@@ -32,6 +34,7 @@ export function MultipleChoiceQuestion({
   selectedAnswers,
   onAnswerChange,
   disabled = false,
+  saveStatus,
 }: MultipleChoiceQuestionProps) {
   const handleSelect = (index: number) => {
     if (disabled) return;
@@ -55,20 +58,43 @@ export function MultipleChoiceQuestion({
       role={isSingleChoice ? 'radiogroup' : 'group'}
       aria-label={`Lựa chọn cho câu hỏi ${questionId}`}
     >
-      {/* Gợi ý loại câu hỏi */}
-      <p className="text-xs text-muted-foreground font-medium mb-4">
-        {isSingleChoice ? (
-          <span className="inline-flex items-center gap-1.5">
-            <Circle className="w-3.5 h-3.5" />
-            Chọn một đáp án đúng
-          </span>
-        ) : (
-          <span className="inline-flex items-center gap-1.5">
-            <CheckSquare className="w-3.5 h-3.5" />
-            Chọn tất cả đáp án đúng
-          </span>
-        )}
-      </p>
+      {/* Gợi ý loại câu hỏi và Autosave status */}
+      <div className="flex items-center justify-between mb-4">
+        <p className="text-xs text-muted-foreground font-medium">
+          {isSingleChoice ? (
+            <span className="inline-flex items-center gap-1.5">
+              <Circle className="w-3.5 h-3.5" />
+              Chọn một đáp án đúng
+            </span>
+          ) : (
+            <span className="inline-flex items-center gap-1.5">
+              <CheckSquare className="w-3.5 h-3.5" />
+              Chọn tất cả đáp án đúng
+            </span>
+          )}
+        </p>
+
+        <div className="h-4 flex items-center">
+          {saveStatus === 'saving' && (
+            <span className="inline-flex items-center gap-1 text-xs text-muted-foreground font-medium animate-pulse">
+              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              Đang lưu...
+            </span>
+          )}
+          {saveStatus === 'saved' && (
+            <span className="inline-flex items-center gap-1 text-xs text-green-600 dark:text-green-400 font-medium">
+              <Check className="w-3.5 h-3.5" />
+              Đã lưu
+            </span>
+          )}
+          {saveStatus === 'error' && (
+            <span className="inline-flex items-center gap-1 text-xs text-destructive font-medium">
+              <AlertCircle className="w-3.5 h-3.5" />
+              Lỗi lưu
+            </span>
+          )}
+        </div>
+      </div>
 
       {choices.map((choice, index) => {
         const isSelected = selectedAnswers.includes(index);
