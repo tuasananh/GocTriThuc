@@ -2,37 +2,39 @@ import { http, HttpResponse } from 'msw';
 import type { AnnouncementDto, CommentDto, PageResponse } from '@/types';
 
 // In-memory store cho MSW
-const getAnnouncements = () => {
+const getAnnouncements = (): AnnouncementDto[] => {
   const str = sessionStorage.getItem('mock_announcements');
   return str ? JSON.parse(str) : [];
 };
 
-const saveAnnouncements = (data: any) => {
+const saveAnnouncements = (data: AnnouncementDto[]) => {
   sessionStorage.setItem('mock_announcements', JSON.stringify(data));
 };
 
-const getComments = () => {
+type MockCommentDto = CommentDto & { referenceId: string };
+
+const getComments = (): MockCommentDto[] => {
   const str = sessionStorage.getItem('mock_announcement_comments');
   return str ? JSON.parse(str) : [];
 };
 
-const saveComments = (data: any) => {
+const saveComments = (data: MockCommentDto[]) => {
   sessionStorage.setItem('mock_announcement_comments', JSON.stringify(data));
 };
 
 export const announcementsHandlers = [
   // Lấy danh sách thông báo của khóa học
-  http.get('/api/courses/:courseId/announcements', async ({ params, request }) => {
+  http.get('/api/courses/:courseId/announcements', ({ params, request }) => {
     const { courseId } = params;
     const url = new URL(request.url);
     const size = Number(url.searchParams.get('size') || '10');
     const page = Number(url.searchParams.get('page') || '0');
 
     const allAnnouncements = getAnnouncements();
-    const filtered = allAnnouncements.filter((a: any) => a.courseId === courseId);
+    const filtered = allAnnouncements.filter((a) => a.courseId === courseId);
     // Sort desc by createdAt
     filtered.sort(
-      (a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+      (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
     );
 
     const start = page * size;
@@ -54,7 +56,7 @@ export const announcementsHandlers = [
   // Đăng thông báo mới
   http.post('/api/courses/:courseId/announcements', async ({ params, request }) => {
     const { courseId } = params;
-    const data = (await request.json()) as any;
+    const data = (await request.json()) as { title: string; content: string };
 
     const allAnnouncements = getAnnouncements();
     const newAnnouncement: AnnouncementDto = {
@@ -80,23 +82,23 @@ export const announcementsHandlers = [
   }),
 
   // Lấy bình luận của thông báo
-  http.get('/api/announcements/:id/comments', async ({ params }) => {
+  http.get('/api/announcements/:id/comments', ({ params }) => {
     const { id } = params;
     const allComments = getComments();
 
     // Lọc ra các comment thuộc về announcement này
-    const filtered = allComments.filter((c: any) => c.referenceId === id);
+    const filtered = allComments.filter((c) => c.referenceId === id);
 
     // Dựng cây (tree)
     const buildTree = (parentId: string | null): CommentDto[] => {
       return filtered
-        .filter((c: any) => c.parentId === parentId)
-        .map((c: any) => ({
+        .filter((c) => c.parentId === parentId)
+        .map((c) => ({
           ...c,
           replies: buildTree(c.id),
         }))
         .sort(
-          (a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+          (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
         );
     };
 
@@ -107,14 +109,15 @@ export const announcementsHandlers = [
   // Thêm bình luận cho thông báo
   http.post('/api/announcements/:id/comments', async ({ params, request }) => {
     const { id } = params;
-    const data = (await request.json()) as any;
+    const data = (await request.json()) as { content: string; parentId?: string };
 
     const allComments = getComments();
-    const newComment = {
+    const newComment: MockCommentDto = {
       id: `comment-${Date.now()}`,
       referenceId: id as string,
       content: data.content,
       parentId: data.parentId || null,
+      replies: [],
       author: {
         id: 'user-1',
         email: 'user@example.com',
@@ -139,7 +142,7 @@ export const announcementsHandlers = [
     const data = (await request.json()) as { content: string };
 
     const allComments = getComments();
-    const commentIndex = allComments.findIndex((c: any) => c.id === commentId);
+    const commentIndex = allComments.findIndex((c) => c.id === commentId);
 
     if (commentIndex === -1) {
       return new HttpResponse(null, { status: 404 });
@@ -154,7 +157,7 @@ export const announcementsHandlers = [
   }),
 
   // Xóa bình luận (cascade)
-  http.delete('/api/announcements/comments/:commentId', async ({ params }) => {
+  http.delete('/api/announcements/comments/:commentId', ({ params }) => {
     const { commentId } = params;
     let allComments = getComments();
 
@@ -173,7 +176,7 @@ export const announcementsHandlers = [
       }
     } while (added);
 
-    allComments = allComments.filter((c: any) => !toDelete.has(c.id));
+    allComments = allComments.filter((c) => !toDelete.has(c.id));
     saveComments(allComments);
 
     return new HttpResponse(null, { status: 204 });
