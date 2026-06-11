@@ -6,7 +6,6 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Trash2, CheckCircle2 } from 'lucide-react';
-import { Trash2, CheckCircle2 } from 'lucide-react';
 import type { QuestionDto } from '@/types';
 import { RichTextViewer } from '@/components/rich-text-editor/RichTextViewer';
 import {
