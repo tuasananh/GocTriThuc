@@ -90,7 +90,46 @@ public class QuizScoringService {
     List<Object[]> details = testQuestionRepo.findWithDetailsByTestId(testId);
     List<TestSessionAnswerEntity> studentAnswers =
         testSessionAnswerRepository.findBySessionId(sessionId);
+    return calculateResult(session, details, studentAnswers);
+  }
 
+  @Transactional(readOnly = true)
+  public Map<Long, TestResultResponse> calculateResults(List<TestSessionEntity> sessions) {
+    if (sessions.isEmpty()) {
+      return Map.of();
+    }
+
+    List<Long> testIds =
+        sessions.stream().map(session -> session.getTest().getId()).distinct().toList();
+    List<Long> sessionIds = sessions.stream().map(TestSessionEntity::getId).toList();
+
+    Map<Long, List<Object[]>> detailsByTestId =
+        testQuestionRepo.findWithDetailsByTestIds(testIds).stream()
+            .collect(
+                java.util.stream.Collectors.groupingBy(
+                    row -> ((TestQuestionEntity) row[0]).getTest().getId()));
+    Map<Long, List<TestSessionAnswerEntity>> answersBySessionId =
+        testSessionAnswerRepository.findBySessionIds(sessionIds).stream()
+            .collect(java.util.stream.Collectors.groupingBy(answer -> answer.getSession().getId()));
+
+    Map<Long, TestResultResponse> results = new HashMap<>();
+    for (TestSessionEntity session : sessions) {
+      results.put(
+          session.getId(),
+          calculateResult(
+              session,
+              detailsByTestId.getOrDefault(session.getTest().getId(), List.of()),
+              answersBySessionId.getOrDefault(session.getId(), List.of())));
+    }
+    return results;
+  }
+
+  private TestResultResponse calculateResult(
+      TestSessionEntity session,
+      List<Object[]> details,
+      List<TestSessionAnswerEntity> studentAnswers) {
+    Long testId = session.getTest().getId();
+    Long sessionId = session.getId();
     Map<Long, int[]> answerMap = new HashMap<>();
     for (TestSessionAnswerEntity ans : studentAnswers) {
       answerMap.put(ans.getQuestionId(), ans.getQuestionAnswer());

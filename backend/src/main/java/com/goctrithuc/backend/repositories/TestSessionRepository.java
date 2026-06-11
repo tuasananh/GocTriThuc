@@ -3,6 +3,8 @@ package com.goctrithuc.backend.repositories;
 import com.goctrithuc.backend.entities.TestSessionEntity;
 import java.util.List;
 import java.util.Optional;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -26,4 +28,18 @@ public interface TestSessionRepository extends JpaRepository<TestSessionEntity, 
           + "JOIN FETCH t.lesson "
           + "WHERE ts.id = :sessionId")
   Optional<TestSessionEntity> findByIdWithTest(@Param("sessionId") Long sessionId);
+
+  @Query(
+      value =
+          "SELECT ts FROM TestSessionEntity ts "
+              + "JOIN FETCH ts.test t "
+              + "JOIN FETCH t.lesson l "
+              + "JOIN FETCH l.module m "
+              + "JOIN FETCH m.course c "
+              + "WHERE ts.user.id = :userId AND ts.isDone = true",
+      countQuery =
+          "SELECT COUNT(ts) FROM TestSessionEntity ts "
+              + "WHERE ts.user.id = :userId AND ts.isDone = true")
+  Page<TestSessionEntity> findCompletedWithTestAndCourseByUserId(
+      @Param("userId") Long userId, Pageable pageable);
 }

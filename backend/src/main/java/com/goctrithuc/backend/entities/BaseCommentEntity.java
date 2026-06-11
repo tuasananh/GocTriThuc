@@ -4,16 +4,16 @@ import jakarta.persistence.*;
 import java.time.ZonedDateTime;
 import org.hibernate.annotations.Generated;
 
-@Entity
-@Table(name = "lesson_blogs")
-public class LessonBlogEntity {
+@MappedSuperclass
+public abstract class BaseCommentEntity {
 
-  @Id private Long id;
+  @Id
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
+  private Long id;
 
-  @OneToOne(fetch = FetchType.LAZY)
-  @MapsId
-  @JoinColumn(name = "id")
-  private LessonEntity lesson;
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "author_id", nullable = false)
+  private User author;
 
   @Column(nullable = false)
   private String content;
@@ -26,10 +26,13 @@ public class LessonBlogEntity {
   @Generated
   private ZonedDateTime updatedAt;
 
-  protected LessonBlogEntity() {}
+  @Column(name = "edited_at")
+  private ZonedDateTime editedAt;
 
-  public LessonBlogEntity(LessonEntity lesson, String content) {
-    this.lesson = lesson;
+  protected BaseCommentEntity() {}
+
+  public BaseCommentEntity(User author, String content) {
+    this.author = author;
     this.content = content;
   }
 
@@ -37,12 +40,12 @@ public class LessonBlogEntity {
     return id;
   }
 
-  public LessonEntity getLesson() {
-    return lesson;
+  public User getAuthor() {
+    return author;
   }
 
-  public void setLesson(LessonEntity lesson) {
-    this.lesson = lesson;
+  public void setAuthor(User author) {
+    this.author = author;
   }
 
   public String getContent() {
@@ -59,5 +62,13 @@ public class LessonBlogEntity {
 
   public ZonedDateTime getUpdatedAt() {
     return updatedAt;
+  }
+
+  public ZonedDateTime getEditedAt() {
+    return editedAt;
+  }
+
+  public void setEditedAt(ZonedDateTime editedAt) {
+    this.editedAt = editedAt;
   }
 }

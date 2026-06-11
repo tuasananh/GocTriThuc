@@ -917,4 +917,135 @@ public class TestSessionControllerIntegrationTest extends BaseIntegrationTest {
         .andExpect(status().isConflict())
         .andDo(print());
   }
+
+  @Test
+  void getMyTestSessions_returnsCompletedSessions() throws Exception {
+    // 1. Initially empty
+    mockMvc
+        .perform(
+            get("/api/tests/sessions/my")
+                .with(
+                    oauth2Login().attributes(attrs -> attrs.put("email", studentUser.getEmail()))))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.content").isEmpty())
+        .andExpect(jsonPath("$.totalElements").value(0));
+
+    // 2. Start a session
+    mockMvc
+        .perform(
+            post("/api/tests/" + testEntity.getId() + "/sessions")
+                .with(oauth2Login().attributes(attrs -> attrs.put("email", studentUser.getEmail())))
+                .with(csrf()))
+        .andExpect(status().isCreated());
+
+    // Verify active session is excluded
+    mockMvc
+        .perform(
+            get("/api/tests/sessions/my")
+                .with(
+                    oauth2Login().attributes(attrs -> attrs.put("email", studentUser.getEmail()))))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.content").isEmpty());
+
+    // 3. Answer questions (q1 correct, q2 incorrect)
+    SaveAnswerRequest req1 = new SaveAnswerRequest(q1.getId(), List.of(0));
+    mockMvc
+        .perform(
+            put("/api/sessions/"
+                    + testSessionRepository
+                        .findByUserIdAndTestIdAndIsDoneFalse(
+                            studentUser.getId(), testEntity.getId())
+                        .orElseThrow()
+                        .getId()
+                    + "/answers")
+                .with(oauth2Login().attributes(attrs -> attrs.put("email", studentUser.getEmail())))
+                .with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(req1)))
+        .andExpect(status().isOk());
+
+    // Submit session
+    TestSessionEntity session =
+        testSessionRepository
+            .findByUserIdAndTestIdAndIsDoneFalse(studentUser.getId(), testEntity.getId())
+            .orElseThrow();
+    mockMvc
+        .perform(
+            post("/api/sessions/" + session.getId() + "/submit")
+                .with(oauth2Login().attributes(attrs -> attrs.put("email", studentUser.getEmail())))
+                .with(csrf()))
+        .andExpect(status().isOk());
+
+    // 4. Query my test sessions -> should return 1 session
+    mockMvc
+        .perform(
+            get("/api/tests/sessions/my")
+                .with(
+                    oauth2Login().attributes(attrs -> attrs.put("email", studentUser.getEmail()))))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.content.length()").value(1))
+        .andExpect(jsonPath("$.totalElements").value(1))
+        .andExpect(jsonPath("$.content[0].testTitle").value("Lesson Test 1"))
+        .andExpect(jsonPath("$.content[0].courseTitle").value("Java Core"))
+        .andExpect(jsonPath("$.content[0].score").value(40.0)) // 4.0 / 10.0 * 100 = 40%
+        .andExpect(jsonPath("$.content[0].correctCount").value(1))
+        .andExpect(jsonPath("$.content[0].totalQuestions").value(2))
+        .andDo(print());
+
+    // 5. Add another completed session and verify pagination and newest-first ordering
+    TestSessionEntity newerSession =
+        new TestSessionEntity(studentUser, testEntity, ZonedDateTime.now().minusMinutes(1));
+    newerSession.setDone(true);
+    newerSession.setSubmittedAt(ZonedDateTime.now().plusMinutes(1));
+    newerSession = testSessionRepository.save(newerSession);
+    testSessionAnswerRepository.save(
+        new TestSessionAnswerEntity(newerSession, q1.getId(), new int[] {1}));
+
+    mockMvc
+        .perform(
+            get("/api/tests/sessions/my?size=1&page=0")
+                .with(
+                    oauth2Login().attributes(attrs -> attrs.put("email", studentUser.getEmail()))))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.content.length()").value(1))
+        .andExpect(jsonPath("$.content[0].sessionId").value(newerSession.getId().toString()))
+        .andExpect(jsonPath("$.content[0].score").value(0.0))
+        .andExpect(jsonPath("$.totalElements").value(2))
+        .andExpect(jsonPath("$.totalPages").value(2));
+
+    mockMvc
+        .perform(
+            get("/api/tests/sessions/my?size=1&page=1")
+                .with(
+                    oauth2Login().attributes(attrs -> attrs.put("email", studentUser.getEmail()))))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.content.length()").value(1))
+        .andExpect(jsonPath("$.content[0].sessionId").value(session.getId().toString()));
+  }
+
+  @Test
+  void getMyTestSessions_withoutPermission_returns403() throws Exception {
+    User guest = userRepository.save(new User("guest@hust.edu.vn", "Guest", "guest", null));
+    Role guestRole = roleRepository.save(new Role("guest", 0x00L, "No access"));
+    userRoleRepository.save(new UserRole(guest, guestRole));
+
+    mockMvc
+        .perform(
+            get("/api/tests/sessions/my")
+                .with(oauth2Login().attributes(attrs -> attrs.put("email", guest.getEmail()))))
+        .andExpect(status().isForbidden());
+  }
+
+  @Test
+  void getResult_withoutPermission_returns403() throws Exception {
+    User guest = userRepository.save(new User("guest@hust.edu.vn", "Guest", "guest", null));
+    Role guestRole = roleRepository.save(new Role("guest", 0x00L, "No access"));
+    userRoleRepository.save(new UserRole(guest, guestRole));
+
+    mockMvc
+        .perform(
+            get("/api/sessions/1/result")
+                .with(oauth2Login().attributes(attrs -> attrs.put("email", guest.getEmail()))))
+        .andExpect(status().isForbidden());
+  }
 }
