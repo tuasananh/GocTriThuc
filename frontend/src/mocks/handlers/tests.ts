@@ -60,6 +60,26 @@ export const testsHandlers = [
     return HttpResponse.json(questions);
   }),
 
+  // Thêm câu hỏi vào đề thi
+  http.post('/api/tests/:testId/questions', async () => {
+    return HttpResponse.json({ success: true }, { status: 201 });
+  }),
+
+  // Xóa câu hỏi khỏi đề thi
+  http.delete('/api/tests/:testId/questions/:questionId', async () => {
+    return HttpResponse.json({ success: true });
+  }),
+
+  // Cập nhật điểm câu hỏi
+  http.patch('/api/tests/:testId/questions/:questionId', async () => {
+    return HttpResponse.json({ success: true });
+  }),
+
+  // Lưu cài đặt test
+  http.put('/api/lessons/:lessonId/test', async () => {
+    return HttpResponse.json({ success: true });
+  }),
+
   // Bắt đầu hoặc tiếp tục Test Session
   http.post('/api/tests/:testId/sessions', async ({ params }) => {
     const { testId } = params;
