@@ -42,8 +42,8 @@ importers:
         specifier: ^1.17.0
         version: 1.17.0(react@19.2.7)
       mathlive:
-        specifier: ^0.109.2
-        version: 0.109.2
+        specifier: ^0.110.0
+        version: 0.110.0
       next-themes:
         specifier: ^0.4.6
         version: 0.4.6(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
@@ -123,8 +123,8 @@ importers:
 
 packages:
 
-  '@arnog/colors@0.3.0':
-    resolution: {integrity: sha512-CDZFMVWeE3HqcrzvacY2Y8257RS9c0f8+D+MWjbjmb5IWpOZPPeJSqWyxkVcFleCjA+x5aq6foc57cVaP+AMQg==}
+  '@arnog/colors@0.5.0':
+    resolution: {integrity: sha512-NB7yqrO7qvInsqJdqz6C6mDU+2oiKmbBbk3czMS0E7KkGxLRy538tEHCsB5TKqmaxxXpi6/U120TnGl8NsDePg==}
 
   '@babel/code-frame@7.29.7':
     resolution: {integrity: sha512-Aup7aUOfpbAUg2ROOJN6Iw5f9DMBlzu0mIkm/malLQFN/YQgO48wCj0Kxa3sEHJvPVFg7siR+qRInwXd2qhQKw==}
@@ -276,8 +276,8 @@ packages:
       react-dom: ^18.0 || ^19.0 || >= 19.0.0-rc
       tailwindcss: ^4.1.12
 
-  '@cortex-js/compute-engine@0.55.6':
-    resolution: {integrity: sha512-lWnZ34gtFpUDpFmEMdsL+5HJuh7hyj0DoaZhVTFnVtGX2Rf7qFyD+zgTs1vY9h2qhcpKymiakE6evvWzI6kwtA==}
+  '@cortex-js/compute-engine@0.58.0':
+    resolution: {integrity: sha512-N0+vXjVZfKwJS7ZIGvq41mojI55m5TrdDXveAXzNjzjZ9iNiNrdEzXL2EmrcP+9GCWCwTonrEeZWAIG78f3INg==}
     engines: {node: '>=21.7.3', npm: '>=10.5.0'}
 
   '@dotenvx/dotenvx@1.71.0':
@@ -3043,8 +3043,8 @@ packages:
     resolution: {integrity: sha512-/IXtbwEk5HTPyEwyKX6hGkYXxM9nbj64B+ilVJnC/R6B0pH5G4V3b0pVbL7DBj4tkhBAppbQUlf6F6Xl9LHu1g==}
     engines: {node: '>= 0.4'}
 
-  mathlive@0.109.2:
-    resolution: {integrity: sha512-/2uNk8xFP8msIINwWFKv9bBLnCnaNL2wzUWaDu89Vj7sSuIUX8FFg0PY6XER0pNpHJCa/T+Ct5MK6m+zFTdPKw==}
+  mathlive@0.110.0:
+    resolution: {integrity: sha512-UOpJsQ6h1eeN0xZULGTl1MwUB/lZLCDuzKeHvKEh7Zra8U/rtgDNrssj5PZdJtBTIV48AfEhtv6rv47AeMOxJA==}
 
   mdast-util-to-hast@13.2.1:
     resolution: {integrity: sha512-cctsq2wp5vTsLIcaymblUriiTcZd0CwWtCbLvrOzYCDZoWyMNV8sZ7krj09FSnsiJi3WVsHLM4k6Dq/yaPyCXA==}
@@ -4011,7 +4011,7 @@ packages:
 
 snapshots:
 
-  '@arnog/colors@0.3.0': {}
+  '@arnog/colors@0.5.0': {}
 
   '@babel/code-frame@7.29.7':
     dependencies:
@@ -4311,9 +4311,9 @@ snapshots:
       - refractor
       - sugar-high
 
-  '@cortex-js/compute-engine@0.55.6':
+  '@cortex-js/compute-engine@0.58.0':
     dependencies:
-      '@arnog/colors': 0.3.0
+      '@arnog/colors': 0.5.0
       complex-esm: 2.1.1-esm1
       decimal.js: 10.6.0
 
@@ -7029,9 +7029,9 @@ snapshots:
 
   math-intrinsics@1.1.0: {}
 
-  mathlive@0.109.2:
+  mathlive@0.110.0:
     dependencies:
-      '@cortex-js/compute-engine': 0.55.6
+      '@cortex-js/compute-engine': 0.58.0
 
   mdast-util-to-hast@13.2.1:
     dependencies:
