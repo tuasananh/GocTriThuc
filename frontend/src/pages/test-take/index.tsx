@@ -12,6 +12,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Loader2, ArrowRight, ArrowLeft } from 'lucide-react';
 import { TestCountdown } from './_components/TestCountdown';
 import { QuestionOptionList } from './_components/QuestionOptionList';
+import { RichTextViewer } from '@/components/rich-text-editor/RichTextViewer';
 
 export function TestTakePage() {
   const { testId } = useParams<{ testId: string }>();
@@ -69,7 +70,6 @@ export function TestTakePage() {
         return;
       }
       setError('Không thể khởi tạo phiên làm bài. Vui lòng thử lại.');
-      console.error(err);
     } finally {
       setLoading(false);
     }
@@ -90,8 +90,7 @@ export function TestTakePage() {
       await api.put(`/api/tests/sessions/${session.id}/answers/${questionId}`, {
         answer: newAnswers,
       });
-    } catch (err) {
-      console.error('Lỗi khi lưu câu trả lời', err);
+    } catch {
       toast.error('Có lỗi xảy ra khi lưu câu trả lời. Vui lòng kiểm tra mạng!');
     }
   };
@@ -111,8 +110,7 @@ export function TestTakePage() {
       await api.post(`/api/tests/sessions/${session.id}/submit`);
       toast.success('Nộp bài thành công!');
       navigate(ROUTES.TEST_RESULT(session.id), { replace: true });
-    } catch (err) {
-      console.error('Lỗi khi nộp bài', err);
+    } catch {
       toast.error('Lỗi nộp bài! Vui lòng liên hệ hỗ trợ.');
       setSubmitting(false); // Only allow re-submit if it failed
     }
@@ -194,10 +192,10 @@ export function TestTakePage() {
             {questions.map((q, index) => (
               <Card key={q.id} id={`question-${q.id}`} className="scroll-mt-24 shadow-sm">
                 <CardHeader className="bg-muted/30 border-b pb-4">
-                  <CardTitle className="text-base flex items-start gap-2 leading-relaxed">
-                    <span className="font-bold text-primary shrink-0">Câu {index + 1}:</span>
-                    {q.statement}
-                  </CardTitle>
+                  <div className="flex items-start gap-2">
+                    <span className="font-bold text-primary shrink-0 mt-1">Câu {index + 1}:</span>
+                    <RichTextViewer htmlContent={q.statement} className="flex-1" />
+                  </div>
                 </CardHeader>
                 <CardContent className="pt-6">
                   <QuestionOptionList

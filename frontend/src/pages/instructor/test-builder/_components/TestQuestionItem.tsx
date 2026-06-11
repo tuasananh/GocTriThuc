@@ -1,8 +1,13 @@
+import { useState, useEffect } from 'react';
+import { cn } from '@/lib/utils';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Trash2, CheckCircle2 } from 'lucide-react';
 import type { QuestionDto } from '@/types';
+import { RichTextViewer } from '@/components/rich-text-editor/RichTextViewer';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -19,9 +24,33 @@ interface TestQuestionItemProps {
   question: QuestionDto & { point?: number; order?: number };
   index: number;
   onRemove: () => void;
+  onUpdatePoint?: (point: number) => void;
 }
 
-export function TestQuestionItem({ question, index, onRemove }: TestQuestionItemProps) {
+export function TestQuestionItem({
+  question,
+  index,
+  onRemove,
+  onUpdatePoint,
+}: TestQuestionItemProps) {
+  const [localPoint, setLocalPoint] = useState(question.point ?? 1);
+  const [prevPropPoint, setPrevPropPoint] = useState(question.point ?? 1);
+
+  // Sync state if props change from outside
+  if ((question.point ?? 1) !== prevPropPoint) {
+    setLocalPoint(question.point ?? 1);
+    setPrevPropPoint(question.point ?? 1);
+  }
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (localPoint !== (question.point ?? 1) && onUpdatePoint) {
+        onUpdatePoint(localPoint);
+      }
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [localPoint, question.point, onUpdatePoint]);
+
   return (
     <Card className="relative group">
       <CardContent className="p-4 sm:p-6">
@@ -31,11 +60,17 @@ export function TestQuestionItem({ question, index, onRemove }: TestQuestionItem
               <Badge variant="secondary" className="font-semibold">
                 Câu {index + 1}
               </Badge>
-              {question.point !== undefined && (
-                <Badge variant="outline" className="text-muted-foreground">
-                  {question.point} điểm
-                </Badge>
-              )}
+              <div className="flex items-center gap-2">
+                <Label className="text-xs text-muted-foreground">Điểm</Label>
+                <Input
+                  type="number"
+                  min={0}
+                  step={0.5}
+                  className="w-16 h-7 text-sm px-2"
+                  value={localPoint}
+                  onChange={(e) => setLocalPoint(Number(e.target.value))}
+                />
+              </div>
               {question.isSingleChoice ? (
                 <Badge variant="outline" className="bg-primary/5 text-primary border-primary/20">
                   Một đáp án
@@ -46,9 +81,9 @@ export function TestQuestionItem({ question, index, onRemove }: TestQuestionItem
                 </Badge>
               )}
             </div>
-            <h4 className="font-medium text-foreground whitespace-pre-wrap">
-              {question.statement}
-            </h4>
+            <div className="font-medium text-foreground whitespace-pre-wrap">
+              <RichTextViewer htmlContent={question.statement} />
+            </div>
           </div>
           <AlertDialog>
             <AlertDialogTrigger asChild>
@@ -88,11 +123,12 @@ export function TestQuestionItem({ question, index, onRemove }: TestQuestionItem
             return (
               <div
                 key={i}
-                className={`p-3 rounded-lg border text-sm flex items-start gap-3 transition-colors ${
+                className={cn(
+                  'p-3 rounded-lg border text-sm flex items-start gap-3 transition-colors',
                   isCorrect
                     ? 'border-green-500/30 bg-green-50/50 text-green-900 dark:bg-green-900/10 dark:text-green-100'
-                    : 'border-border/50 bg-muted/30 text-muted-foreground'
-                }`}
+                    : 'border-border/50 bg-muted/30 text-muted-foreground',
+                )}
               >
                 <div className="mt-0.5">
                   {isCorrect ? (

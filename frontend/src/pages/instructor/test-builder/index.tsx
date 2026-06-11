@@ -6,22 +6,14 @@ import type { LessonDetailDto, TestQuestionDto } from '@/types';
 import { PageShell } from '@/components/PageShell';
 import { SectionHeader } from '@/components/SectionHeader';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+
 import { Plus, ArrowLeft } from 'lucide-react';
 import { EmptyState } from '@/components/EmptyState';
 import { ErrorState } from '@/components/ErrorState';
 import { SkeletonCard } from '@/components/SkeletonCard';
 import { TestQuestionItem } from './_components/TestQuestionItem';
 import { QuestionPickerModal } from './_components/QuestionPickerModal';
+import { TestSettingsForm } from './_components/TestSettingsForm';
 
 export function TestBuilderPage() {
   const { lessonId } = useParams<{ lessonId: string }>();
@@ -49,8 +41,7 @@ export function TestBuilderPage() {
         const qr = await api.get<TestQuestionDto[]>(`/api/tests/${r.data.test.testId}/questions`);
         setQuestions(qr.data);
       }
-    } catch (err) {
-      console.error('Failed to load test details', err);
+    } catch {
       setError('Không thể tải dữ liệu bài kiểm tra. Vui lòng kiểm tra kết nối.');
     } finally {
       setLoading(false);
@@ -67,8 +58,7 @@ export function TestBuilderPage() {
     try {
       await api.put(`/api/lessons/${lessonId}/test`, { statement, timeLimit });
       toast.success('Đã lưu cài đặt bài kiểm tra');
-    } catch (err) {
-      console.error('Save failed', err);
+    } catch {
       toast.error('Không thể lưu cài đặt');
     } finally {
       setSaving(false);
@@ -82,9 +72,19 @@ export function TestBuilderPage() {
       await api.delete(`/api/tests/${testId}/questions/${questionId}`);
       setQuestions((q) => q.filter((x) => x.id !== questionId));
       toast.success('Đã xóa câu hỏi khỏi bài kiểm tra');
-    } catch (err) {
-      console.error('Remove failed', err);
+    } catch {
       toast.error('Không thể xóa câu hỏi');
+    }
+  };
+
+  const updateQuestionPoint = async (questionId: string, point: number) => {
+    if (!testId) return;
+    try {
+      await api.patch(`/api/tests/${testId}/questions/${questionId}`, { point });
+      setQuestions((q) => q.map((x) => (x.id === questionId ? { ...x, point } : x)));
+      toast.success('Đã cập nhật điểm');
+    } catch {
+      toast.error('Không thể cập nhật điểm');
     }
   };
 
@@ -133,42 +133,14 @@ export function TestBuilderPage() {
 
       <div className="grid gap-6 lg:grid-cols-3">
         {/* Settings panel */}
-        <Card className="lg:col-span-1 border-primary/10 shadow-sm self-start">
-          <CardHeader className="bg-primary/5 pb-4 border-b">
-            <CardTitle className="text-lg flex items-center gap-2">Cài đặt chung</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-5 pt-6">
-            <div className="space-y-2">
-              <Label className="text-foreground font-medium">Đề bài / Hướng dẫn</Label>
-              <Textarea
-                rows={4}
-                className="resize-none"
-                placeholder="Nhập hướng dẫn làm bài cho học viên..."
-                value={statement}
-                onChange={(e) => setStatement(e.target.value)}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label className="text-foreground font-medium">Thời gian làm bài</Label>
-              <Select value={String(timeLimit)} onValueChange={(v) => setTimeLimit(Number(v))}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="900">15 phút</SelectItem>
-                  <SelectItem value="1800">30 phút</SelectItem>
-                  <SelectItem value="2700">45 phút</SelectItem>
-                  <SelectItem value="3600">60 phút</SelectItem>
-                  <SelectItem value="5400">90 phút</SelectItem>
-                  <SelectItem value="7200">120 phút</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <Button className="w-full mt-2" onClick={saveSettings} disabled={saving}>
-              {saving ? 'Đang lưu...' : 'Lưu cài đặt'}
-            </Button>
-          </CardContent>
-        </Card>
+        <TestSettingsForm
+          statement={statement}
+          onStatementChange={setStatement}
+          timeLimit={timeLimit}
+          onTimeLimitChange={setTimeLimit}
+          onSave={saveSettings}
+          saving={saving}
+        />
 
         {/* Question list */}
         <div className="lg:col-span-2 space-y-4">
@@ -197,6 +169,7 @@ export function TestBuilderPage() {
                   question={q}
                   index={i}
                   onRemove={() => removeQuestion(q.id)}
+                  onUpdatePoint={(p) => updateQuestionPoint(q.id, p)}
                 />
               ))}
             </div>
