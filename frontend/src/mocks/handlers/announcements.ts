@@ -1,4 +1,4 @@
-﻿import { http, HttpResponse } from 'msw';
+import { http, HttpResponse } from 'msw';
 import type { AnnouncementDto, CommentDto, PageResponse } from '@/types';
 
 // In-memory store cho MSW
@@ -23,7 +23,7 @@ const saveComments = (data: MockCommentDto[]) => {
 };
 
 export const announcementsHandlers = [
-  // Láº¥y danh sÃ¡ch thÃ´ng bÃ¡o cá»§a khÃ³a há»c
+  // GET /api/courses/:courseId/announcements
   http.get('/api/courses/:courseId/announcements', ({ params, request }) => {
     const { courseId } = params;
     const url = new URL(request.url);
@@ -32,7 +32,6 @@ export const announcementsHandlers = [
 
     const allAnnouncements = getAnnouncements();
     const filtered = allAnnouncements.filter((a) => a.courseId === courseId);
-    // Sort desc by createdAt
     filtered.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
     const start = page * size;
@@ -40,18 +39,19 @@ export const announcementsHandlers = [
 
     const response: PageResponse<AnnouncementDto> = {
       content: paginated,
-      page: {
-        number: page,
-        size: size,
-        totalElements: filtered.length,
-        totalPages: Math.ceil(filtered.length / size),
-      },
+      totalElements: filtered.length,
+      totalPages: Math.ceil(filtered.length / size),
+      number: page,
+      size: size,
+      first: page === 0,
+      last: start + size >= filtered.length,
+      empty: paginated.length === 0,
     };
 
     return HttpResponse.json(response);
   }),
 
-  // ÄÄƒng thÃ´ng bÃ¡o má»›i
+  // POST /api/courses/:courseId/announcements
   http.post('/api/courses/:courseId/announcements', async ({ params, request }) => {
     const { courseId } = params;
     const data = (await request.json()) as { title: string; content: string };
@@ -62,13 +62,7 @@ export const announcementsHandlers = [
       courseId: courseId as string,
       title: data.title,
       content: data.content,
-      author: {
-        id: 'user-1',
-        email: 'instructor@example.com',
-        username: 'instructor1',
-        displayName: 'Giáº£ng viÃªn',
-        role: 'teacher',
-      },
+      author: { id: '1', displayName: 'Ngo Ba Kha', username: 'khaba', avatarUrl: null },
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };
@@ -79,30 +73,23 @@ export const announcementsHandlers = [
     return HttpResponse.json(newAnnouncement, { status: 201 });
   }),
 
-  // Láº¥y bÃ¬nh luáº­n cá»§a thÃ´ng bÃ¡o
+  // GET /api/announcements/:id/comments
   http.get('/api/announcements/:id/comments', ({ params }) => {
     const { id } = params;
     const allComments = getComments();
-
-    // Lá»c ra cÃ¡c comment thuá»™c vá» announcement nÃ y
     const filtered = allComments.filter((c) => c.referenceId === id);
 
-    // Dá»±ng cÃ¢y (tree)
     const buildTree = (parentId: string | null): CommentDto[] => {
       return filtered
         .filter((c) => c.parentId === parentId)
-        .map((c) => ({
-          ...c,
-          replies: buildTree(c.id),
-        }))
+        .map((c) => ({ ...c, replies: buildTree(c.id) }))
         .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
     };
 
-    const roots = buildTree(null);
-    return HttpResponse.json(roots);
+    return HttpResponse.json(buildTree(null));
   }),
 
-  // ThÃªm bÃ¬nh luáº­n cho thÃ´ng bÃ¡o
+  // POST /api/announcements/:id/comments
   http.post('/api/announcements/:id/comments', async ({ params, request }) => {
     const { id } = params;
     const data = (await request.json()) as { content: string; parentId?: string };
@@ -114,13 +101,7 @@ export const announcementsHandlers = [
       content: data.content,
       parentId: data.parentId ?? null,
       replies: [],
-      author: {
-        id: 'user-1',
-        email: 'user@example.com',
-        username: 'user1',
-        displayName: 'NgÆ°á»i dÃ¹ng',
-        role: 'student',
-      },
+      author: { id: '1', displayName: 'Ngo Ba Kha', username: 'khaba', avatarUrl: null },
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       editedAt: null,
@@ -132,7 +113,7 @@ export const announcementsHandlers = [
     return HttpResponse.json(newComment, { status: 201 });
   }),
 
-  // Sá»­a bÃ¬nh luáº­n
+  // PUT /api/announcements/comments/:commentId
   http.put('/api/announcements/comments/:commentId', async ({ params, request }) => {
     const { commentId } = params;
     const data = (await request.json()) as { content: string };
@@ -152,12 +133,11 @@ export const announcementsHandlers = [
     return HttpResponse.json(allComments[commentIndex]);
   }),
 
-  // XÃ³a bÃ¬nh luáº­n (cascade)
+  // DELETE /api/announcements/comments/:commentId
   http.delete('/api/announcements/comments/:commentId', ({ params }) => {
     const { commentId } = params;
     let allComments = getComments();
 
-    // TÃ¬m táº¥t cáº£ children cáº§n xÃ³a (cascade)
     const toDelete = new Set<string>();
     toDelete.add(commentId as string);
 
