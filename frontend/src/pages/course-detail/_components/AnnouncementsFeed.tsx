@@ -25,9 +25,12 @@ export function AnnouncementsFeed({ courseId, isAuthor }: { courseId: string; is
   const fetchAnnouncements = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await api.get<PageResponse<AnnouncementDto>>(`/api/courses/${courseId}/announcements`, {
-        params: { size: 20, page: 0 },
-      });
+      const res = await api.get<PageResponse<AnnouncementDto>>(
+        `/api/courses/${courseId}/announcements`,
+        {
+          params: { size: 20, page: 0 },
+        },
+      );
       setAnnouncements(res.data.content);
     } catch (err) {
       console.error(err);
@@ -106,7 +109,10 @@ export function AnnouncementsFeed({ courseId, isAuthor }: { courseId: string; is
               <Button variant="ghost" onClick={() => setShowForm(false)}>
                 Hủy
               </Button>
-              <Button onClick={handleCreate} disabled={creating || !title.trim() || !content.trim()}>
+              <Button
+                onClick={handleCreate}
+                disabled={creating || !title.trim() || !content.trim()}
+              >
                 {creating && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
                 Đăng tin
               </Button>
@@ -200,7 +206,12 @@ function AnnouncementItem({
     const updateNode = (nodes: CommentDto[]): CommentDto[] => {
       return nodes.map((n) => {
         if (n.id === id) {
-          return { ...n, content: res.data.content, editedAt: res.data.editedAt, updatedAt: res.data.updatedAt };
+          return {
+            ...n,
+            content: res.data.content,
+            editedAt: res.data.editedAt,
+            updatedAt: res.data.updatedAt,
+          };
         }
         if (n.replies) {
           return { ...n, replies: updateNode(n.replies) };
@@ -214,10 +225,12 @@ function AnnouncementItem({
   const handleDelete = async (id: string) => {
     await api.delete(`/api/announcements/comments/${id}`);
     const removeNode = (nodes: CommentDto[]): CommentDto[] => {
-      return nodes.filter((n) => n.id !== id).map((n) => ({
-        ...n,
-        replies: n.replies ? removeNode(n.replies) : [],
-      }));
+      return nodes
+        .filter((n) => n.id !== id)
+        .map((n) => ({
+          ...n,
+          replies: n.replies ? removeNode(n.replies) : [],
+        }));
     };
     setComments((prev) => removeNode(prev));
   };
@@ -236,8 +249,11 @@ function AnnouncementItem({
             <div>
               <CardTitle className="text-lg">{announcement.title}</CardTitle>
               <p className="text-xs text-muted-foreground mt-1">
-                Đăng bởi <span className="font-medium text-foreground">{announcement.author.displayName}</span> •{' '}
-                {new Date(announcement.createdAt).toLocaleDateString('vi-VN')}
+                Đăng bởi{' '}
+                <span className="font-medium text-foreground">
+                  {announcement.author.displayName}
+                </span>{' '}
+                • {new Date(announcement.createdAt).toLocaleDateString('vi-VN')}
               </p>
             </div>
           </div>
@@ -247,9 +263,14 @@ function AnnouncementItem({
         <div className="whitespace-pre-wrap text-sm leading-relaxed mb-6">
           {announcement.content}
         </div>
-        
+
         <div className="pt-4 border-t">
-          <Button variant="ghost" size="sm" onClick={handleToggleComments} className="text-muted-foreground hover:text-foreground">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleToggleComments}
+            className="text-muted-foreground hover:text-foreground"
+          >
             <MessageSquare className="w-4 h-4 mr-2" />
             Bình luận
           </Button>

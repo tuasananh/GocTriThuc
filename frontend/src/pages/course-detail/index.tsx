@@ -313,11 +313,14 @@ export function CourseDetailPage() {
               Thông báo
             </TabsTrigger>
           </TabsList>
-          
+
           <TabsContent value="modules" className="mt-0">
-            <ModuleSidebar courseId={id!} visible={accessStatus === 'enrolled' || isAuthor || isAdmin} />
+            <ModuleSidebar
+              courseId={id!}
+              visible={accessStatus === 'enrolled' || isAuthor || isAdmin}
+            />
           </TabsContent>
-          
+
           <TabsContent value="announcements" className="mt-0">
             <AnnouncementsFeed courseId={id!} isAuthor={isAuthor} />
           </TabsContent>

@@ -31,7 +31,9 @@ export const announcementsHandlers = [
     const allAnnouncements = getAnnouncements();
     const filtered = allAnnouncements.filter((a: any) => a.courseId === courseId);
     // Sort desc by createdAt
-    filtered.sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    filtered.sort(
+      (a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+    );
 
     const start = page * size;
     const paginated = filtered.slice(start, start + size);
@@ -93,7 +95,9 @@ export const announcementsHandlers = [
           ...c,
           replies: buildTree(c.id),
         }))
-        .sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+        .sort(
+          (a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+        );
     };
 
     const roots = buildTree(null);
@@ -133,10 +137,10 @@ export const announcementsHandlers = [
   http.put('/api/announcements/comments/:commentId', async ({ params, request }) => {
     const { commentId } = params;
     const data = (await request.json()) as { content: string };
-    
+
     const allComments = getComments();
     const commentIndex = allComments.findIndex((c: any) => c.id === commentId);
-    
+
     if (commentIndex === -1) {
       return new HttpResponse(null, { status: 404 });
     }
@@ -144,7 +148,7 @@ export const announcementsHandlers = [
     allComments[commentIndex].content = data.content;
     allComments[commentIndex].editedAt = new Date().toISOString();
     allComments[commentIndex].updatedAt = new Date().toISOString();
-    
+
     saveComments(allComments);
     return HttpResponse.json(allComments[commentIndex]);
   }),
@@ -153,7 +157,7 @@ export const announcementsHandlers = [
   http.delete('/api/announcements/comments/:commentId', async ({ params }) => {
     const { commentId } = params;
     let allComments = getComments();
-    
+
     // Tìm tất cả children cần xóa (cascade)
     const toDelete = new Set<string>();
     toDelete.add(commentId as string);
