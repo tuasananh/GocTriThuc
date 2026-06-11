@@ -69,7 +69,6 @@ export function TestTakePage() {
         return;
       }
       setError('Không thể khởi tạo phiên làm bài. Vui lòng thử lại.');
-      console.error(err);
     } finally {
       setLoading(false);
     }
@@ -90,8 +89,7 @@ export function TestTakePage() {
       await api.put(`/api/tests/sessions/${session.id}/answers/${questionId}`, {
         answer: newAnswers,
       });
-    } catch (err) {
-      console.error('Lỗi khi lưu câu trả lời', err);
+    } catch {
       toast.error('Có lỗi xảy ra khi lưu câu trả lời. Vui lòng kiểm tra mạng!');
     }
   };
@@ -111,8 +109,7 @@ export function TestTakePage() {
       await api.post(`/api/tests/sessions/${session.id}/submit`);
       toast.success('Nộp bài thành công!');
       navigate(ROUTES.TEST_RESULT(session.id), { replace: true });
-    } catch (err) {
-      console.error('Lỗi khi nộp bài', err);
+    } catch {
       toast.error('Lỗi nộp bài! Vui lòng liên hệ hỗ trợ.');
       setSubmitting(false); // Only allow re-submit if it failed
     }

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { cn } from '@/lib/utils';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -121,11 +122,12 @@ export function TestQuestionItem({
             return (
               <div
                 key={i}
-                className={`p-3 rounded-lg border text-sm flex items-start gap-3 transition-colors ${
+                className={cn(
+                  'p-3 rounded-lg border text-sm flex items-start gap-3 transition-colors',
                   isCorrect
                     ? 'border-green-500/30 bg-green-50/50 text-green-900 dark:bg-green-900/10 dark:text-green-100'
-                    : 'border-border/50 bg-muted/30 text-muted-foreground'
-                }`}
+                    : 'border-border/50 bg-muted/30 text-muted-foreground',
+                )}
               >
                 <div className="mt-0.5">
                   {isCorrect ? (

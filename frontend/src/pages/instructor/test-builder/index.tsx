@@ -41,8 +41,7 @@ export function TestBuilderPage() {
         const qr = await api.get<TestQuestionDto[]>(`/api/tests/${r.data.test.testId}/questions`);
         setQuestions(qr.data);
       }
-    } catch (err) {
-      console.error('Failed to load test details', err);
+    } catch {
       setError('Không thể tải dữ liệu bài kiểm tra. Vui lòng kiểm tra kết nối.');
     } finally {
       setLoading(false);
@@ -59,8 +58,7 @@ export function TestBuilderPage() {
     try {
       await api.put(`/api/lessons/${lessonId}/test`, { statement, timeLimit });
       toast.success('Đã lưu cài đặt bài kiểm tra');
-    } catch (err) {
-      console.error('Save failed', err);
+    } catch {
       toast.error('Không thể lưu cài đặt');
     } finally {
       setSaving(false);
@@ -74,8 +72,7 @@ export function TestBuilderPage() {
       await api.delete(`/api/tests/${testId}/questions/${questionId}`);
       setQuestions((q) => q.filter((x) => x.id !== questionId));
       toast.success('Đã xóa câu hỏi khỏi bài kiểm tra');
-    } catch (err) {
-      console.error('Remove failed', err);
+    } catch {
       toast.error('Không thể xóa câu hỏi');
     }
   };
@@ -86,8 +83,7 @@ export function TestBuilderPage() {
       await api.patch(`/api/tests/${testId}/questions/${questionId}`, { point });
       setQuestions((q) => q.map((x) => (x.id === questionId ? { ...x, point } : x)));
       toast.success('Đã cập nhật điểm');
-    } catch (err) {
-      console.error('Update point failed', err);
+    } catch {
       toast.error('Không thể cập nhật điểm');
     }
   };

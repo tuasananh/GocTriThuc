@@ -39,8 +39,7 @@ export function QuestionPickerModal({
         params: { search: debouncedSearch, size: 50 },
       });
       setQuestions(res.data.content || []);
-    } catch (err) {
-      console.error('Failed to fetch questions', err);
+    } catch {
       toast.error('Không thể tải danh sách câu hỏi');
     } finally {
       setLoading(false);
@@ -65,8 +64,7 @@ export function QuestionPickerModal({
       });
       toast.success('Đã thêm câu hỏi vào đề thi');
       onAdded({ ...q, point, order });
-    } catch (err) {
-      console.error('Failed to add question', err);
+    } catch {
       toast.error('Không thể thêm câu hỏi');
     } finally {
       setAddingId(null);
