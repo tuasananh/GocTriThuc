@@ -62,6 +62,7 @@ export const testsHandlers = [
     ];
     // Omit correctChoices for the student response
     const studentQuestions = questions.map((q) => {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { correctChoices, ...rest } = q;
       return rest;
     });
