@@ -1,7 +1,7 @@
 import { http, HttpResponse } from 'msw';
-// Wait, let's check how other handlers store data. I will use a simple in-memory array for sessions and answers.
 
-// Actually, I should use sessionStorage to keep the session alive across reloads!
+// Sử dụng sessionStorage để lưu trữ tạm trạng thái phiên làm bài (session) và đáp án (answers).
+// Việc này giúp sinh viên không bị mất dữ liệu hoặc trạng thái thời gian khi lỡ tay F5 (reload) trang.
 const getSessions = () => {
   const str = sessionStorage.getItem('mock_sessions');
   return str ? JSON.parse(str) : [];
