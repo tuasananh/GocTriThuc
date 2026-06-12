@@ -1,10 +1,11 @@
 import { useState, useEffect, useCallback } from 'react';
 import { api } from '@/lib/api';
-import type { PageResponse, CourseDto, AccessRequestDto } from '@/types';
+import type { PageResponse, CourseDto, AccessRequestDto, AccessRequest } from '@/types';
 import { PageShell } from '@/components/PageShell';
 import { SectionHeader } from '@/components/SectionHeader';
 import { SkeletonCard } from '@/components/SkeletonCard';
 import { ErrorState } from '@/components/ErrorState';
+import { EmptyState } from '@/components/EmptyState';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
 import { ROUTES } from '@/lib/routes';
@@ -23,9 +24,7 @@ import {
 
 export const InstructorDashboardPage = () => {
   const [courses, setCourses] = useState<CourseDto[]>([]);
-  const [accessRequests, setAccessRequests] = useState<
-    (AccessRequestDto & { courseTitle: string })[]
-  >([]);
+  const [accessRequests, setAccessRequests] = useState<AccessRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -158,7 +157,7 @@ export const InstructorDashboardPage = () => {
                             <Button
                               size="sm"
                               variant="outline"
-                              className="text-emerald-600 border-emerald-200 hover:bg-emerald-50 dark:hover:bg-emerald-950"
+                              className="text-primary border-primary/30 hover:bg-primary/10"
                               onClick={() => handleApprove(req.courseId, req.userId)}
                             >
                               <Check size={16} className="mr-1" /> Duyệt
@@ -189,13 +188,11 @@ export const InstructorDashboardPage = () => {
             />
 
             {courses.length === 0 ? (
-              <div className="text-center py-12 bg-muted/30 rounded-lg border border-dashed">
-                <BookOpen size={48} className="mx-auto text-muted-foreground mb-4" />
-                <h3 className="text-lg font-medium">Bạn chưa tạo khóa học nào</h3>
-                <p className="text-muted-foreground mt-1 mb-4">
-                  Hãy bắt đầu chia sẻ kiến thức của bạn ngay hôm nay.
-                </p>
-              </div>
+              <EmptyState
+                icon={BookOpen}
+                title="Bạn chưa tạo khóa học nào"
+                description="Hãy bắt đầu chia sẻ kiến thức của bạn ngay hôm nay."
+              />
             ) : (
               <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
                 {courses.map((course) => (

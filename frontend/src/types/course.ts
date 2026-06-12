@@ -52,6 +52,8 @@ export interface AccessRequestDto {
   requestedAt: string;
 }
 
+export type AccessRequest = AccessRequestDto & { courseTitle: string };
+
 // ============================================================
 // Module & Lesson DTOs
 // ============================================================

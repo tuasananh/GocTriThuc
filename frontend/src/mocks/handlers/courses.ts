@@ -48,17 +48,22 @@ export const courseHandlers = [
     const search = url.searchParams.get('search') ?? '';
     const visibility = url.searchParams.get('visibility') ?? 'public';
     const own = url.searchParams.get('own') === 'true';
+    const enrolled = url.searchParams.get('enrolled') === 'true';
 
     let filtered = mockCourses;
     if (own) {
       // Current mock user is vinh_nc (id: '1')
       filtered = filtered.filter((c) => c.author.id === '1');
+    } else if (enrolled) {
+      // Mock that user is enrolled in first 3 courses
+      filtered = filtered.slice(0, 3);
     }
-    if (visibility) {
+
+    if (visibility && !enrolled) {
       filtered = filtered.filter((c) => c.visibility === visibility);
     }
-    // Only check isPublished for general public/restricted queries (not for own drafts)
-    if (!own) {
+    // Only check isPublished for general public/restricted queries (not for own drafts or enrolled)
+    if (!own && !enrolled) {
       filtered = filtered.filter((c) => c.isPublished);
     }
 

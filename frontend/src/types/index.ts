@@ -12,6 +12,7 @@ export type {
   AccessStatus,
   AccessStatusResponse,
   AccessRequestDto,
+  AccessRequest,
   LessonType,
   ModuleDto,
   LessonDto,

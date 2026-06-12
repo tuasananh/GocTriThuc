@@ -21,6 +21,8 @@ import { toast } from 'sonner';
 import { SkeletonCard } from '@/components/SkeletonCard';
 import { ErrorState } from '@/components/ErrorState';
 import { RoleBadge } from '@/components/RoleBadge';
+import { EmptyState } from '@/components/EmptyState';
+import { Users } from 'lucide-react';
 
 export const UserRoleTable = () => {
   const [users, setUsers] = useState<AdminUserResponse[]>([]);
@@ -84,6 +86,16 @@ export const UserRoleTable = () => {
 
   if (error) {
     return <ErrorState message={error} onRetry={fetchUsers} />;
+  }
+
+  if (users.length === 0) {
+    return (
+      <EmptyState
+        icon={Users}
+        title="Không có người dùng"
+        description="Hiện tại không có người dùng nào trong hệ thống."
+      />
+    );
   }
 
   return (
