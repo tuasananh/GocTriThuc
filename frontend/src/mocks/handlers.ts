@@ -16,6 +16,5 @@ export const handlers = [
   ...testsHandlers,
   ...questionHandlers,
   ...fileHandlers,
-  ...testsHandlers,
   ...adminHandlers,
 ];
