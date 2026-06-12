@@ -49,9 +49,7 @@ export function QuestionOptionList({
               <input
                 type={isSingleChoice ? 'radio' : 'checkbox'}
                 name={isSingleChoice ? `question-${questionId}` : `option-${questionId}-${index}`}
-                className={`w-4 h-4 accent-primary text-primary bg-background border-input ring-offset-background focus:ring-2 focus:ring-ring focus:ring-offset-2 ${
-                  isSingleChoice ? 'rounded-full' : 'rounded-sm'
-                }`}
+                className="w-4 h-4 accent-primary cursor-pointer"
                 checked={isSelected}
                 onChange={(e) => handleChange(index, e.target.checked)}
               />

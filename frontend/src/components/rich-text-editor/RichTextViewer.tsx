@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   BlockNoteSchema,
   defaultInlineContentSpecs,
@@ -37,6 +37,19 @@ export function RichTextViewer({ htmlContent, className, emptyMessage }: RichTex
     schema: viewerSchema,
     initialContent: undefined,
   });
+
+  // Theo dõi dark/light mode dựa trên class 'dark' của <html>
+  const [theme, setTheme] = useState<'light' | 'dark'>(() =>
+    document.documentElement.classList.contains('dark') ? 'dark' : 'light',
+  );
+
+  useEffect(() => {
+    const observer = new MutationObserver(() => {
+      setTheme(document.documentElement.classList.contains('dark') ? 'dark' : 'light');
+    });
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+    return () => observer.disconnect();
+  }, []);
 
   const parsedContent = useMemo(() => htmlContent?.trim() ?? '', [htmlContent]);
 
@@ -95,7 +108,7 @@ export function RichTextViewer({ htmlContent, className, emptyMessage }: RichTex
           margin-bottom: 0;
         }
       `}</style>
-      <BlockNoteView editor={editor} editable={false} theme="light" />
+      <BlockNoteView editor={editor} editable={false} theme={theme} />
     </div>
   );
 }
