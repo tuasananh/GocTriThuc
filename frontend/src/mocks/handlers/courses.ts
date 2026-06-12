@@ -48,17 +48,22 @@ export const courseHandlers = [
     const search = url.searchParams.get('search') ?? '';
     const visibility = url.searchParams.get('visibility') ?? 'public';
     const own = url.searchParams.get('own') === 'true';
+    const enrolled = url.searchParams.get('enrolled') === 'true';
 
     let filtered = mockCourses;
     if (own) {
       // Current mock user is vinh_nc (id: '1')
       filtered = filtered.filter((c) => c.author.id === '1');
+    } else if (enrolled) {
+      // Mock that user is enrolled in first 3 courses
+      filtered = filtered.slice(0, 3);
     }
-    if (visibility) {
+
+    if (visibility && !enrolled) {
       filtered = filtered.filter((c) => c.visibility === visibility);
     }
-    // Only check isPublished for general public/restricted queries (not for own drafts)
-    if (!own) {
+    // Only check isPublished for general public/restricted queries (not for own drafts or enrolled)
+    if (!own && !enrolled) {
       filtered = filtered.filter((c) => c.isPublished);
     }
 
@@ -136,7 +141,42 @@ export const courseHandlers = [
 
   // ── POST /api/courses/:id/access-requests ──────────────────
   http.post('/api/courses/:id/access-requests', async () => {
+    await delay(500);
+    return HttpResponse.json({}, { status: 201 });
+  }),
+
+  // ── GET /api/courses/:id/access-requests ───────────────────
+  http.get('/api/courses/:id/access-requests', async ({ params }) => {
     await delay(300);
-    return new HttpResponse(null, { status: 201 });
+    return HttpResponse.json([
+      {
+        userId: '2',
+        courseId: params.id as string,
+        userDisplayName: 'Học viên A',
+        requestedAt: '2026-06-01T10:00:00Z',
+      },
+    ]);
+  }),
+
+  // ── POST /api/courses/:courseId/access-requests/:userId/approve ──
+  http.post('/api/courses/:courseId/access-requests/:userId/approve', async () => {
+    await delay(300);
+    return HttpResponse.json({}, { status: 201 });
+  }),
+
+  // ── DELETE /api/courses/:courseId/access-requests/:userId ──
+  http.delete('/api/courses/:courseId/access-requests/:userId', async () => {
+    await delay(300);
+    return HttpResponse.json({}, { status: 204 });
+  }),
+
+  // ── GET /api/courses/:id/progress ────────────────────────────
+  http.get('/api/courses/:id/progress', async () => {
+    await delay(300);
+    return HttpResponse.json({
+      completedLessons: 4,
+      totalLessons: 10,
+      percent: 40,
+    });
   }),
 ];
