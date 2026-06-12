@@ -13,6 +13,7 @@ import { TestTakePage } from '@/pages/test-take';
 import { TestBuilderPage } from './pages/instructor/test-builder';
 import { InstructorDashboardPage } from './pages/instructor';
 import { AdminDashboardPage } from './pages/admin';
+import { TestResultPage } from '@/pages/test-result';
 import { CommentThreadSinglePage } from '@/pages/comments';
 import { QuestionBankPage } from './pages/instructor/QuestionBankPage';
 import { GuestRoute } from '@/components/GuestRoute';
@@ -55,6 +56,7 @@ function App() {
                   <Route path={ROUTES.PROFILE} element={<ProfilePage />} />
                   <Route path={ROUTES.LESSON(':courseId', ':lessonId')} element={<LessonPage />} />
                   <Route path={ROUTES.TEST_TAKE(':testId')} element={<TestTakePage />} />
+                  <Route path={ROUTES.TEST_RESULT(':sessionId')} element={<TestResultPage />} />
                   <Route
                     path={ROUTE_PATTERNS.COMMENT_THREAD}
                     element={<CommentThreadSinglePage />}
