@@ -41,8 +41,8 @@ export function QuestionOptionList({
             key={index}
             className={`flex items-start gap-3 p-4 rounded-xl border cursor-pointer transition-all ${
               isSelected
-                ? 'border-primary bg-primary/5 ring-1 ring-primary'
-                : 'border-border hover:bg-muted/50'
+                ? 'border-primary bg-primary/10 ring-1 ring-primary/50'
+                : 'border-border bg-card hover:bg-muted/40 hover:border-muted-foreground/30'
             }`}
           >
             <div className="flex h-5 items-center">
