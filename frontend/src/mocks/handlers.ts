@@ -5,6 +5,7 @@ import { fileHandlers } from './handlers/files';
 import { authHandlers } from './handlers/auth';
 import { testsHandlers } from './handlers/tests';
 import { announcementsHandlers } from './handlers/announcements';
+import { adminHandlers } from './handlers/admin';
 
 /**
  * Tất cả mock handlers — import vào browser.ts
@@ -17,4 +18,5 @@ export const handlers = [
   ...fileHandlers,
   ...testsHandlers,
   ...announcementsHandlers,
+  ...adminHandlers,
 ];
