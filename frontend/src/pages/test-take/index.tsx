@@ -11,7 +11,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Loader2, ArrowRight, ArrowLeft } from 'lucide-react';
 import { TestCountdown } from './_components/TestCountdown';
-import { MultipleChoiceQuestion } from './_components/MultipleChoiceQuestion';
+import { QuestionOptionList } from './_components/QuestionOptionList';
 import { RichTextViewer } from '@/components/rich-text-editor/RichTextViewer';
 
 export function TestTakePage() {
@@ -198,7 +198,7 @@ export function TestTakePage() {
                   </div>
                 </CardHeader>
                 <CardContent className="pt-6">
-                  <MultipleChoiceQuestion
+                  <QuestionOptionList
                     questionId={q.id}
                     choices={q.choices}
                     isSingleChoice={q.isSingleChoice}
