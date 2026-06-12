@@ -1,7 +1,7 @@
 import { http, HttpResponse } from 'msw';
-// Wait, let's check how other handlers store data. I will use a simple in-memory array for sessions and answers.
 
-// Actually, I should use sessionStorage to keep the session alive across reloads!
+// Sử dụng sessionStorage để lưu trữ tạm trạng thái phiên làm bài (session) và đáp án (answers).
+// Việc này giúp sinh viên không bị mất dữ liệu hoặc trạng thái thời gian khi lỡ tay F5 (reload) trang.
 const getSessions = () => {
   const str = sessionStorage.getItem('mock_sessions');
   return str ? JSON.parse(str) : [];
@@ -40,6 +40,7 @@ export const testsHandlers = [
         statement: 'React là thư viện của công ty nào?',
         questionType: 'multiple_choice',
         choices: ['Google', 'Meta (Facebook)', 'Microsoft', 'Twitter'],
+        correctChoices: [1],
         isSingleChoice: true,
       },
       {
@@ -47,6 +48,7 @@ export const testsHandlers = [
         statement: 'Các hook cơ bản trong React là gì? (Chọn nhiều)',
         questionType: 'multiple_choice',
         choices: ['useState', 'useForm', 'useEffect', 'useMouse'],
+        correctChoices: [0, 2],
         isSingleChoice: false,
       },
       {
@@ -54,10 +56,37 @@ export const testsHandlers = [
         statement: 'TypeScript có hỗ trợ interface không?',
         questionType: 'multiple_choice',
         choices: ['Có', 'Không'],
+        correctChoices: [0],
         isSingleChoice: true,
       },
     ];
-    return HttpResponse.json(questions);
+    // Omit correctChoices for the student response
+    const studentQuestions = questions.map((q) => {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { correctChoices, ...rest } = q;
+      return rest;
+    });
+    return HttpResponse.json(studentQuestions);
+  }),
+
+  // Thêm câu hỏi vào đề thi
+  http.post('/api/tests/:testId/questions', async () => {
+    return HttpResponse.json({ success: true }, { status: 201 });
+  }),
+
+  // Xóa câu hỏi khỏi đề thi
+  http.delete('/api/tests/:testId/questions/:questionId', async () => {
+    return HttpResponse.json({ success: true });
+  }),
+
+  // Cập nhật điểm câu hỏi
+  http.patch('/api/tests/:testId/questions/:questionId', async () => {
+    return HttpResponse.json({ success: true });
+  }),
+
+  // Lưu cài đặt test
+  http.put('/api/lessons/:lessonId/test', async () => {
+    return HttpResponse.json({ success: true });
   }),
 
   // Bắt đầu hoặc tiếp tục Test Session
@@ -149,5 +178,86 @@ export const testsHandlers = [
     saveSessions(sessions);
 
     return HttpResponse.json({ success: true, sessionId });
+  }),
+
+  // Lấy kết quả bài thi
+  http.get('/api/sessions/:sessionId/result', async ({ params }) => {
+    const { sessionId } = params;
+    const sessions = getSessions();
+    const session = sessions.find((s: Record<string, unknown>) => s.id === sessionId);
+
+    if (!session) return new HttpResponse(null, { status: 404 });
+
+    const answers = getAnswers();
+    const sessionAnswers = answers[sessionId as string] || {};
+
+    const questions = [
+      {
+        id: 'q1',
+        statement: 'React là thư viện của công ty nào?',
+        questionType: 'multiple_choice',
+        choices: ['Google', 'Meta (Facebook)', 'Microsoft', 'Twitter'],
+        correctChoices: [1],
+        isSingleChoice: true,
+        point: 1,
+      },
+      {
+        id: 'q2',
+        statement: 'Các hook cơ bản trong React là gì? (Chọn nhiều)',
+        questionType: 'multiple_choice',
+        choices: ['useState', 'useForm', 'useEffect', 'useMouse'],
+        correctChoices: [0, 2],
+        isSingleChoice: false,
+        point: 2,
+      },
+      {
+        id: 'q3',
+        statement: 'TypeScript có hỗ trợ interface không?',
+        questionType: 'multiple_choice',
+        choices: ['Có', 'Không'],
+        correctChoices: [0],
+        isSingleChoice: true,
+        point: 1,
+      },
+    ];
+
+    let totalScore = 0;
+    const maxScore = 4; // 1 + 2 + 1
+
+    const resultAnswers = questions.map((q) => {
+      const studentAnswer = sessionAnswers[q.id] || [];
+      // Simple exact match logic for correct answers
+      const isCorrect =
+        studentAnswer.length === q.correctChoices.length &&
+        studentAnswer.every((val: number) => q.correctChoices.includes(val));
+
+      if (isCorrect) totalScore += q.point;
+
+      return {
+        questionId: q.id,
+        statement: q.statement,
+        choices: q.choices,
+        correctChoices: q.correctChoices,
+        studentAnswer: studentAnswer,
+        isCorrect,
+        point: isCorrect ? q.point : 0,
+      };
+    });
+
+    const percent = Math.round((totalScore / maxScore) * 100);
+    const duration = session.submittedAt
+      ? Math.floor(
+          (new Date(session.submittedAt).getTime() - new Date(session.startedAt).getTime()) / 1000,
+        )
+      : 0;
+
+    return HttpResponse.json({
+      sessionId,
+      totalScore,
+      maxScore,
+      percent,
+      duration,
+      answers: resultAnswers,
+    });
   }),
 ];

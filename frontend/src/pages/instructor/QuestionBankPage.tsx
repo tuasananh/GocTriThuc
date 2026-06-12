@@ -18,6 +18,7 @@ import { SectionHeader } from '@/components/SectionHeader';
 import { EmptyState } from '@/components/EmptyState';
 import { ErrorState } from '@/components/ErrorState';
 import { SkeletonCard } from '@/components/SkeletonCard';
+import { RichTextViewer } from '@/components/rich-text-editor/RichTextViewer';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -334,9 +335,9 @@ function QuestionCard({
                 </Badge>
               )}
             </div>
-            <p className="font-medium text-foreground text-sm leading-relaxed">
-              {question.statement}
-            </p>
+            <div className="font-medium text-foreground text-sm leading-relaxed">
+              <RichTextViewer htmlContent={question.statement} />
+            </div>
           </div>
 
           {/* Actions */}

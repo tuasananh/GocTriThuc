@@ -108,49 +108,4 @@ export const questionHandlers = [
     await delay(200);
     return new HttpResponse(null, { status: 204 });
   }),
-
-  // ── POST /api/tests/:id/sessions (start quiz) ─────────────
-  http.post('/api/tests/:testId/sessions', async ({ params }) => {
-    await delay(300);
-    return HttpResponse.json(
-      {
-        id: String(Date.now()),
-        userId: '1',
-        testId: params.testId as string,
-        startedAt: new Date().toISOString(),
-        submittedAt: null,
-        isDone: false,
-        remainingTime: 1800,
-        createdAt: new Date().toISOString(),
-      },
-      { status: 201 },
-    );
-  }),
-
-  // ── PUT /api/sessions/:id/answers (autosave) ──────────────
-  http.put('/api/sessions/:sessionId/answers', async () => {
-    await delay(100);
-    return new HttpResponse(null, { status: 204 });
-  }),
-
-  // ── POST /api/sessions/:id/submit ─────────────────────────
-  http.post('/api/sessions/:sessionId/submit', async ({ params }) => {
-    await delay(500);
-    return HttpResponse.json({
-      sessionId: params.sessionId as string,
-      totalScore: 8,
-      maxScore: 10,
-      percent: 80,
-      duration: 540,
-      answers: mockQuestions.map((q) => ({
-        questionId: q.id,
-        statement: q.statement,
-        choices: q.choices,
-        correctChoices: q.correctChoices,
-        studentAnswer: [q.correctChoices[0]],
-        isCorrect: true,
-        point: 1,
-      })),
-    });
-  }),
 ];

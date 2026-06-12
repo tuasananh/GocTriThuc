@@ -12,7 +12,7 @@ export const handlers = [
   ...authHandlers,
   ...courseHandlers,
   ...moduleHandlers,
+  ...testsHandlers,
   ...questionHandlers,
   ...fileHandlers,
-  ...testsHandlers,
 ];

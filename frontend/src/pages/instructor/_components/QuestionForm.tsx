@@ -6,9 +6,9 @@ import type { QuestionDto, ApiError } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
+import { RichTextEditor } from '@/components/rich-text-editor';
 
 interface QuestionFormProps {
   onSaved: (q: QuestionDto) => void;
@@ -25,6 +25,7 @@ export function QuestionForm({ onSaved, initialData }: QuestionFormProps) {
   const [isSingleChoice, setIsSingleChoice] = useState(initialData?.isSingleChoice ?? true);
   const [saving, setSaving] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [editorKey, setEditorKey] = useState(0);
 
   // ── Toggle đáp án đúng ───────────────────────────────────────
   const toggleCorrect = (idx: number) => {
@@ -126,6 +127,7 @@ export function QuestionForm({ onSaved, initialData }: QuestionFormProps) {
         setChoices(['', '']);
         setCorrectChoices([]);
         setIsSingleChoice(true);
+        setEditorKey((k) => k + 1);
       }
       onSaved(saved);
     } catch (err: unknown) {
@@ -159,13 +161,12 @@ export function QuestionForm({ onSaved, initialData }: QuestionFormProps) {
           <HelpCircle className="w-4 h-4 text-primary" />
           Nội dung câu hỏi <span className="text-destructive">*</span>
         </Label>
-        <Textarea
-          rows={3}
-          className="resize-none"
-          placeholder="Nhập nội dung câu hỏi ở đây..."
-          value={statement}
-          onChange={(e) => {
-            setStatement(e.target.value);
+        <RichTextEditor
+          key={editorKey}
+          initialHtml={initialData?.statement}
+          onChange={async (editor) => {
+            const html = await editor.blocksToHTMLLossy(editor.document);
+            setStatement(html);
             if (errors.statement) setErrors((p) => ({ ...p, statement: '' }));
           }}
         />
