@@ -55,20 +55,20 @@ const UserButtonDropdown = ({
           </DropdownMenuItem>
           <DropdownMenuItem>
             <Link to={ROUTES.DASHBOARD} className="w-full">
-              Bảng điều khiển học viên
+              Bảng điều khiển của học viên
             </Link>
           </DropdownMenuItem>
           {isInstructor && (
             <DropdownMenuItem>
               <Link to={ROUTES.INSTRUCTOR_DASHBOARD} className="w-full">
-                Bảng điều khiển giảng viên
+                Bảng điều khiển của giảng viên
               </Link>
             </DropdownMenuItem>
           )}
           {isAdmin && (
             <DropdownMenuItem>
               <Link to={ROUTES.ADMIN_DASHBOARD} className="w-full">
-                Bảng điều khiển admin
+                Bảng điều khiển của admin
               </Link>
             </DropdownMenuItem>
           )}
