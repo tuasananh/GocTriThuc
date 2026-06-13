@@ -4,7 +4,7 @@ import type { ModuleDto, LessonDetailDto, LessonDto } from '@/types';
 const completedLessonsMap = new Map<string, boolean>();
 
 interface LessonExtraData {
-  video?: { provider: string; providerValue: string };
+  video?: { provider: 'youtube' | 'vimeo'; providerValue: string };
   blog?: { content: string };
   test?: { testId: string; statement: string; timeLimit: number };
 }
@@ -256,7 +256,7 @@ export const moduleHandlers = [
   // ── PUT /api/lessons/:id/video ─────────────────────────────
   http.put('/api/lessons/:id/video', async ({ request, params }) => {
     await delay(200);
-    const body = (await request.json()) as { provider: string; providerValue: string };
+    const body = (await request.json()) as { provider: 'youtube' | 'vimeo'; providerValue: string };
     const id = params.id as string;
     const current = lessonExtraDataMap.get(id) || {};
     lessonExtraDataMap.set(id, { ...current, video: body });
