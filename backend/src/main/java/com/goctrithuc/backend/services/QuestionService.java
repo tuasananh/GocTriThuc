@@ -211,13 +211,17 @@ public class QuestionService {
           HttpStatus.CONFLICT, "Question is already added to this test");
     }
 
-    if (testQuestionRepo.existsByTestIdAndOrder(testId, req.order())) {
-      throw new ResponseStatusException(
-          HttpStatus.CONFLICT, "Order is already taken for this test");
+    Integer order = req.order();
+    if (order == null) {
+      order = testQuestionRepo.findMaxOrderByTestId(testId).orElse(-1) + 1;
+    } else {
+      if (testQuestionRepo.existsByTestIdAndOrder(testId, order)) {
+        throw new ResponseStatusException(
+            HttpStatus.CONFLICT, "Order is already taken for this test");
+      }
     }
 
-    TestQuestionEntity testQuestion =
-        new TestQuestionEntity(test, question, req.order(), req.point());
+    TestQuestionEntity testQuestion = new TestQuestionEntity(test, question, order, req.point());
     testQuestion = testQuestionRepo.save(testQuestion);
 
     McQuestionEntity mcQuestion =
@@ -277,6 +281,86 @@ public class QuestionService {
               }
             })
         .toList();
+  }
+
+  @Transactional
+  public TestQuestionResponse updateTestQuestion(
+      Long testId, Long questionId, UpdateTestQuestionRequest req, Long userId) {
+    validateCourseOwnership(testId, userId);
+
+    TestQuestionId tqId = new TestQuestionId(testId, questionId);
+    TestQuestionEntity testQuestion =
+        testQuestionRepo
+            .findById(tqId)
+            .orElseThrow(
+                () ->
+                    new ResponseStatusException(
+                        HttpStatus.NOT_FOUND, "Question link to test not found"));
+
+    testQuestion.setPoint(req.point());
+
+    QuestionEntity question =
+        questionRepo
+            .findById(questionId)
+            .orElseThrow(
+                () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Question not found"));
+
+    McQuestionEntity mcQuestion =
+        mcQuestionRepo
+            .findById(questionId)
+            .orElseThrow(
+                () ->
+                    new ResponseStatusException(
+                        HttpStatus.NOT_FOUND, "McQuestion details not found"));
+
+    return TestQuestionResponse.fromInstructor(testQuestion, question, mcQuestion);
+  }
+
+  @Transactional
+  public void reorderTestQuestion(Long testId, Long questionId, String direction, Long userId) {
+    validateCourseOwnership(testId, userId);
+
+    TestQuestionId tqId = new TestQuestionId(testId, questionId);
+    TestQuestionEntity testQuestion =
+        testQuestionRepo
+            .findById(tqId)
+            .orElseThrow(
+                () ->
+                    new ResponseStatusException(
+                        HttpStatus.NOT_FOUND, "Question link to test not found"));
+
+    int currentOrder = testQuestion.getOrder();
+    List<TestQuestionEntity> siblings = testQuestionRepo.findByTestIdOrderByOrderAsc(testId);
+
+    int index = -1;
+    for (int i = 0; i < siblings.size(); i++) {
+      if (siblings.get(i).getId().getQuestionId().equals(questionId)) {
+        index = i;
+        break;
+      }
+    }
+
+    if (index == -1) {
+      throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Sequence corruption");
+    }
+
+    if ("up".equalsIgnoreCase(direction)) {
+      if (index == 0) {
+        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Cannot move first question up");
+      }
+      TestQuestionEntity prev = siblings.get(index - 1);
+      testQuestion.setOrder(prev.getOrder());
+      prev.setOrder(currentOrder);
+    } else if ("down".equalsIgnoreCase(direction)) {
+      if (index == siblings.size() - 1) {
+        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Cannot move last question down");
+      }
+      TestQuestionEntity next = siblings.get(index + 1);
+      testQuestion.setOrder(next.getOrder());
+      next.setOrder(currentOrder);
+    } else {
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Direction must be 'up' or 'down'");
+    }
   }
 
   private void validateCourseOwnership(Long testId, Long userId) {

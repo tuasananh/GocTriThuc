@@ -45,7 +45,7 @@ export function CreateLessonDialog({
     try {
       await api.post(`/api/modules/${moduleId}/lessons`, {
         title: title.trim(),
-        lessonType,
+        type: lessonType,
       });
       toast.success('Thêm bài học thành công');
       onSuccess();
