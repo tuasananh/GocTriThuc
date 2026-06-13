@@ -21,16 +21,6 @@ const saveAnswers = (data: unknown) => {
 };
 
 export const testsHandlers = [
-  // Lấy chi tiết Test
-  http.get('/api/tests/:testId', async ({ params }) => {
-    // Return a dummy test details
-    return HttpResponse.json({
-      id: params.testId,
-      timeLimit: 1800, // 30 minutes by default
-      statement: 'Bài kiểm tra trắc nghiệm',
-    });
-  }),
-
   // Lấy danh sách câu hỏi cho Student (ẩn correctChoices)
   http.get('/api/tests/:testId/questions', async () => {
     // Generate some dummy questions
@@ -82,6 +72,11 @@ export const testsHandlers = [
   // Cập nhật điểm câu hỏi
   http.patch('/api/tests/:testId/questions/:questionId', async () => {
     return HttpResponse.json({ success: true });
+  }),
+
+  // Cập nhật thứ tự câu hỏi
+  http.patch('/api/tests/:testId/questions/:questionId/order', async () => {
+    return new HttpResponse(null, { status: 204 });
   }),
 
   // Lưu cài đặt test
