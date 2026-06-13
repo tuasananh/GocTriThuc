@@ -57,13 +57,13 @@ export function LessonEditorPage() {
       await api.put(`/api/lessons/${lesson.id}`, { title: title.trim() });
 
       // 2. Lưu nội dung chi tiết theo loại bài học
-      if (lesson.lessonType === 'video') {
+      if (lesson.type === 'video') {
         const detectedProvider = videoUrl.includes('vimeo.com') ? 'vimeo' : 'youtube';
         await api.put(`/api/lessons/${lesson.id}/video`, {
           provider: detectedProvider,
           providerValue: videoUrl.trim(),
         });
-      } else if (lesson.lessonType === 'blog') {
+      } else if (lesson.type === 'blog') {
         await api.put(`/api/lessons/${lesson.id}/blog`, {
           content: blogContent,
         });
@@ -73,12 +73,12 @@ export function LessonEditorPage() {
       setLesson((prev) => {
         if (!prev) return null;
         const updated = { ...prev, title: title.trim() };
-        if (prev.lessonType === 'video') {
+        if (prev.type === 'video') {
           updated.video = {
             provider: videoUrl.includes('vimeo.com') ? 'vimeo' : 'youtube',
             providerValue: videoUrl.trim(),
           };
-        } else if (prev.lessonType === 'blog') {
+        } else if (prev.type === 'blog') {
           updated.blog = {
             content: blogContent,
           };
@@ -142,7 +142,7 @@ export function LessonEditorPage() {
             </div>
             <p className="text-sm text-muted-foreground mt-2">
               Loại bài học:{' '}
-              <span className="font-semibold text-foreground uppercase">{lesson.lessonType}</span>
+              <span className="font-semibold text-foreground uppercase">{lesson.type}</span>
             </p>
           </div>
 
@@ -154,17 +154,17 @@ export function LessonEditorPage() {
 
         {/* Content Form */}
         <div className="bg-card border rounded-xl shadow-sm p-6">
-          {lesson.lessonType === 'blog' && (
+          {lesson.type === 'blog' && (
             <BlogLessonForm
               lessonId={lesson.id}
               initialHtml={lesson.blog?.content || ''}
               onChangeContent={setBlogContent}
             />
           )}
-          {lesson.lessonType === 'video' && (
+          {lesson.type === 'video' && (
             <VideoLessonForm videoUrl={videoUrl} onChangeUrl={setVideoUrl} />
           )}
-          {lesson.lessonType === 'test' && <TestLessonForm lesson={lesson} />}
+          {lesson.type === 'test' && <TestLessonForm lesson={lesson} />}
         </div>
       </div>
     </PageShell>

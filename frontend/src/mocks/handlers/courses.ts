@@ -38,6 +38,50 @@ const mockCourses: CourseDto[] = Array.from({ length: 15 }, (_, i) => ({
   updatedAt: new Date(2026, 4, 20 + (i % 5)).toISOString(),
 }));
 
+const currentUserId = '1';
+
+const getMockEnrollments = (): Record<string, string[]> => {
+  const str = sessionStorage.getItem('mock_enrollments');
+  if (str) return JSON.parse(str);
+  const defaults: Record<string, string[]> = {
+    '1': ['1'],
+    '2': ['1'],
+    '3': ['1'],
+  };
+  sessionStorage.setItem('mock_enrollments', JSON.stringify(defaults));
+  return defaults;
+};
+
+const saveMockEnrollments = (data: Record<string, string[]>) => {
+  sessionStorage.setItem('mock_enrollments', JSON.stringify(data));
+};
+
+interface MockAccessRequest {
+  userId: string;
+  courseId: string;
+  userDisplayName: string;
+  requestedAt: string;
+}
+
+const getMockAccessRequests = (): MockAccessRequest[] => {
+  const str = sessionStorage.getItem('mock_access_requests');
+  if (str) return JSON.parse(str);
+  const defaults = [
+    {
+      userId: '2',
+      courseId: '4',
+      userDisplayName: 'Học viên A',
+      requestedAt: '2026-06-01T10:00:00Z',
+    },
+  ];
+  sessionStorage.setItem('mock_access_requests', JSON.stringify(defaults));
+  return defaults;
+};
+
+const saveMockAccessRequests = (data: MockAccessRequest[]) => {
+  sessionStorage.setItem('mock_access_requests', JSON.stringify(data));
+};
+
 export const courseHandlers = [
   // ── GET /api/courses (paginated, searchable) ───────────────
   http.get('/api/courses', async ({ request }) => {
@@ -55,8 +99,14 @@ export const courseHandlers = [
       // Current mock user is vinh_nc (id: '1')
       filtered = filtered.filter((c) => c.author.id === '1');
     } else if (enrolled) {
-      // Mock that user is enrolled in first 3 courses
-      filtered = filtered.slice(0, 3);
+      const enrollments = getMockEnrollments();
+      const enrolledCourseIds: string[] = [];
+      Object.entries(enrollments).forEach(([courseId, userIds]) => {
+        if (userIds.includes(currentUserId)) {
+          enrolledCourseIds.push(courseId);
+        }
+      });
+      filtered = filtered.filter((c) => enrolledCourseIds.includes(c.id));
     }
 
     if (visibility && !enrolled) {
@@ -128,45 +178,96 @@ export const courseHandlers = [
   }),
 
   // ── GET /api/courses/:id/access-status ─────────────────────
-  http.get('/api/courses/:id/access-status', async () => {
+  http.get('/api/courses/:id/access-status', async ({ params }) => {
     await delay(200);
+    const courseId = params.id as string;
+    const enrollments = getMockEnrollments();
+    const enrolledUsers = enrollments[courseId] || [];
+    if (enrolledUsers.includes(currentUserId)) {
+      return HttpResponse.json({ status: 'enrolled' });
+    }
+    const requests = getMockAccessRequests();
+    const hasRequest = requests.some((r) => r.courseId === courseId && r.userId === currentUserId);
+    if (hasRequest) {
+      return HttpResponse.json({ status: 'requested' });
+    }
     return HttpResponse.json({ status: 'none' });
   }),
 
   // ── POST /api/courses/:id/enroll ───────────────────────────
-  http.post('/api/courses/:id/enroll', async () => {
+  http.post('/api/courses/:id/enroll', async ({ params }) => {
     await delay(300);
+    const courseId = params.id as string;
+    const enrollments = getMockEnrollments();
+    if (!enrollments[courseId]) {
+      enrollments[courseId] = [];
+    }
+    if (!enrollments[courseId].includes(currentUserId)) {
+      enrollments[courseId].push(currentUserId);
+    }
+    saveMockEnrollments(enrollments);
     return new HttpResponse(null, { status: 201 });
   }),
 
   // ── POST /api/courses/:id/access-requests ──────────────────
-  http.post('/api/courses/:id/access-requests', async () => {
+  http.post('/api/courses/:id/access-requests', async ({ params }) => {
     await delay(500);
+    const courseId = params.id as string;
+    const requests = getMockAccessRequests();
+    const exists = requests.some((r) => r.courseId === courseId && r.userId === currentUserId);
+    if (!exists) {
+      requests.push({
+        userId: currentUserId,
+        courseId,
+        userDisplayName: 'Ngô Bá Khá',
+        requestedAt: new Date().toISOString(),
+      });
+      saveMockAccessRequests(requests);
+    }
     return HttpResponse.json({}, { status: 201 });
   }),
 
   // ── GET /api/courses/:id/access-requests ───────────────────
   http.get('/api/courses/:id/access-requests', async ({ params }) => {
     await delay(300);
-    return HttpResponse.json([
-      {
-        userId: '2',
-        courseId: params.id as string,
-        userDisplayName: 'Học viên A',
-        requestedAt: '2026-06-01T10:00:00Z',
-      },
-    ]);
+    const courseId = params.id as string;
+    const requests = getMockAccessRequests();
+    const courseRequests = requests.filter((r) => r.courseId === courseId);
+    return HttpResponse.json(courseRequests);
   }),
 
   // ── POST /api/courses/:courseId/access-requests/:userId/approve ──
-  http.post('/api/courses/:courseId/access-requests/:userId/approve', async () => {
+  http.post('/api/courses/:courseId/access-requests/:userId/approve', async ({ params }) => {
     await delay(300);
+    const courseId = params.courseId as string;
+    const userId = params.userId as string;
+
+    let requests = getMockAccessRequests();
+    requests = requests.filter((r) => !(r.courseId === courseId && r.userId === userId));
+    saveMockAccessRequests(requests);
+
+    const enrollments = getMockEnrollments();
+    if (!enrollments[courseId]) {
+      enrollments[courseId] = [];
+    }
+    if (!enrollments[courseId].includes(userId)) {
+      enrollments[courseId].push(userId);
+    }
+    saveMockEnrollments(enrollments);
+
     return HttpResponse.json({}, { status: 201 });
   }),
 
   // ── DELETE /api/courses/:courseId/access-requests/:userId ──
-  http.delete('/api/courses/:courseId/access-requests/:userId', async () => {
+  http.delete('/api/courses/:courseId/access-requests/:userId', async ({ params }) => {
     await delay(300);
+    const courseId = params.courseId as string;
+    const userId = params.userId as string;
+
+    let requests = getMockAccessRequests();
+    requests = requests.filter((r) => !(r.courseId === courseId && r.userId === userId));
+    saveMockAccessRequests(requests);
+
     return HttpResponse.json({}, { status: 204 });
   }),
 
