@@ -69,7 +69,11 @@ export const testsHandlers = [
     }
 
     // Học viên: ẩn correctChoices
-    const studentQuestions = questions.map(({ correctChoices, ...q }) => q);
+    const studentQuestions = questions.map((q) => {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { correctChoices, ...studentQ } = q;
+      return studentQ;
+    });
     return HttpResponse.json(studentQuestions);
   }),
 
