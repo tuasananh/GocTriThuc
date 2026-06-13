@@ -1,12 +1,12 @@
-import type { LessonDetailDto } from '@/types';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 
 interface VideoLessonFormProps {
-  lesson: LessonDetailDto;
+  videoUrl: string;
+  onChangeUrl: (url: string) => void;
 }
 
-export function VideoLessonForm({ lesson }: VideoLessonFormProps) {
+export function VideoLessonForm({ videoUrl, onChangeUrl }: VideoLessonFormProps) {
   return (
     <div className="space-y-6">
       <div className="space-y-1">
@@ -20,7 +20,8 @@ export function VideoLessonForm({ lesson }: VideoLessonFormProps) {
           <Input
             id="video-url"
             placeholder="VD: https://www.youtube.com/watch?v=..."
-            defaultValue={lesson.video?.providerValue || ''}
+            value={videoUrl}
+            onChange={(e) => onChangeUrl(e.target.value)}
           />
         </div>
       </div>

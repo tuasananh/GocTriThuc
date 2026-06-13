@@ -2,6 +2,8 @@ import { http, HttpResponse, delay } from 'msw';
 import type { ModuleDto, LessonDetailDto, LessonDto } from '@/types';
 
 const completedLessonsMap = new Map<string, boolean>();
+const lessonVideoMap = new Map<string, { provider: 'youtube' | 'vimeo'; providerValue: string }>();
+const lessonBlogMap = new Map<string, string>();
 
 // ── Fake modules & lessons ──────────────────────────────────
 
@@ -152,13 +154,14 @@ export const moduleHandlers = [
     };
 
     if (lessonType === 'video') {
-      detail.video = {
+      detail.video = lessonVideoMap.get(id) || {
         provider: 'youtube',
         providerValue: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
       };
     } else if (lessonType === 'blog') {
       detail.blog = {
-        content: '<h2>Nội dung bài giảng</h2><p>Đây là nội dung blog mẫu.</p>',
+        content:
+          lessonBlogMap.get(id) || '<h2>Nội dung bài giảng</h2><p>Đây là nội dung blog mẫu.</p>',
       };
     } else if (lessonType === 'test') {
       detail.test = {
@@ -230,6 +233,24 @@ export const moduleHandlers = [
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     });
+  }),
+
+  // ── PUT /api/lessons/:id/video ────────────────────────────
+  http.put('/api/lessons/:id/video', async ({ request, params }) => {
+    await delay(200);
+    const body = (await request.json()) as { provider: 'youtube' | 'vimeo'; providerValue: string };
+    const id = params.id as string;
+    lessonVideoMap.set(id, body);
+    return new HttpResponse(null, { status: 204 });
+  }),
+
+  // ── PUT /api/lessons/:id/blog ─────────────────────────────
+  http.put('/api/lessons/:id/blog', async ({ request, params }) => {
+    await delay(200);
+    const body = (await request.json()) as { content: string };
+    const id = params.id as string;
+    lessonBlogMap.set(id, body.content);
+    return new HttpResponse(null, { status: 204 });
   }),
 
   // ── PUT /api/lessons/:id/test ─────────────────────────────

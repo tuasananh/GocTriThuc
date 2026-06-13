@@ -19,6 +19,8 @@ export function LessonEditorPage() {
 
   const [lesson, setLesson] = useState<LessonDetailDto | null>(null);
   const [title, setTitle] = useState('');
+  const [videoUrl, setVideoUrl] = useState('');
+  const [blogContent, setBlogContent] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
@@ -31,6 +33,8 @@ export function LessonEditorPage() {
       const res = await api.get<LessonDetailDto>(`/api/lessons/${lessonId}`);
       setLesson(res.data);
       setTitle(res.data.title);
+      setVideoUrl(res.data.video?.providerValue || '');
+      setBlogContent(res.data.blog?.content || '');
     } catch {
       setError('Không thể tải thông tin bài học.');
     } finally {
@@ -49,9 +53,38 @@ export function LessonEditorPage() {
     if (!lesson || !title.trim()) return;
     setIsSaving(true);
     try {
+      // 1. Lưu tiêu đề bài học chung
       await api.put(`/api/lessons/${lesson.id}`, { title: title.trim() });
+
+      // 2. Lưu nội dung chi tiết theo loại bài học
+      if (lesson.lessonType === 'video') {
+        const detectedProvider = videoUrl.includes('vimeo.com') ? 'vimeo' : 'youtube';
+        await api.put(`/api/lessons/${lesson.id}/video`, {
+          provider: detectedProvider,
+          providerValue: videoUrl.trim(),
+        });
+      } else if (lesson.lessonType === 'blog') {
+        await api.put(`/api/lessons/${lesson.id}/blog`, {
+          content: blogContent,
+        });
+      }
+
       toast.success('Đã lưu các thay đổi của bài học!');
-      setLesson((prev) => (prev ? { ...prev, title: title.trim() } : null));
+      setLesson((prev) => {
+        if (!prev) return null;
+        const updated = { ...prev, title: title.trim() };
+        if (prev.lessonType === 'video') {
+          updated.video = {
+            provider: videoUrl.includes('vimeo.com') ? 'vimeo' : 'youtube',
+            providerValue: videoUrl.trim(),
+          };
+        } else if (prev.lessonType === 'blog') {
+          updated.blog = {
+            content: blogContent,
+          };
+        }
+        return updated;
+      });
     } catch {
       toast.error('Lỗi khi lưu bài học.');
     } finally {
@@ -121,8 +154,16 @@ export function LessonEditorPage() {
 
         {/* Content Form */}
         <div className="bg-card border rounded-xl shadow-sm p-6">
-          {lesson.lessonType === 'blog' && <BlogLessonForm lesson={lesson} />}
-          {lesson.lessonType === 'video' && <VideoLessonForm lesson={lesson} />}
+          {lesson.lessonType === 'blog' && (
+            <BlogLessonForm
+              lessonId={lesson.id}
+              initialHtml={lesson.blog?.content || ''}
+              onChangeContent={setBlogContent}
+            />
+          )}
+          {lesson.lessonType === 'video' && (
+            <VideoLessonForm videoUrl={videoUrl} onChangeUrl={setVideoUrl} />
+          )}
           {lesson.lessonType === 'test' && <TestLessonForm lesson={lesson} />}
         </div>
       </div>

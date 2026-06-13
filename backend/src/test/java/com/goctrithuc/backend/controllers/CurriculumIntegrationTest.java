@@ -406,4 +406,58 @@ public class CurriculumIntegrationTest extends BaseIntegrationTest {
                 .with(csrf()))
         .andExpect(status().isForbidden());
   }
+
+  @Test
+  void shouldAllowAuthorToUpdateLessonVideo() throws Exception {
+    Course course =
+        courseRepository.save(
+            new Course(
+                "HUST Computer Networks",
+                "Advanced Networks",
+                null,
+                true,
+                CourseVisibility.PUBLIC,
+                teacherA,
+                null));
+
+    ModuleEntity module = moduleRepository.save(new ModuleEntity(course, "Module 1: Intro", 0));
+    LessonEntity lesson =
+        lessonRepository.save(
+            new LessonEntity(module, "Lesson 1.1: OSI Model", LessonType.VIDEO, 0));
+    lessonVideoRepository.save(new LessonVideoEntity(lesson, VideoProvider.YOUTUBE, ""));
+
+    // Update video content
+    UpdateLessonVideoRequest updateVideoReq =
+        new UpdateLessonVideoRequest(
+            VideoProvider.YOUTUBE, "https://www.youtube.com/watch?v=dQw4w9WgXcQ");
+
+    mockMvc
+        .perform(
+            put("/api/lessons/" + lesson.getId() + "/video")
+                .with(oauth2Login().attributes(attrs -> attrs.put("email", teacherA.getEmail())))
+                .with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(updateVideoReq)))
+        .andExpect(status().isNoContent());
+
+    // Verify database update
+    LessonVideoEntity videoEntity = lessonVideoRepository.findById(lesson.getId()).orElseThrow();
+    assertThat(videoEntity.getProvider()).isEqualTo(VideoProvider.YOUTUBE);
+    assertThat(videoEntity.getProviderValue())
+        .isEqualTo("https://www.youtube.com/watch?v=dQw4w9WgXcQ");
+
+    // Enroll student and retrieve details
+    enrollmentRepository.save(new EnrollmentEntity(studentUser, course));
+
+    mockMvc
+        .perform(
+            get("/api/lessons/" + lesson.getId())
+                .with(
+                    oauth2Login().attributes(attrs -> attrs.put("email", studentUser.getEmail()))))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.title").value("Lesson 1.1: OSI Model"))
+        .andExpect(jsonPath("$.video.provider").value("youtube"))
+        .andExpect(
+            jsonPath("$.video.providerValue").value("https://www.youtube.com/watch?v=dQw4w9WgXcQ"));
+  }
 }
