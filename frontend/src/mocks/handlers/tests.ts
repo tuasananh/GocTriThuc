@@ -84,7 +84,6 @@ export const testsHandlers = [
     return HttpResponse.json({ success: true });
   }),
 
-
   // Bắt đầu hoặc tiếp tục Test Session
   http.post('/api/tests/:testId/sessions', async ({ params }) => {
     const { testId } = params;

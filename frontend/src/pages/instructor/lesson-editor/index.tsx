@@ -55,7 +55,7 @@ export function LessonEditorPage() {
     setIsSaving(true);
     try {
       await api.put(`/api/lessons/${lesson.id}`, { title: title.trim() });
-      
+
       if (lesson.type === 'video') {
         await api.put(`/api/lessons/${lesson.id}/video`, {
           provider: 'youtube', // Mặc định youtube cho demo
