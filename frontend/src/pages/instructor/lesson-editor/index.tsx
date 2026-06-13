@@ -13,6 +13,25 @@ import { VideoLessonForm } from './_components/VideoLessonForm';
 import { TestLessonForm } from './_components/TestLessonForm';
 import { Input } from '@/components/ui/input';
 
+const detectVideoProvider = (rawUrl: string): 'vimeo' | 'youtube' => {
+  try {
+    const hostname = new URL(rawUrl.trim()).hostname.toLowerCase();
+    if (hostname === 'vimeo.com' || hostname.endsWith('.vimeo.com')) {
+      return 'vimeo';
+    }
+    if (
+      hostname === 'youtube.com' ||
+      hostname.endsWith('.youtube.com') ||
+      hostname === 'youtu.be'
+    ) {
+      return 'youtube';
+    }
+  } catch {
+    // Keep legacy fallback behavior for invalid URLs
+  }
+  return 'youtube';
+};
+
 export function LessonEditorPage() {
   const { lessonId } = useParams<{ lessonId: string }>();
   const navigate = useNavigate();
@@ -58,7 +77,7 @@ export function LessonEditorPage() {
 
       // 2. Lưu nội dung chi tiết theo loại bài học
       if (lesson.type === 'video') {
-        const detectedProvider = videoUrl.includes('vimeo.com') ? 'vimeo' : 'youtube';
+        const detectedProvider = detectVideoProvider(videoUrl);
         await api.put(`/api/lessons/${lesson.id}/video`, {
           provider: detectedProvider,
           providerValue: videoUrl.trim(),
@@ -75,7 +94,7 @@ export function LessonEditorPage() {
         const updated = { ...prev, title: title.trim() };
         if (prev.type === 'video') {
           updated.video = {
-            provider: videoUrl.includes('vimeo.com') ? 'vimeo' : 'youtube',
+            provider: detectVideoProvider(videoUrl),
             providerValue: videoUrl.trim(),
           };
         } else if (prev.type === 'blog') {
