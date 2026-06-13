@@ -298,7 +298,6 @@ public class QuestionService {
                         HttpStatus.NOT_FOUND, "Question link to test not found"));
 
     testQuestion.setPoint(req.point());
-    testQuestion = testQuestionRepo.save(testQuestion);
 
     QuestionEntity question =
         questionRepo
@@ -352,8 +351,6 @@ public class QuestionService {
       TestQuestionEntity prev = siblings.get(index - 1);
       testQuestion.setOrder(prev.getOrder());
       prev.setOrder(currentOrder);
-      testQuestionRepo.save(testQuestion);
-      testQuestionRepo.save(prev);
     } else if ("down".equalsIgnoreCase(direction)) {
       if (index == siblings.size() - 1) {
         throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Cannot move last question down");
@@ -361,8 +358,6 @@ public class QuestionService {
       TestQuestionEntity next = siblings.get(index + 1);
       testQuestion.setOrder(next.getOrder());
       next.setOrder(currentOrder);
-      testQuestionRepo.save(testQuestion);
-      testQuestionRepo.save(next);
     } else {
       throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Direction must be 'up' or 'down'");
     }

@@ -129,7 +129,7 @@ export function ModuleSidebar({ courseId, visible }: ModuleSidebarProps) {
   // ── Data state ─────────────────────────────────────────────
   const totalLessons = modules.reduce((sum, m) => sum + m.lessons.length, 0);
   const completedLessons = modules.reduce(
-    (sum, m) => sum + m.lessons.filter((l) => l.isCompleted).length,
+    (sum, m) => sum + m.lessons.filter((l) => l.completed).length,
     0,
   );
 
@@ -184,7 +184,7 @@ export function ModuleSidebar({ courseId, visible }: ModuleSidebarProps) {
                       key={lesson.id}
                       lesson={lesson}
                       onClick={() => {
-                        if (lesson.lessonType === 'test') {
+                        if (lesson.type === 'test') {
                           navigate(ROUTES.TEST_TAKE(lesson.id));
                         } else {
                           navigate(ROUTES.LESSON(courseId, lesson.id));
@@ -215,7 +215,7 @@ const lessonTypeConfig = {
 } as const;
 
 function LessonRow({ lesson, onClick }: { lesson: LessonDto; onClick: () => void }) {
-  const config = lessonTypeConfig[lesson.lessonType] || lessonTypeConfig.blog;
+  const config = lessonTypeConfig[lesson.type] || lessonTypeConfig.blog;
   const Icon = config.icon;
 
   return (
@@ -227,7 +227,7 @@ function LessonRow({ lesson, onClick }: { lesson: LessonDto; onClick: () => void
     >
       {/* Completion indicator */}
       <span className="shrink-0">
-        {lesson.isCompleted ? (
+        {lesson.completed ? (
           <CheckCircle2 className="w-4 h-4 text-emerald-500" />
         ) : (
           <Circle className="w-4 h-4 text-muted-foreground/40" />
@@ -240,7 +240,7 @@ function LessonRow({ lesson, onClick }: { lesson: LessonDto; onClick: () => void
       {/* Title */}
       <span
         className={`flex-1 text-sm font-medium line-clamp-1 ${
-          lesson.isCompleted
+          lesson.completed
             ? 'text-muted-foreground line-through decoration-muted-foreground/40'
             : 'text-foreground'
         }`}

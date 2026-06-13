@@ -109,7 +109,7 @@ export function LessonEditorPage() {
             </div>
             <p className="text-sm text-muted-foreground mt-2">
               Loại bài học:{' '}
-              <span className="font-semibold text-foreground uppercase">{lesson.lessonType}</span>
+              <span className="font-semibold text-foreground uppercase">{lesson.type}</span>
             </p>
           </div>
 
@@ -121,9 +121,9 @@ export function LessonEditorPage() {
 
         {/* Content Form */}
         <div className="bg-card border rounded-xl shadow-sm p-6">
-          {lesson.lessonType === 'blog' && <BlogLessonForm lesson={lesson} />}
-          {lesson.lessonType === 'video' && <VideoLessonForm lesson={lesson} />}
-          {lesson.lessonType === 'test' && <TestLessonForm lesson={lesson} />}
+          {lesson.type === 'blog' && <BlogLessonForm lesson={lesson} />}
+          {lesson.type === 'video' && <VideoLessonForm lesson={lesson} />}
+          {lesson.type === 'test' && <TestLessonForm lesson={lesson} />}
         </div>
       </div>
     </PageShell>

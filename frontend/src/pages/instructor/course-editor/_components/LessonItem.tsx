@@ -51,7 +51,7 @@ export function LessonItem({
   };
 
   const getLessonIcon = () => {
-    switch (lesson.lessonType) {
+    switch (lesson.type) {
       case 'video':
         return <Video className="w-4 h-4 text-blue-500" />;
       case 'blog':
