@@ -16,6 +16,8 @@ import { GocTriThuc } from '@/components/GocTriThuc';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { ROUTES } from '@/lib/routes';
 
+import { useIsAdmin, useIsInstructor } from '@/lib/permissions';
+
 const UserButtonDropdown = ({
   user,
   logout,
@@ -23,6 +25,9 @@ const UserButtonDropdown = ({
   user: CurrentUser;
   logout: () => Promise<void>;
 }) => {
+  const isAdmin = useIsAdmin();
+  const isInstructor = useIsInstructor();
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -50,9 +55,23 @@ const UserButtonDropdown = ({
           </DropdownMenuItem>
           <DropdownMenuItem>
             <Link to={ROUTES.DASHBOARD} className="w-full">
-              Bảng điều khiển
+              Bảng điều khiển học viên
             </Link>
           </DropdownMenuItem>
+          {isInstructor && (
+            <DropdownMenuItem>
+              <Link to={ROUTES.INSTRUCTOR_DASHBOARD} className="w-full">
+                Bảng điều khiển giảng viên
+              </Link>
+            </DropdownMenuItem>
+          )}
+          {isAdmin && (
+            <DropdownMenuItem>
+              <Link to={ROUTES.ADMIN_DASHBOARD} className="w-full">
+                Bảng điều khiển admin
+              </Link>
+            </DropdownMenuItem>
+          )}
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
         <DropdownMenuGroup>
