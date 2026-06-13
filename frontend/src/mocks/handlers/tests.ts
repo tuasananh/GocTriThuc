@@ -21,8 +21,21 @@ const saveAnswers = (data: unknown) => {
 };
 
 export const testsHandlers = [
-  // Lấy danh sách câu hỏi cho Student (ẩn correctChoices)
-  http.get('/api/tests/:testId/questions', async () => {
+  // Lấy chi tiết đề thi
+  http.get('/api/tests/:testId', async ({ params }) => {
+    const { testId } = params;
+    return HttpResponse.json({
+      id: testId,
+      statement: 'Đây là bài kiểm tra mẫu. Chọn đáp án đúng cho các câu hỏi sau.',
+      timeLimit: 1800,
+    });
+  }),
+
+  // Lấy danh sách câu hỏi cho Student (ẩn correctChoices) hoặc Instructor (hiện correctChoices)
+  http.get('/api/tests/:testId/questions', async ({ request }) => {
+    const referer = request.headers.get('referer') || '';
+    const isInstructor = referer.includes('/instructor/');
+
     // Generate some dummy questions
     const questions = [
       {
@@ -50,7 +63,14 @@ export const testsHandlers = [
         isSingleChoice: true,
       },
     ];
-    return HttpResponse.json(questions);
+
+    if (isInstructor) {
+      return HttpResponse.json(questions);
+    }
+
+    // Học viên: ẩn correctChoices
+    const studentQuestions = questions.map(({ correctChoices, ...q }) => q);
+    return HttpResponse.json(studentQuestions);
   }),
 
   // Thêm câu hỏi vào đề thi
