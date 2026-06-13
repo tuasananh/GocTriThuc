@@ -1,4 +1,5 @@
 import { useEffect, useMemo } from 'react';
+import { useTheme } from 'next-themes';
 import {
   BlockNoteSchema,
   defaultInlineContentSpecs,
@@ -37,6 +38,9 @@ export function RichTextViewer({ htmlContent, className, emptyMessage }: RichTex
     schema: viewerSchema,
     initialContent: undefined,
   });
+
+  const { resolvedTheme } = useTheme();
+  const theme = resolvedTheme === 'dark' ? 'dark' : 'light';
 
   const parsedContent = useMemo(() => htmlContent?.trim() ?? '', [htmlContent]);
 
@@ -95,7 +99,7 @@ export function RichTextViewer({ htmlContent, className, emptyMessage }: RichTex
           margin-bottom: 0;
         }
       `}</style>
-      <BlockNoteView editor={editor} editable={false} theme="light" />
+      <BlockNoteView editor={editor} editable={false} theme={theme} />
     </div>
   );
 }

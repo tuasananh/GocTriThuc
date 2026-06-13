@@ -39,19 +39,17 @@ export function QuestionOptionList({
         return (
           <Label
             key={index}
-            className={`flex items-start gap-3 p-4 rounded-xl border cursor-pointer transition-all ${
+            className={`flex items-start gap-3 p-4 rounded-xl border cursor-pointer transition-all duration-200 ${
               isSelected
-                ? 'border-primary bg-primary/5 ring-1 ring-primary'
-                : 'border-border hover:bg-muted/50'
+                ? 'border-primary bg-primary/10 ring-1 ring-primary/50'
+                : 'border-border bg-card hover:bg-muted/40 hover:border-muted-foreground/30'
             }`}
           >
             <div className="flex h-5 items-center">
               <input
                 type={isSingleChoice ? 'radio' : 'checkbox'}
                 name={isSingleChoice ? `question-${questionId}` : `option-${questionId}-${index}`}
-                className={`w-4 h-4 accent-primary text-primary bg-background border-input ring-offset-background focus:ring-2 focus:ring-ring focus:ring-offset-2 ${
-                  isSingleChoice ? 'rounded-full' : 'rounded-sm'
-                }`}
+                className="w-4 h-4 accent-primary cursor-pointer"
                 checked={isSelected}
                 onChange={(e) => handleChange(index, e.target.checked)}
               />
