@@ -65,6 +65,11 @@ export function CourseDetailPage() {
           type: 'not_found',
           message: 'Khóa học không tồn tại hoặc đã bị xóa.',
         });
+      } else if (status === 403) {
+        setError({
+          type: 'not_found',
+          message: 'Bạn không có quyền truy cập khóa học này. Đây là khóa học riêng tư.',
+        });
       } else {
         setError({
           type: 'network',
