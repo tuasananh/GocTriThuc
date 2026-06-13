@@ -2,7 +2,9 @@ package com.goctrithuc.backend.controllers;
 
 import com.goctrithuc.backend.common.AuthUtils;
 import com.goctrithuc.backend.dtos.AddQuestionToTestRequest;
+import com.goctrithuc.backend.dtos.ReorderRequest;
 import com.goctrithuc.backend.dtos.TestQuestionResponse;
+import com.goctrithuc.backend.dtos.UpdateTestQuestionRequest;
 import com.goctrithuc.backend.repositories.UserRepository;
 import com.goctrithuc.backend.services.QuestionService;
 import jakarta.validation.Valid;
@@ -57,6 +59,32 @@ public class TestQuestionController {
       @AuthenticationPrincipal OAuth2User principal) {
     Long userId = AuthUtils.getCurrentUserId(principal, userRepository);
     questionService.removeQuestionFromTest(testId, questionId, userId);
+    return ResponseEntity.noContent().build();
+  }
+
+  @PatchMapping("/{testId}/questions/{questionId}")
+  @PreAuthorize(
+      "@permissionService.hasPermission(#principal, T(com.goctrithuc.backend.common.PermissionConstants).MANAGE_OWN_TESTS)")
+  public ResponseEntity<TestQuestionResponse> updateTestQuestion(
+      @PathVariable Long testId,
+      @PathVariable Long questionId,
+      @Valid @RequestBody UpdateTestQuestionRequest req,
+      @AuthenticationPrincipal OAuth2User principal) {
+    Long userId = AuthUtils.getCurrentUserId(principal, userRepository);
+    TestQuestionResponse res = questionService.updateTestQuestion(testId, questionId, req, userId);
+    return ResponseEntity.ok(res);
+  }
+
+  @PatchMapping("/{testId}/questions/{questionId}/order")
+  @PreAuthorize(
+      "@permissionService.hasPermission(#principal, T(com.goctrithuc.backend.common.PermissionConstants).MANAGE_OWN_TESTS)")
+  public ResponseEntity<Void> reorderTestQuestion(
+      @PathVariable Long testId,
+      @PathVariable Long questionId,
+      @Valid @RequestBody ReorderRequest req,
+      @AuthenticationPrincipal OAuth2User principal) {
+    Long userId = AuthUtils.getCurrentUserId(principal, userRepository);
+    questionService.reorderTestQuestion(testId, questionId, req.direction(), userId);
     return ResponseEntity.noContent().build();
   }
 }
