@@ -242,6 +242,26 @@ export const moduleHandlers = [
     });
   }),
 
+  // ── PUT /api/lessons/:id/video ─────────────────────────────
+  http.put('/api/lessons/:id/video', async ({ request }) => {
+    await delay(200);
+    const body = (await request.json()) as { provider: string; providerValue: string };
+    return HttpResponse.json(body);
+  }),
+
+  // ── PUT /api/lessons/:id/blog ──────────────────────────────
+  http.put('/api/lessons/:id/blog', async ({ request }) => {
+    await delay(200);
+    const body = (await request.json()) as { content: string };
+    return HttpResponse.json(body);
+  }),
+
+  // ── POST /api/lessons/:id/resources ────────────────────────
+  http.post('/api/lessons/:id/resources', async () => {
+    await delay(200);
+    return new HttpResponse(null, { status: 201 });
+  }),
+
   // ── DELETE ───────────────────────────────────────────────
   http.delete('/api/modules/:id', async () => {
     await delay(200);
