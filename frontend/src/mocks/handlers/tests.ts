@@ -50,13 +50,7 @@ export const testsHandlers = [
         isSingleChoice: true,
       },
     ];
-    // Omit correctChoices for the student response
-    const studentQuestions = questions.map((q) => {
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const { correctChoices, ...rest } = q;
-      return rest;
-    });
-    return HttpResponse.json(studentQuestions);
+    return HttpResponse.json(questions);
   }),
 
   // Thêm câu hỏi vào đề thi
