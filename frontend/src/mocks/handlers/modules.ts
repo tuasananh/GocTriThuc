@@ -3,6 +3,13 @@ import type { ModuleDto, LessonDetailDto, LessonDto } from '@/types';
 
 const completedLessonsMap = new Map<string, boolean>();
 
+interface LessonExtraData {
+  video?: { provider: string; providerValue: string };
+  blog?: { content: string };
+  test?: { testId: string; statement: string; timeLimit: number };
+}
+const lessonExtraDataMap = new Map<string, LessonExtraData>();
+
 // ── Fake modules & lessons ──────────────────────────────────
 
 const mockModules: ModuleDto[] = [
@@ -152,16 +159,16 @@ export const moduleHandlers = [
     };
 
     if (lessonType === 'video') {
-      detail.video = {
+      detail.video = lessonExtraDataMap.get(id)?.video || {
         provider: 'youtube',
         providerValue: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
       };
     } else if (lessonType === 'blog') {
-      detail.blog = {
+      detail.blog = lessonExtraDataMap.get(id)?.blog || {
         content: '<h2>Nội dung bài giảng</h2><p>Đây là nội dung blog mẫu.</p>',
       };
     } else if (lessonType === 'test') {
-      detail.test = {
+      detail.test = lessonExtraDataMap.get(id)?.test || {
         testId: `test-${id}`,
         statement: 'Đây là bài kiểm tra mẫu. Chọn đáp án đúng cho các câu hỏi sau.',
         timeLimit: 1800,
@@ -236,23 +243,33 @@ export const moduleHandlers = [
   http.put('/api/lessons/:id/test', async ({ request, params }) => {
     await delay(200);
     const body = (await request.json()) as { statement: string; timeLimit: number };
-    return HttpResponse.json({
-      testId: `test-${params.id}`,
+    const id = params.id as string;
+    const current = lessonExtraDataMap.get(id) || {};
+    const testData = {
+      testId: `test-${id}`,
       ...body,
-    });
+    };
+    lessonExtraDataMap.set(id, { ...current, test: testData });
+    return HttpResponse.json(testData);
   }),
 
   // ── PUT /api/lessons/:id/video ─────────────────────────────
-  http.put('/api/lessons/:id/video', async ({ request }) => {
+  http.put('/api/lessons/:id/video', async ({ request, params }) => {
     await delay(200);
     const body = (await request.json()) as { provider: string; providerValue: string };
+    const id = params.id as string;
+    const current = lessonExtraDataMap.get(id) || {};
+    lessonExtraDataMap.set(id, { ...current, video: body });
     return HttpResponse.json(body);
   }),
 
   // ── PUT /api/lessons/:id/blog ──────────────────────────────
-  http.put('/api/lessons/:id/blog', async ({ request }) => {
+  http.put('/api/lessons/:id/blog', async ({ request, params }) => {
     await delay(200);
     const body = (await request.json()) as { content: string };
+    const id = params.id as string;
+    const current = lessonExtraDataMap.get(id) || {};
+    lessonExtraDataMap.set(id, { ...current, blog: body });
     return HttpResponse.json(body);
   }),
 

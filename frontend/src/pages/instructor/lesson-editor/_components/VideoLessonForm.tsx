@@ -4,9 +4,10 @@ import { Label } from '@/components/ui/label';
 
 interface VideoLessonFormProps {
   lesson: LessonDetailDto;
+  onChange?: (val: string) => void;
 }
 
-export function VideoLessonForm({ lesson }: VideoLessonFormProps) {
+export function VideoLessonForm({ lesson, onChange }: VideoLessonFormProps) {
   return (
     <div className="space-y-6">
       <div className="space-y-1">
@@ -21,6 +22,7 @@ export function VideoLessonForm({ lesson }: VideoLessonFormProps) {
             id="video-url"
             placeholder="VD: https://www.youtube.com/watch?v=..."
             defaultValue={lesson.video?.providerValue || ''}
+            onChange={(e) => onChange?.(e.target.value)}
           />
         </div>
       </div>
