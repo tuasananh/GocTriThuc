@@ -53,7 +53,7 @@ export function TestTakePage() {
       // Khôi phục câu trả lời nếu refresh trang
       try {
         const ansRes = await api.get<Record<string, number[]>>(
-          `/api/tests/sessions/${sessionRes.data.id}/answers`,
+          `/api/sessions/${sessionRes.data.id}/answers`,
         );
         if (ansRes.data) {
           setAnswers(ansRes.data);
@@ -87,8 +87,9 @@ export function TestTakePage() {
     setAnswers((prev) => ({ ...prev, [questionId]: newAnswers }));
 
     try {
-      await api.put(`/api/tests/sessions/${session.id}/answers/${questionId}`, {
-        answer: newAnswers,
+      await api.put(`/api/sessions/${session.id}/answers`, {
+        questionId: questionId,
+        selectedChoices: newAnswers,
       });
     } catch {
       toast.error('Có lỗi xảy ra khi lưu câu trả lời. Vui lòng kiểm tra mạng!');
@@ -107,7 +108,7 @@ export function TestTakePage() {
 
     setSubmitting(true);
     try {
-      await api.post(`/api/tests/sessions/${session.id}/submit`);
+      await api.post(`/api/sessions/${session.id}/submit`);
       toast.success('Nộp bài thành công!');
       navigate(ROUTES.TEST_RESULT(session.id), { replace: true });
     } catch {

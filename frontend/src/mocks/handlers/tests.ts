@@ -144,29 +144,29 @@ export const testsHandlers = [
   }),
 
   // Lấy câu trả lời hiện tại của session (để restore khi f5)
-  http.get('/api/tests/sessions/:sessionId/answers', async ({ params }) => {
+  http.get('/api/sessions/:sessionId/answers', async ({ params }) => {
     const { sessionId } = params;
     const answers = getAnswers();
     return HttpResponse.json(answers[sessionId as string] || {});
   }),
 
   // Lưu câu trả lời
-  http.put('/api/tests/sessions/:sessionId/answers/:questionId', async ({ params, request }) => {
-    const { sessionId, questionId } = params;
-    const data = (await request.json()) as { answer: number[] };
+  http.put('/api/sessions/:sessionId/answers', async ({ params, request }) => {
+    const { sessionId } = params;
+    const data = (await request.json()) as { questionId: string; selectedChoices: number[] };
 
     const answers = getAnswers();
     if (!answers[sessionId as string]) {
       answers[sessionId as string] = {};
     }
-    answers[sessionId as string][questionId as string] = data.answer;
+    answers[sessionId as string][data.questionId] = data.selectedChoices;
     saveAnswers(answers);
 
     return HttpResponse.json({ success: true });
   }),
 
   // Nộp bài
-  http.post('/api/tests/sessions/:sessionId/submit', async ({ params }) => {
+  http.post('/api/sessions/:sessionId/submit', async ({ params }) => {
     const { sessionId } = params;
     const sessions = getSessions();
     const session = sessions.find((s: Record<string, unknown>) => s.id === sessionId);

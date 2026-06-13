@@ -6,6 +6,7 @@ import com.goctrithuc.backend.repositories.UserRepository;
 import com.goctrithuc.backend.services.TestSessionService;
 import jakarta.validation.Valid;
 import java.util.List;
+import java.util.Map;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -61,6 +62,16 @@ public class TestSessionController {
       @PathVariable Long testId, @AuthenticationPrincipal OAuth2User principal) {
     Long userId = AuthUtils.getCurrentUserId(principal, userRepository);
     List<TestSessionSummaryResponse> res = testSessionService.listTestSessions(testId, userId);
+    return ResponseEntity.ok(res);
+  }
+
+  @GetMapping("/sessions/{sessionId}/answers")
+  @PreAuthorize(
+      "@permissionService.hasPermission(#principal, T(com.goctrithuc.backend.common.PermissionConstants).ACCESS_TESTS)")
+  public ResponseEntity<Map<Long, List<Integer>>> getSessionAnswers(
+      @PathVariable Long sessionId, @AuthenticationPrincipal OAuth2User principal) {
+    Long userId = AuthUtils.getCurrentUserId(principal, userRepository);
+    Map<Long, List<Integer>> res = testSessionService.getSessionAnswers(sessionId, userId);
     return ResponseEntity.ok(res);
   }
 
