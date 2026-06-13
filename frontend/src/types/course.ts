@@ -45,6 +45,15 @@ export interface AccessStatusResponse {
   status: AccessStatus;
 }
 
+export interface AccessRequestDto {
+  userId: string;
+  courseId: string;
+  userDisplayName: string;
+  requestedAt: string;
+}
+
+export type AccessRequest = AccessRequestDto & { courseTitle: string };
+
 // ============================================================
 // Module & Lesson DTOs
 // ============================================================

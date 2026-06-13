@@ -11,6 +11,9 @@ import { CourseEditorPage } from './pages/instructor/course-editor';
 import { LessonEditorPage } from './pages/instructor/lesson-editor';
 import { TestTakePage } from '@/pages/test-take';
 import { TestBuilderPage } from './pages/instructor/test-builder';
+import { InstructorDashboardPage } from './pages/instructor';
+import { AdminDashboardPage } from './pages/admin';
+import { TestResultPage } from '@/pages/test-result';
 import { CommentThreadSinglePage } from '@/pages/comments';
 import { QuestionBankPage } from './pages/instructor/QuestionBankPage';
 import { GuestRoute } from '@/components/GuestRoute';
@@ -53,6 +56,7 @@ function App() {
                   <Route path={ROUTES.PROFILE} element={<ProfilePage />} />
                   <Route path={ROUTES.LESSON(':courseId', ':lessonId')} element={<LessonPage />} />
                   <Route path={ROUTES.TEST_TAKE(':testId')} element={<TestTakePage />} />
+                  <Route path={ROUTES.TEST_RESULT(':sessionId')} element={<TestResultPage />} />
                   <Route
                     path={ROUTE_PATTERNS.COMMENT_THREAD}
                     element={<CommentThreadSinglePage />}
@@ -66,6 +70,7 @@ function App() {
                 element={<ProtectedRoute requiredPermission={PERMISSION.MANAGE_OWN_COURSES} />}
               >
                 <Route element={<MainLayout />}>
+                  <Route path={ROUTES.INSTRUCTOR_DASHBOARD} element={<InstructorDashboardPage />} />
                   <Route path={ROUTES.QUESTION_BANK} element={<QuestionBankPage />} />
                   <Route
                     path={ROUTES.INSTRUCTOR_COURSE_EDITOR(':id')}
@@ -85,10 +90,8 @@ function App() {
               {/* ── Admin (cần quyền admin) ────────────────── */}
               <Route element={<ProtectedRoute requiredPermission={PERMISSION.ADMIN} />}>
                 <Route element={<MainLayout />}>
-                  {/* Thêm các trang admin ở đây:
-                    <Route path={ROUTES.ADMIN_DASHBOARD} element={<AdminDashboard />} />
-                    <Route path={ROUTES.ADMIN_USERS} element={<AdminUsersPage />} />
-                */}
+                  <Route path={ROUTES.ADMIN_DASHBOARD} element={<AdminDashboardPage />} />
+                  <Route path={ROUTES.ADMIN_USERS} element={<AdminDashboardPage />} />
                 </Route>
               </Route>
 
