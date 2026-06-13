@@ -66,16 +66,19 @@ export function LandingPage() {
             <Button
               variant="ghost"
               className="hidden md:inline-flex text-primary hover:text-primary/80 transition-colors"
+              asChild
             >
-              Xem tất cả <ArrowRight className="ml-2 h-4 w-4" />
+              <Link to={ROUTES.COURSES}>
+                Xem tất cả <ArrowRight className="ml-2 h-4 w-4" />
+              </Link>
             </Button>
           </div>
 
           <CourseCatalog />
 
           <div className="flex justify-center md:hidden mt-8">
-            <Button variant="outline" className="w-full rounded-full h-12 border-border">
-              Xem tất cả khóa học
+            <Button variant="outline" className="w-full rounded-full h-12 border-border" asChild>
+              <Link to={ROUTES.COURSES}>Xem tất cả khóa học</Link>
             </Button>
           </div>
         </div>

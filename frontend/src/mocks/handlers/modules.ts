@@ -1,5 +1,5 @@
 import { http, HttpResponse, delay } from 'msw';
-import type { ModuleDto, LessonDetailDto, LessonDto } from '@/types';
+import type { ModuleDto, LessonDetailDto, LessonDto, LessonType } from '@/types';
 
 const completedLessonsMap = new Map<string, boolean>();
 
@@ -24,7 +24,7 @@ const mockModules: ModuleDto[] = [
       {
         id: '1001',
         title: 'React là gì?',
-        lessonType: 'blog',
+        type: 'blog',
         order: 0,
         moduleId: '101',
         createdAt: '2026-05-01T00:00:00Z',
@@ -33,7 +33,7 @@ const mockModules: ModuleDto[] = [
       {
         id: '1002',
         title: 'Cài đặt môi trường',
-        lessonType: 'video',
+        type: 'video',
         order: 1,
         moduleId: '101',
         createdAt: '2026-05-01T00:00:00Z',
@@ -42,7 +42,7 @@ const mockModules: ModuleDto[] = [
       {
         id: '1003',
         title: 'Bài kiểm tra nhập môn',
-        lessonType: 'test',
+        type: 'test',
         order: 2,
         moduleId: '101',
         createdAt: '2026-05-01T00:00:00Z',
@@ -61,7 +61,7 @@ const mockModules: ModuleDto[] = [
       {
         id: '1004',
         title: 'Function Components',
-        lessonType: 'blog',
+        type: 'blog',
         order: 0,
         moduleId: '102',
         createdAt: '2026-05-02T00:00:00Z',
@@ -70,7 +70,7 @@ const mockModules: ModuleDto[] = [
       {
         id: '1005',
         title: 'Props và State',
-        lessonType: 'video',
+        type: 'video',
         order: 1,
         moduleId: '102',
         createdAt: '2026-05-02T00:00:00Z',
@@ -107,13 +107,13 @@ export const moduleHandlers = [
   // ── POST /api/modules/:id/lessons ────────────────────────
   http.post('/api/modules/:moduleId/lessons', async ({ request, params }) => {
     await delay(300);
-    const body = (await request.json()) as { title: string; lessonType: string };
+    const body = (await request.json()) as { title: string; type: string };
     const moduleId = params.moduleId as string;
     return HttpResponse.json(
       {
         id: String(Date.now()),
         title: body.title,
-        lessonType: body.lessonType,
+        type: body.type as LessonType,
         order: 0,
         moduleId,
         createdAt: new Date().toISOString(),
@@ -139,17 +139,17 @@ export const moduleHandlers = [
     }
 
     const title = foundLesson ? foundLesson.title : 'Bài giảng mẫu';
-    const lessonType = foundLesson ? foundLesson.lessonType : 'video';
+    const lessonType = foundLesson ? foundLesson.type : 'video';
     const moduleId = foundLesson ? foundLesson.moduleId : '101';
     const order = foundLesson ? foundLesson.order : 0;
 
     const detail: LessonDetailDto = {
       id,
       title,
-      lessonType,
+      type: lessonType,
       order,
       moduleId,
-      isCompleted: completedLessonsMap.get(id) || false,
+      completed: completedLessonsMap.get(id) || false,
       resources: [
         { id: 'file-react-1', filename: 'React-19-CheatSheet.pdf', url: '' },
         { id: 'file-react-2', filename: 'Thuc-hanh-Props-State.zip', url: '' },
@@ -231,7 +231,7 @@ export const moduleHandlers = [
     return HttpResponse.json({
       id,
       title: body.title,
-      lessonType: 'video',
+      type: 'video',
       order: 0,
       moduleId: '101',
       createdAt: new Date().toISOString(),
