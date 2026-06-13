@@ -6,15 +6,19 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Skeleton } from '@/components/ui/skeleton';
 import { Loader2, MessageSquare, Plus } from 'lucide-react';
 import { EmptyState } from '@/components/EmptyState';
+import { ErrorState } from '@/components/ErrorState';
 import { CommentThread } from '@/components/CommentThread';
+import { RichTextViewer } from '@/components/rich-text-editor/RichTextViewer';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
 
 export function AnnouncementsFeed({ courseId, isAuthor }: { courseId: string; isAuthor: boolean }) {
   const [announcements, setAnnouncements] = useState<AnnouncementDto[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [creating, setCreating] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const [title, setTitle] = useState('');
@@ -24,6 +28,7 @@ export function AnnouncementsFeed({ courseId, isAuthor }: { courseId: string; is
 
   const fetchAnnouncements = useCallback(async () => {
     setLoading(true);
+    setError(null);
     try {
       const res = await api.get<PageResponse<AnnouncementDto>>(
         `/api/courses/${courseId}/announcements`,
@@ -34,7 +39,7 @@ export function AnnouncementsFeed({ courseId, isAuthor }: { courseId: string; is
       setAnnouncements(res.data.content);
     } catch (err) {
       console.error(err);
-      toast.error('Không thể tải thông báo.');
+      setError('Không thể tải thông báo. Vui lòng thử lại.');
     } finally {
       setLoading(false);
     }
@@ -68,8 +73,33 @@ export function AnnouncementsFeed({ courseId, isAuthor }: { courseId: string; is
 
   if (loading) {
     return (
-      <div className="flex justify-center p-8">
-        <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
+      <div className="space-y-6 max-w-4xl mx-auto py-6">
+        {[...Array(3)].map((_, i) => (
+          <Card key={i} className="overflow-hidden">
+            <CardHeader className="bg-muted/20 pb-4">
+              <div className="flex gap-3 items-center">
+                <Skeleton className="h-10 w-10 rounded-full" />
+                <div className="space-y-2">
+                  <Skeleton className="h-5 w-48" />
+                  <Skeleton className="h-3 w-32" />
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="p-6 space-y-3">
+              <Skeleton className="h-4 w-full" />
+              <Skeleton className="h-4 w-5/6" />
+              <Skeleton className="h-4 w-3/4" />
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="max-w-4xl mx-auto py-6">
+        <ErrorState message={error} onRetry={fetchAnnouncements} />
       </div>
     );
   }
@@ -260,8 +290,8 @@ function AnnouncementItem({
         </div>
       </CardHeader>
       <CardContent className="p-6">
-        <div className="whitespace-pre-wrap text-sm leading-relaxed mb-6">
-          {announcement.content}
+        <div className="mb-6">
+          <RichTextViewer htmlContent={announcement.content} />
         </div>
 
         <div className="pt-4 border-t">

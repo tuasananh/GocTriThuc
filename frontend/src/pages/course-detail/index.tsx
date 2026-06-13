@@ -18,6 +18,7 @@ import { ModuleSidebar } from './_components/ModuleSidebar';
 import { RestrictedAccessBanner } from './_components/RestrictedAccessBanner';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { AnnouncementsFeed } from './_components/AnnouncementsFeed';
+
 export function CourseDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
