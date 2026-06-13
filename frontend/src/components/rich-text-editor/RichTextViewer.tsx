@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo } from 'react';
+import { useTheme } from 'next-themes';
 import {
   BlockNoteSchema,
   defaultInlineContentSpecs,
@@ -38,18 +39,8 @@ export function RichTextViewer({ htmlContent, className, emptyMessage }: RichTex
     initialContent: undefined,
   });
 
-  // Theo dõi dark/light mode dựa trên class 'dark' của <html>
-  const [theme, setTheme] = useState<'light' | 'dark'>(() =>
-    document.documentElement.classList.contains('dark') ? 'dark' : 'light',
-  );
-
-  useEffect(() => {
-    const observer = new MutationObserver(() => {
-      setTheme(document.documentElement.classList.contains('dark') ? 'dark' : 'light');
-    });
-    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
-    return () => observer.disconnect();
-  }, []);
+  const { resolvedTheme } = useTheme();
+  const theme = resolvedTheme === 'dark' ? 'dark' : 'light';
 
   const parsedContent = useMemo(() => htmlContent?.trim() ?? '', [htmlContent]);
 
