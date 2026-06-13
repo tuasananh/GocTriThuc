@@ -56,12 +56,12 @@ export function LessonEditorPage() {
     try {
       await api.put(`/api/lessons/${lesson.id}`, { title: title.trim() });
       
-      if (lesson.lessonType === 'video') {
+      if (lesson.type === 'video') {
         await api.put(`/api/lessons/${lesson.id}/video`, {
           provider: 'youtube', // Mặc định youtube cho demo
           providerValue: videoDataRef.current,
         });
-      } else if (lesson.lessonType === 'blog') {
+      } else if (lesson.type === 'blog') {
         await api.put(`/api/lessons/${lesson.id}/blog`, {
           content: blogDataRef.current,
         });
@@ -125,7 +125,7 @@ export function LessonEditorPage() {
             </div>
             <p className="text-sm text-muted-foreground mt-2">
               Loại bài học:{' '}
-              <span className="font-semibold text-foreground uppercase">{lesson.lessonType}</span>
+              <span className="font-semibold text-foreground uppercase">{lesson.type}</span>
             </p>
           </div>
 
@@ -137,7 +137,7 @@ export function LessonEditorPage() {
 
         {/* Content Form */}
         <div className="bg-card border rounded-xl shadow-sm p-6">
-          {lesson.lessonType === 'blog' && (
+          {lesson.type === 'blog' && (
             <BlogLessonForm
               lesson={lesson}
               onChange={(html) => {
@@ -145,7 +145,7 @@ export function LessonEditorPage() {
               }}
             />
           )}
-          {lesson.lessonType === 'video' && (
+          {lesson.type === 'video' && (
             <VideoLessonForm
               lesson={lesson}
               onChange={(val) => {
@@ -153,7 +153,7 @@ export function LessonEditorPage() {
               }}
             />
           )}
-          {lesson.lessonType === 'test' && <TestLessonForm lesson={lesson} />}
+          {lesson.type === 'test' && <TestLessonForm lesson={lesson} />}
         </div>
       </div>
     </PageShell>
