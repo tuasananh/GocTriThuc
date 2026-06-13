@@ -16,6 +16,8 @@ import { useIsAdmin } from '@/lib/permissions';
 import { isAxiosError } from 'axios';
 import { ModuleSidebar } from './_components/ModuleSidebar';
 import { RestrictedAccessBanner } from './_components/RestrictedAccessBanner';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { AnnouncementsFeed } from './_components/AnnouncementsFeed';
 
 export function CourseDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -301,8 +303,30 @@ export function CourseDetailPage() {
         isAdmin={isAdmin}
       />
 
-      {/* Course Content — Modules & Lessons */}
-      <ModuleSidebar courseId={id!} visible={accessStatus === 'enrolled' || isAuthor || isAdmin} />
+      {/* Course Content — Modules & Announcements */}
+      <div className="mt-8">
+        <Tabs defaultValue="modules" className="w-full">
+          <TabsList className="mb-6 h-auto p-1 bg-muted/50 w-full sm:w-auto flex flex-col sm:flex-row justify-start">
+            <TabsTrigger value="modules" className="w-full sm:w-auto px-6 py-2.5 text-base">
+              Nội dung bài học
+            </TabsTrigger>
+            <TabsTrigger value="announcements" className="w-full sm:w-auto px-6 py-2.5 text-base">
+              Thông báo
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="modules" className="mt-0">
+            <ModuleSidebar
+              courseId={id!}
+              visible={accessStatus === 'enrolled' || isAuthor || isAdmin}
+            />
+          </TabsContent>
+
+          <TabsContent value="announcements" className="mt-0">
+            <AnnouncementsFeed courseId={id!} isAuthor={isAuthor} />
+          </TabsContent>
+        </Tabs>
+      </div>
     </PageShell>
   );
 }
