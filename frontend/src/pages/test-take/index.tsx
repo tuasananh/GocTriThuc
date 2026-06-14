@@ -29,6 +29,7 @@ export function TestTakePage() {
 
   const requestCounterRef = useRef<Record<string, number>>({});
   const submittingRef = useRef(false);
+  const lastSavedAnswersRef = useRef<Record<string, number[]>>({});
 
   const fetchData = useCallback(async () => {
     if (!testId) return;
@@ -66,6 +67,7 @@ export function TestTakePage() {
         );
         if (ansRes.data?.answers) {
           setAnswers(ansRes.data.answers);
+          lastSavedAnswersRef.current = ansRes.data.answers;
         }
       } catch (e) {
         console.warn('Could not restore answers', e);
@@ -104,21 +106,23 @@ export function TestTakePage() {
         questionId: questionId,
         selectedChoices: newAnswers,
       });
+      // Lưu lại giá trị đã lưu thành công
+      lastSavedAnswersRef.current[questionId] = newAnswers;
     } catch {
       toast.error('Có lỗi xảy ra khi lưu câu trả lời. Vui lòng kiểm tra mạng!');
 
-      // Chỉ đồng bộ lại từ server nếu đây là request cuối cùng của câu hỏi này
+      // Chỉ rollback câu hỏi này về giá trị lưu thành công gần nhất nếu đây là request cuối cùng
       if (requestCounterRef.current[questionId] === nextSeq) {
-        try {
-          const ansRes = await api.get<{ answers: Record<string, number[]> }>(
-            `/api/sessions/${session.id}/answers`,
-          );
-          if (ansRes.data?.answers) {
-            setAnswers(ansRes.data.answers);
+        setAnswers((prev) => {
+          const updated = { ...prev };
+          const rollbackVal = lastSavedAnswersRef.current[questionId];
+          if (rollbackVal === undefined) {
+            delete updated[questionId];
+          } else {
+            updated[questionId] = rollbackVal;
           }
-        } catch (e) {
-          console.error('Failed to silently refetch answers', e);
-        }
+          return updated;
+        });
       }
     }
   };

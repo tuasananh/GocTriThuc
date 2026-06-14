@@ -133,7 +133,7 @@ export function CourseListPage() {
             <SkeletonCard key={i} />
           ))}
         </div>
-      ) : courses?.content.length === 0 ? (
+      ) : !courses?.content || courses.content.length === 0 ? (
         <EmptyState
           icon={BookOpen}
           title="Chưa có khóa học nào"
@@ -141,7 +141,7 @@ export function CourseListPage() {
         />
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {courses?.content.map((c) => (
+          {courses.content.map((c) => (
             <CourseCard key={c.id} course={c} />
           ))}
         </div>
