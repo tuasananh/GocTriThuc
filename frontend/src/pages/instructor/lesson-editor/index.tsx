@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { api } from '@/lib/api';
 import type { LessonDetailDto } from '@/types';
@@ -23,6 +23,9 @@ export function LessonEditorPage() {
   const [error, setError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
 
+  const videoDataRef = useRef<string>('');
+  const blogDataRef = useRef<string>('');
+
   const fetchLesson = useCallback(async () => {
     if (!lessonId) return;
     setLoading(true);
@@ -31,6 +34,8 @@ export function LessonEditorPage() {
       const res = await api.get<LessonDetailDto>(`/api/lessons/${lessonId}`);
       setLesson(res.data);
       setTitle(res.data.title);
+      videoDataRef.current = res.data.video?.providerValue || '';
+      blogDataRef.current = res.data.blog?.content || '';
     } catch {
       setError('Không thể tải thông tin bài học.');
     } finally {
@@ -50,6 +55,17 @@ export function LessonEditorPage() {
     setIsSaving(true);
     try {
       await api.put(`/api/lessons/${lesson.id}`, { title: title.trim() });
+
+      if (lesson.type === 'video') {
+        await api.put(`/api/lessons/${lesson.id}/video`, {
+          provider: 'youtube', // Mặc định youtube cho demo
+          providerValue: videoDataRef.current,
+        });
+      } else if (lesson.type === 'blog') {
+        await api.put(`/api/lessons/${lesson.id}/blog`, {
+          content: blogDataRef.current,
+        });
+      }
       toast.success('Đã lưu các thay đổi của bài học!');
       setLesson((prev) => (prev ? { ...prev, title: title.trim() } : null));
     } catch {
@@ -109,7 +125,7 @@ export function LessonEditorPage() {
             </div>
             <p className="text-sm text-muted-foreground mt-2">
               Loại bài học:{' '}
-              <span className="font-semibold text-foreground uppercase">{lesson.lessonType}</span>
+              <span className="font-semibold text-foreground uppercase">{lesson.type}</span>
             </p>
           </div>
 
@@ -121,9 +137,23 @@ export function LessonEditorPage() {
 
         {/* Content Form */}
         <div className="bg-card border rounded-xl shadow-sm p-6">
-          {lesson.lessonType === 'blog' && <BlogLessonForm lesson={lesson} />}
-          {lesson.lessonType === 'video' && <VideoLessonForm lesson={lesson} />}
-          {lesson.lessonType === 'test' && <TestLessonForm lesson={lesson} />}
+          {lesson.type === 'blog' && (
+            <BlogLessonForm
+              lesson={lesson}
+              onChange={(html) => {
+                blogDataRef.current = html;
+              }}
+            />
+          )}
+          {lesson.type === 'video' && (
+            <VideoLessonForm
+              lesson={lesson}
+              onChange={(val) => {
+                videoDataRef.current = val;
+              }}
+            />
+          )}
+          {lesson.type === 'test' && <TestLessonForm lesson={lesson} />}
         </div>
       </div>
     </PageShell>

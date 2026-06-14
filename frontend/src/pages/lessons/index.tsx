@@ -55,7 +55,7 @@ export function LessonPage() {
       await api.post(`/api/lessons/${lessonId}/complete`);
       toast.success('Đã đánh dấu hoàn thành bài học!');
       // Update local state
-      setLesson((prev) => (prev ? { ...prev, isCompleted: true } : prev));
+      setLesson((prev) => (prev ? { ...prev, completed: true } : prev));
     } catch (err) {
       toast.error('Có lỗi xảy ra, không thể đánh dấu hoàn thành.');
       console.error(err);
@@ -100,7 +100,7 @@ export function LessonPage() {
             </Link>
           </Button>
 
-          {lesson.isCompleted ? (
+          {lesson.completed ? (
             <div className="flex items-center gap-2 text-emerald-600 dark:text-emerald-500 font-medium">
               <CheckCircle2 className="w-5 h-5" />
               <span>Đã hoàn thành</span>
@@ -116,18 +116,18 @@ export function LessonPage() {
         <div>
           <h1 className="text-3xl font-bold tracking-tight mb-2">{lesson.title}</h1>
           <p className="text-muted-foreground">
-            {lesson.lessonType === 'video'
+            {lesson.type === 'video'
               ? 'Bài học Video'
-              : lesson.lessonType === 'blog'
+              : lesson.type === 'blog'
                 ? 'Bài học Bài viết'
                 : 'Bài học Trắc nghiệm'}
           </p>
         </div>
 
         <div className="bg-card rounded-xl border p-4 shadow-sm">
-          {lesson.lessonType === 'video' && lesson.video ? (
+          {lesson.type === 'video' && lesson.video ? (
             <VideoLessonViewer video={lesson.video} />
-          ) : lesson.lessonType === 'blog' ? (
+          ) : lesson.type === 'blog' ? (
             <BlogLessonViewer blog={lesson.blog ?? { content: '' }} />
           ) : lesson.lessonType === 'test' ? (
             <div className="p-8 bg-muted/10 rounded-lg border flex flex-col items-center justify-center text-center space-y-6">

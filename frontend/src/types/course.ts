@@ -73,10 +73,10 @@ export interface ModuleDto {
 export interface LessonDto {
   id: string;
   title: string;
-  lessonType: LessonType;
+  type: LessonType;
   order: number;
   moduleId: string;
-  isCompleted?: boolean; // có khi lấy theo context enrolled student
+  completed?: boolean; // có khi lấy theo context enrolled student
   createdAt: string;
   updatedAt: string;
 }
@@ -87,7 +87,7 @@ export interface CreateModuleRequest {
 
 export interface CreateLessonRequest {
   title: string;
-  lessonType: LessonType;
+  type: LessonType;
 }
 
 /** Chi tiết lesson (bao gồm nội dung video/blog/test) */

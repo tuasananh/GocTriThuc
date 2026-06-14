@@ -12,7 +12,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.goctrithuc.backend.BaseIntegrationTest;
 import com.goctrithuc.backend.dtos.AddQuestionToTestRequest;
 import com.goctrithuc.backend.dtos.CreateQuestionRequest;
+import com.goctrithuc.backend.dtos.ReorderRequest;
 import com.goctrithuc.backend.dtos.UpdateQuestionRequest;
+import com.goctrithuc.backend.dtos.UpdateTestQuestionRequest;
 import com.goctrithuc.backend.entities.*;
 import com.goctrithuc.backend.repositories.*;
 import java.util.List;
@@ -797,5 +799,321 @@ public class QuestionControllerIntegrationTest extends BaseIntegrationTest {
                 .content(objectMapper.writeValueAsString(addReq)))
         .andExpect(status().isConflict())
         .andDo(print());
+  }
+
+  @Test
+  void testUpdateQuestionPointSuccess() throws Exception {
+    Course course =
+        courseRepository.save(
+            new Course("Course 1", "Desc", null, true, CourseVisibility.PUBLIC, teacherA, null));
+    ModuleEntity module = moduleRepository.save(new ModuleEntity(course, "Module 1", 0));
+    LessonEntity lesson =
+        lessonRepository.save(new LessonEntity(module, "Test Lesson", LessonType.TEST, 0));
+    LessonTestEntity test =
+        lessonTestRepository.save(new LessonTestEntity(lesson, "Test Statement", 60, null));
+
+    QuestionEntity q =
+        questionRepository.save(
+            new QuestionEntity(
+                teacherA.getId(), "Question Statement", QuestionType.MULTIPLE_CHOICE));
+    mcQuestionRepository.save(
+        new McQuestionEntity(q, new String[] {"A", "B"}, new int[] {0}, true));
+
+    testQuestionRepository.save(new TestQuestionEntity(test, q, 0, 5.0));
+
+    UpdateTestQuestionRequest updateReq = new UpdateTestQuestionRequest(15.0);
+
+    mockMvc
+        .perform(
+            patch("/api/tests/" + test.getId() + "/questions/" + q.getId())
+                .with(oauth2Login().attributes(attrs -> attrs.put("email", teacherA.getEmail())))
+                .with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(updateReq)))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.id").value(q.getId()))
+        .andExpect(jsonPath("$.point").value(15.0))
+        .andDo(print());
+
+    TestQuestionEntity updated =
+        testQuestionRepository.findById(new TestQuestionId(test.getId(), q.getId())).orElseThrow();
+    assertThat(updated.getPoint()).isEqualTo(15.0);
+  }
+
+  @Test
+  void testUpdateQuestionPointNegativePointBadRequest() throws Exception {
+    UpdateTestQuestionRequest updateReq = new UpdateTestQuestionRequest(-1.0);
+
+    mockMvc
+        .perform(
+            patch("/api/tests/1/questions/1")
+                .with(oauth2Login().attributes(attrs -> attrs.put("email", teacherA.getEmail())))
+                .with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(updateReq)))
+        .andExpect(status().isBadRequest())
+        .andDo(print());
+  }
+
+  @Test
+  void testUpdateQuestionPointForbiddenForStudent() throws Exception {
+    UpdateTestQuestionRequest updateReq = new UpdateTestQuestionRequest(10.0);
+
+    mockMvc
+        .perform(
+            patch("/api/tests/1/questions/1")
+                .with(oauth2Login().attributes(attrs -> attrs.put("email", studentUser.getEmail())))
+                .with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(updateReq)))
+        .andExpect(status().isForbidden())
+        .andDo(print());
+  }
+
+  @Test
+  void testUpdateQuestionPointForbiddenForOtherTeacher() throws Exception {
+    Course course =
+        courseRepository.save(
+            new Course("Course 1", "Desc", null, true, CourseVisibility.PUBLIC, teacherA, null));
+    ModuleEntity module = moduleRepository.save(new ModuleEntity(course, "Module 1", 0));
+    LessonEntity lesson =
+        lessonRepository.save(new LessonEntity(module, "Test Lesson", LessonType.TEST, 0));
+    LessonTestEntity test =
+        lessonTestRepository.save(new LessonTestEntity(lesson, "Test Statement", 60, null));
+
+    QuestionEntity q =
+        questionRepository.save(
+            new QuestionEntity(
+                teacherA.getId(), "Question Statement", QuestionType.MULTIPLE_CHOICE));
+    mcQuestionRepository.save(
+        new McQuestionEntity(q, new String[] {"A", "B"}, new int[] {0}, true));
+
+    testQuestionRepository.save(new TestQuestionEntity(test, q, 0, 5.0));
+
+    UpdateTestQuestionRequest updateReq = new UpdateTestQuestionRequest(10.0);
+
+    mockMvc
+        .perform(
+            patch("/api/tests/" + test.getId() + "/questions/" + q.getId())
+                .with(oauth2Login().attributes(attrs -> attrs.put("email", teacherB.getEmail())))
+                .with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(updateReq)))
+        .andExpect(status().isForbidden())
+        .andDo(print());
+  }
+
+  @Test
+  void testUpdateQuestionPointNotFound() throws Exception {
+    Course course =
+        courseRepository.save(
+            new Course("Course 1", "Desc", null, true, CourseVisibility.PUBLIC, teacherA, null));
+    ModuleEntity module = moduleRepository.save(new ModuleEntity(course, "Module 1", 0));
+    LessonEntity lesson =
+        lessonRepository.save(new LessonEntity(module, "Test Lesson", LessonType.TEST, 0));
+    LessonTestEntity test =
+        lessonTestRepository.save(new LessonTestEntity(lesson, "Test Statement", 60, null));
+
+    UpdateTestQuestionRequest updateReq = new UpdateTestQuestionRequest(10.0);
+
+    mockMvc
+        .perform(
+            patch("/api/tests/" + test.getId() + "/questions/999")
+                .with(oauth2Login().attributes(attrs -> attrs.put("email", teacherA.getEmail())))
+                .with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(updateReq)))
+        .andExpect(status().isNotFound())
+        .andDo(print());
+  }
+
+  @Test
+  void testReorderQuestionUpAndDownSuccess() throws Exception {
+    Course course =
+        courseRepository.save(
+            new Course("Course 1", "Desc", null, true, CourseVisibility.PUBLIC, teacherA, null));
+    ModuleEntity module = moduleRepository.save(new ModuleEntity(course, "Module 1", 0));
+    LessonEntity lesson =
+        lessonRepository.save(new LessonEntity(module, "Test Lesson", LessonType.TEST, 0));
+    LessonTestEntity test =
+        lessonTestRepository.save(new LessonTestEntity(lesson, "Test Statement", 60, null));
+
+    QuestionEntity q1 =
+        questionRepository.save(
+            new QuestionEntity(teacherA.getId(), "Q1", QuestionType.MULTIPLE_CHOICE));
+    QuestionEntity q2 =
+        questionRepository.save(
+            new QuestionEntity(teacherA.getId(), "Q2", QuestionType.MULTIPLE_CHOICE));
+    QuestionEntity q3 =
+        questionRepository.save(
+            new QuestionEntity(teacherA.getId(), "Q3", QuestionType.MULTIPLE_CHOICE));
+
+    mcQuestionRepository.save(new McQuestionEntity(q1, new String[] {"A"}, new int[] {0}, true));
+    mcQuestionRepository.save(new McQuestionEntity(q2, new String[] {"B"}, new int[] {0}, true));
+    mcQuestionRepository.save(new McQuestionEntity(q3, new String[] {"C"}, new int[] {0}, true));
+
+    testQuestionRepository.save(new TestQuestionEntity(test, q1, 0, 5.0));
+    testQuestionRepository.save(new TestQuestionEntity(test, q2, 1, 5.0));
+    testQuestionRepository.save(new TestQuestionEntity(test, q3, 2, 5.0));
+
+    // Move q2 UP (swaps with q1)
+    ReorderRequest upReq = new ReorderRequest("up");
+    mockMvc
+        .perform(
+            patch("/api/tests/" + test.getId() + "/questions/" + q2.getId() + "/order")
+                .with(oauth2Login().attributes(attrs -> attrs.put("email", teacherA.getEmail())))
+                .with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(upReq)))
+        .andExpect(status().isNoContent())
+        .andDo(print());
+
+    assertThat(
+            testQuestionRepository
+                .findById(new TestQuestionId(test.getId(), q2.getId()))
+                .orElseThrow()
+                .getOrder())
+        .isEqualTo(0);
+    assertThat(
+            testQuestionRepository
+                .findById(new TestQuestionId(test.getId(), q1.getId()))
+                .orElseThrow()
+                .getOrder())
+        .isEqualTo(1);
+
+    // Move q2 DOWN (swaps back with q1)
+    ReorderRequest downReq = new ReorderRequest("down");
+    mockMvc
+        .perform(
+            patch("/api/tests/" + test.getId() + "/questions/" + q2.getId() + "/order")
+                .with(oauth2Login().attributes(attrs -> attrs.put("email", teacherA.getEmail())))
+                .with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(downReq)))
+        .andExpect(status().isNoContent())
+        .andDo(print());
+
+    assertThat(
+            testQuestionRepository
+                .findById(new TestQuestionId(test.getId(), q2.getId()))
+                .orElseThrow()
+                .getOrder())
+        .isEqualTo(1);
+    assertThat(
+            testQuestionRepository
+                .findById(new TestQuestionId(test.getId(), q1.getId()))
+                .orElseThrow()
+                .getOrder())
+        .isEqualTo(0);
+  }
+
+  @Test
+  void testReorderQuestionOutOfBoundsBadRequest() throws Exception {
+    Course course =
+        courseRepository.save(
+            new Course("Course 1", "Desc", null, true, CourseVisibility.PUBLIC, teacherA, null));
+    ModuleEntity module = moduleRepository.save(new ModuleEntity(course, "Module 1", 0));
+    LessonEntity lesson =
+        lessonRepository.save(new LessonEntity(module, "Test Lesson", LessonType.TEST, 0));
+    LessonTestEntity test =
+        lessonTestRepository.save(new LessonTestEntity(lesson, "Test Statement", 60, null));
+
+    QuestionEntity q1 =
+        questionRepository.save(
+            new QuestionEntity(teacherA.getId(), "Q1", QuestionType.MULTIPLE_CHOICE));
+    QuestionEntity q2 =
+        questionRepository.save(
+            new QuestionEntity(teacherA.getId(), "Q2", QuestionType.MULTIPLE_CHOICE));
+
+    mcQuestionRepository.save(new McQuestionEntity(q1, new String[] {"A"}, new int[] {0}, true));
+    mcQuestionRepository.save(new McQuestionEntity(q2, new String[] {"B"}, new int[] {0}, true));
+
+    testQuestionRepository.save(new TestQuestionEntity(test, q1, 0, 5.0));
+    testQuestionRepository.save(new TestQuestionEntity(test, q2, 1, 5.0));
+
+    // Move first question UP -> bad request
+    ReorderRequest upReq = new ReorderRequest("up");
+    mockMvc
+        .perform(
+            patch("/api/tests/" + test.getId() + "/questions/" + q1.getId() + "/order")
+                .with(oauth2Login().attributes(attrs -> attrs.put("email", teacherA.getEmail())))
+                .with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(upReq)))
+        .andExpect(status().isBadRequest())
+        .andDo(print());
+  }
+
+  @Test
+  void testReorderQuestionInvalidDirectionBadRequest() throws Exception {
+    ReorderRequest invalidReq = new ReorderRequest("left");
+    mockMvc
+        .perform(
+            patch("/api/tests/1/questions/1/order")
+                .with(oauth2Login().attributes(attrs -> attrs.put("email", teacherA.getEmail())))
+                .with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(invalidReq)))
+        .andExpect(status().isBadRequest())
+        .andDo(print());
+  }
+
+  @Test
+  void testReorderQuestionForbiddenForStudent() throws Exception {
+    ReorderRequest upReq = new ReorderRequest("up");
+    mockMvc
+        .perform(
+            patch("/api/tests/1/questions/1/order")
+                .with(oauth2Login().attributes(attrs -> attrs.put("email", studentUser.getEmail())))
+                .with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(upReq)))
+        .andExpect(status().isForbidden())
+        .andDo(print());
+  }
+
+  @Test
+  void testAddQuestionToTestWithNullOrderAutoIncrements() throws Exception {
+    Course course =
+        courseRepository.save(
+            new Course("Course 1", "Desc", null, true, CourseVisibility.PUBLIC, teacherA, null));
+    ModuleEntity module = moduleRepository.save(new ModuleEntity(course, "Module 1", 0));
+    LessonEntity lesson =
+        lessonRepository.save(new LessonEntity(module, "Test Lesson", LessonType.TEST, 0));
+    LessonTestEntity test =
+        lessonTestRepository.save(new LessonTestEntity(lesson, "Test Statement", 60, null));
+
+    QuestionEntity q1 =
+        questionRepository.save(
+            new QuestionEntity(teacherA.getId(), "Q1", QuestionType.MULTIPLE_CHOICE));
+    QuestionEntity q2 =
+        questionRepository.save(
+            new QuestionEntity(teacherA.getId(), "Q2", QuestionType.MULTIPLE_CHOICE));
+    mcQuestionRepository.save(new McQuestionEntity(q1, new String[] {"A"}, new int[] {0}, true));
+    mcQuestionRepository.save(new McQuestionEntity(q2, new String[] {"B"}, new int[] {0}, true));
+
+    // First question with explicit order 5
+    testQuestionRepository.save(new TestQuestionEntity(test, q1, 5, 5.0));
+
+    // Add second question with NULL order -> should auto-increment to 6
+    AddQuestionToTestRequest addReq = new AddQuestionToTestRequest(q2.getId(), null, 10.0);
+
+    mockMvc
+        .perform(
+            post("/api/tests/" + test.getId() + "/questions")
+                .with(oauth2Login().attributes(attrs -> attrs.put("email", teacherA.getEmail())))
+                .with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(addReq)))
+        .andExpect(status().isCreated())
+        .andExpect(jsonPath("$.order").value(6))
+        .andDo(print());
+
+    assertThat(
+            testQuestionRepository
+                .findById(new TestQuestionId(test.getId(), q2.getId()))
+                .orElseThrow()
+                .getOrder())
+        .isEqualTo(6);
   }
 }
