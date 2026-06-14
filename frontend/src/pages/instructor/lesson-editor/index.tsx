@@ -13,12 +13,32 @@ import { VideoLessonForm } from './_components/VideoLessonForm';
 import { TestLessonForm } from './_components/TestLessonForm';
 import { Input } from '@/components/ui/input';
 
+const detectVideoProvider = (rawUrl: string): 'vimeo' | 'youtube' => {
+  try {
+    const hostname = new URL(rawUrl.trim()).hostname.toLowerCase();
+    if (hostname === 'vimeo.com' || hostname.endsWith('.vimeo.com')) {
+      return 'vimeo';
+    }
+    if (
+      hostname === 'youtube.com' ||
+      hostname.endsWith('.youtube.com') ||
+      hostname === 'youtu.be'
+    ) {
+      return 'youtube';
+    }
+  } catch {
+    // Keep legacy fallback behavior for invalid URLs
+  }
+  return 'youtube';
+};
+
 export function LessonEditorPage() {
   const { lessonId } = useParams<{ lessonId: string }>();
   const navigate = useNavigate();
 
   const [lesson, setLesson] = useState<LessonDetailDto | null>(null);
   const [title, setTitle] = useState('');
+
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
@@ -54,12 +74,15 @@ export function LessonEditorPage() {
     if (!lesson || !title.trim()) return;
     setIsSaving(true);
     try {
+      // 1. Lưu tiêu đề bài học chung
       await api.put(`/api/lessons/${lesson.id}`, { title: title.trim() });
 
+      // 2. Lưu nội dung chi tiết theo loại bài học
       if (lesson.type === 'video') {
+        const detectedProvider = detectVideoProvider(videoDataRef.current);
         await api.put(`/api/lessons/${lesson.id}/video`, {
-          provider: 'youtube', // Mặc định youtube cho demo
-          providerValue: videoDataRef.current,
+          provider: detectedProvider,
+          providerValue: videoDataRef.current.trim(),
         });
       } else if (lesson.type === 'blog') {
         await api.put(`/api/lessons/${lesson.id}/blog`, {
@@ -67,7 +90,21 @@ export function LessonEditorPage() {
         });
       }
       toast.success('Đã lưu các thay đổi của bài học!');
-      setLesson((prev) => (prev ? { ...prev, title: title.trim() } : null));
+      setLesson((prev) => {
+        if (!prev) return null;
+        const updated = { ...prev, title: title.trim() };
+        if (prev.type === 'video') {
+          updated.video = {
+            provider: detectVideoProvider(videoDataRef.current),
+            providerValue: videoDataRef.current.trim(),
+          };
+        } else if (prev.type === 'blog') {
+          updated.blog = {
+            content: blogDataRef.current,
+          };
+        }
+        return updated;
+      });
     } catch {
       toast.error('Lỗi khi lưu bài học.');
     } finally {

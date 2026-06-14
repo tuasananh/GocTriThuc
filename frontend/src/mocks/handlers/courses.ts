@@ -280,4 +280,10 @@ export const courseHandlers = [
       percent: 40,
     });
   }),
+
+  // ── POST /api/courses/:id/resources ────────────────────────
+  http.post('/api/courses/:id/resources', async () => {
+    await delay(200);
+    return new HttpResponse(null, { status: 201 });
+  }),
 ];

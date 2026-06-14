@@ -1,5 +1,6 @@
-import type { LessonDetailDto } from '@/types';
 import { RichTextEditor } from '@/components/rich-text-editor';
+
+import type { LessonDetailDto } from '@/types';
 
 interface BlogLessonFormProps {
   lesson: LessonDetailDto;

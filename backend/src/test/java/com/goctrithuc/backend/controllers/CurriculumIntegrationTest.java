@@ -35,6 +35,8 @@ public class CurriculumIntegrationTest extends BaseIntegrationTest {
   private final LessonBlogRepository lessonBlogRepository;
   private final LessonTestRepository lessonTestRepository;
   private final EnrollmentRepository enrollmentRepository;
+  private final FileRepository fileRepository;
+  private final LessonResourceRepository lessonResourceRepository;
   private final ObjectMapper objectMapper = new ObjectMapper();
 
   private User adminUser;
@@ -54,7 +56,9 @@ public class CurriculumIntegrationTest extends BaseIntegrationTest {
       LessonVideoRepository lessonVideoRepository,
       LessonBlogRepository lessonBlogRepository,
       LessonTestRepository lessonTestRepository,
-      EnrollmentRepository enrollmentRepository) {
+      EnrollmentRepository enrollmentRepository,
+      FileRepository fileRepository,
+      LessonResourceRepository lessonResourceRepository) {
     this.mockMvc = mockMvc;
     this.userRepository = userRepository;
     this.userRoleRepository = userRoleRepository;
@@ -66,10 +70,13 @@ public class CurriculumIntegrationTest extends BaseIntegrationTest {
     this.lessonBlogRepository = lessonBlogRepository;
     this.lessonTestRepository = lessonTestRepository;
     this.enrollmentRepository = enrollmentRepository;
+    this.fileRepository = fileRepository;
+    this.lessonResourceRepository = lessonResourceRepository;
   }
 
   @BeforeEach
   void setUp() {
+    lessonResourceRepository.deleteAll();
     lessonVideoRepository.deleteAll();
     lessonBlogRepository.deleteAll();
     lessonTestRepository.deleteAll();
@@ -77,6 +84,7 @@ public class CurriculumIntegrationTest extends BaseIntegrationTest {
     moduleRepository.deleteAll();
     enrollmentRepository.deleteAll();
     courseRepository.deleteAll();
+    fileRepository.deleteAll();
     userRoleRepository.deleteAll();
     userRepository.deleteAll();
 
@@ -99,6 +107,7 @@ public class CurriculumIntegrationTest extends BaseIntegrationTest {
 
   @AfterEach
   void cleanUp() {
+    lessonResourceRepository.deleteAll();
     lessonVideoRepository.deleteAll();
     lessonBlogRepository.deleteAll();
     lessonTestRepository.deleteAll();
@@ -106,6 +115,7 @@ public class CurriculumIntegrationTest extends BaseIntegrationTest {
     moduleRepository.deleteAll();
     enrollmentRepository.deleteAll();
     courseRepository.deleteAll();
+    fileRepository.deleteAll();
     userRoleRepository.deleteAll();
     userRepository.deleteAll();
   }
@@ -404,6 +414,199 @@ public class CurriculumIntegrationTest extends BaseIntegrationTest {
             delete("/api/modules/" + m1.getId())
                 .with(oauth2Login().attributes(attrs -> attrs.put("email", teacherB.getEmail())))
                 .with(csrf()))
+        .andExpect(status().isForbidden());
+  }
+
+  @Test
+  void shouldAllowAuthorToUpdateLessonVideo() throws Exception {
+    Course course =
+        courseRepository.save(
+            new Course(
+                "HUST Computer Networks",
+                "Advanced Networks",
+                null,
+                true,
+                CourseVisibility.PUBLIC,
+                teacherA,
+                null));
+
+    ModuleEntity module = moduleRepository.save(new ModuleEntity(course, "Module 1: Intro", 0));
+    LessonEntity lesson =
+        lessonRepository.save(
+            new LessonEntity(module, "Lesson 1.1: OSI Model", LessonType.VIDEO, 0));
+    lessonVideoRepository.save(new LessonVideoEntity(lesson, VideoProvider.YOUTUBE, ""));
+
+    // Update video content
+    UpdateLessonVideoRequest updateVideoReq =
+        new UpdateLessonVideoRequest(
+            VideoProvider.YOUTUBE, "https://www.youtube.com/watch?v=dQw4w9WgXcQ");
+
+    mockMvc
+        .perform(
+            put("/api/lessons/" + lesson.getId() + "/video")
+                .with(oauth2Login().attributes(attrs -> attrs.put("email", teacherA.getEmail())))
+                .with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(updateVideoReq)))
+        .andExpect(status().isNoContent());
+
+    // Verify database update
+    LessonVideoEntity videoEntity = lessonVideoRepository.findById(lesson.getId()).orElseThrow();
+    assertThat(videoEntity.getProvider()).isEqualTo(VideoProvider.YOUTUBE);
+    assertThat(videoEntity.getProviderValue())
+        .isEqualTo("https://www.youtube.com/watch?v=dQw4w9WgXcQ");
+
+    // Enroll student and retrieve details
+    enrollmentRepository.save(new EnrollmentEntity(studentUser, course));
+
+    mockMvc
+        .perform(
+            get("/api/lessons/" + lesson.getId())
+                .with(
+                    oauth2Login().attributes(attrs -> attrs.put("email", studentUser.getEmail()))))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.title").value("Lesson 1.1: OSI Model"))
+        .andExpect(jsonPath("$.video.provider").value("youtube"))
+        .andExpect(
+            jsonPath("$.video.providerValue").value("https://www.youtube.com/watch?v=dQw4w9WgXcQ"));
+  }
+
+  @Test
+  void shouldAllowAuthorToAttachLessonResourceAndRetrieveDetailWithResources() throws Exception {
+    Course course =
+        courseRepository.save(
+            new Course(
+                "HUST Computer Networks",
+                "Advanced Networks",
+                null,
+                true,
+                CourseVisibility.PUBLIC,
+                teacherA,
+                null));
+
+    ModuleEntity module = moduleRepository.save(new ModuleEntity(course, "Module 1: Intro", 0));
+    LessonEntity lesson =
+        lessonRepository.save(
+            new LessonEntity(module, "Lesson 1.1: OSI Model", LessonType.VIDEO, 0));
+
+    // Create uploaded file owned by teacherA
+    File file =
+        fileRepository.save(
+            new File(
+                teacherA.getId(),
+                "local",
+                "lesson_doc.pdf",
+                "application/pdf",
+                "My Lesson Document.pdf",
+                1024L));
+
+    // Attach resource
+    AttachResourceRequest attachReq = new AttachResourceRequest(file.getId());
+    mockMvc
+        .perform(
+            post("/api/lessons/" + lesson.getId() + "/resources")
+                .with(oauth2Login().attributes(attrs -> attrs.put("email", teacherA.getEmail())))
+                .with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(attachReq)))
+        .andExpect(status().isCreated());
+
+    // Enroll student and retrieve details to verify
+    enrollmentRepository.save(new EnrollmentEntity(studentUser, course));
+
+    mockMvc
+        .perform(
+            get("/api/lessons/" + lesson.getId())
+                .with(
+                    oauth2Login().attributes(attrs -> attrs.put("email", studentUser.getEmail()))))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.resources.length()").value(1))
+        .andExpect(jsonPath("$.resources[0].filename").value("lesson_doc.pdf"))
+        .andExpect(jsonPath("$.resources[0].mimeType").value("application/pdf"))
+        .andExpect(jsonPath("$.resources[0].originalName").value("My Lesson Document.pdf"))
+        .andExpect(jsonPath("$.resources[0].sizeBytes").value(1024));
+  }
+
+  @Test
+  void shouldRejectNonAuthorOrNonAdminFromAttachingLessonResource() throws Exception {
+    Course course =
+        courseRepository.save(
+            new Course(
+                "HUST Computer Networks",
+                "Advanced Networks",
+                null,
+                true,
+                CourseVisibility.PUBLIC,
+                teacherA,
+                null));
+
+    ModuleEntity module = moduleRepository.save(new ModuleEntity(course, "Module 1: Intro", 0));
+    LessonEntity lesson =
+        lessonRepository.save(
+            new LessonEntity(module, "Lesson 1.1: OSI Model", LessonType.VIDEO, 0));
+
+    File file =
+        fileRepository.save(
+            new File(
+                teacherB.getId(),
+                "local",
+                "lesson_doc.pdf",
+                "application/pdf",
+                "My Lesson Document.pdf",
+                1024L));
+
+    AttachResourceRequest attachReq = new AttachResourceRequest(file.getId());
+
+    // Teacher B is NOT the author of Teacher A's course/lesson
+    mockMvc
+        .perform(
+            post("/api/lessons/" + lesson.getId() + "/resources")
+                .with(oauth2Login().attributes(attrs -> attrs.put("email", teacherB.getEmail())))
+                .with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(attachReq)))
+        .andExpect(status().isForbidden());
+  }
+
+  @Test
+  void shouldRejectAttachingLessonResourceWhenFileNotOwnedByAuthor() throws Exception {
+    Course course =
+        courseRepository.save(
+            new Course(
+                "HUST Computer Networks",
+                "Advanced Networks",
+                null,
+                true,
+                CourseVisibility.PUBLIC,
+                teacherA,
+                null));
+
+    ModuleEntity module = moduleRepository.save(new ModuleEntity(course, "Module 1: Intro", 0));
+    LessonEntity lesson =
+        lessonRepository.save(
+            new LessonEntity(module, "Lesson 1.1: OSI Model", LessonType.VIDEO, 0));
+
+    // File uploaded by Teacher B (not owned by Teacher A)
+    File file =
+        fileRepository.save(
+            new File(
+                teacherB.getId(),
+                "local",
+                "teacher_b_doc.pdf",
+                "application/pdf",
+                "B's Lecture.pdf",
+                1024L));
+
+    AttachResourceRequest attachReq = new AttachResourceRequest(file.getId());
+
+    // Teacher A tries to attach Teacher B's file
+    mockMvc
+        .perform(
+            post("/api/lessons/" + lesson.getId() + "/resources")
+                .with(oauth2Login().attributes(attrs -> attrs.put("email", teacherA.getEmail())))
+                .with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(attachReq)))
         .andExpect(status().isForbidden());
   }
 }
