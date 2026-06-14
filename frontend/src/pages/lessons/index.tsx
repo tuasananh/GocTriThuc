@@ -133,7 +133,9 @@ export function LessonPage() {
             <div className="p-8 bg-muted/10 rounded-lg border flex flex-col items-center justify-center text-center space-y-6">
               <div className="max-w-md space-y-2">
                 <h3 className="text-xl font-semibold">Bài kiểm tra</h3>
-                {lesson.test?.statement && <p className="text-muted-foreground">{lesson.test.statement}</p>}
+                {lesson.test?.statement && (
+                  <p className="text-muted-foreground">{lesson.test.statement}</p>
+                )}
                 {lesson.test?.timeLimit && (
                   <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground mt-4">
                     <Clock className="w-4 h-4" />

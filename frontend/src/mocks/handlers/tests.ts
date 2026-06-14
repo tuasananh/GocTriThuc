@@ -168,22 +168,26 @@ export const testsHandlers = [
     const { testId } = params;
     const sessions = getSessions();
     const testSessions = sessions.filter((s: Record<string, unknown>) => s.testId === testId);
-    return HttpResponse.json(testSessions.map((s: Record<string, unknown>) => ({
-      id: s.id,
-      userId: s.userId,
-      userDisplayName: 'Mock User',
-      startedAt: s.startedAt,
-      submittedAt: s.submittedAt,
-      isDone: s.isDone,
-    })));
+    return HttpResponse.json(
+      testSessions.map((s: Record<string, unknown>) => ({
+        id: s.id,
+        userId: s.userId,
+        userDisplayName: 'Mock User',
+        startedAt: s.startedAt,
+        submittedAt: s.submittedAt,
+        isDone: s.isDone,
+      })),
+    );
   }),
 
   // Lấy lịch sử sessions của mình
   http.get('/api/tests/sessions/my', async () => {
     const userId = 'user-1';
     const sessions = getSessions();
-    const mySessions = sessions.filter((s: Record<string, unknown>) => s.userId === userId && s.isDone);
-    
+    const mySessions = sessions.filter(
+      (s: Record<string, unknown>) => s.userId === userId && s.isDone,
+    );
+
     // Simulate pagination format
     return HttpResponse.json({
       content: mySessions.map((s: Record<string, unknown>) => ({
