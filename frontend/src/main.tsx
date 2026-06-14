@@ -4,7 +4,8 @@ import './index.css';
 import App from './App.tsx';
 
 async function enableMocking() {
-  if (import.meta.env.MODE !== 'development') {
+  // Chỉ chạy mock ở chế độ development VÀ khi không tắt tường minh bằng VITE_USE_MOCKS
+  if (import.meta.env.MODE !== 'development' || import.meta.env.VITE_USE_MOCKS === 'false') {
     return;
   }
 
