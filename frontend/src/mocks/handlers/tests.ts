@@ -21,18 +21,21 @@ const saveAnswers = (data: unknown) => {
 };
 
 export const testsHandlers = [
-  // Lấy chi tiết Test
+  // Lấy chi tiết đề thi
   http.get('/api/tests/:testId', async ({ params }) => {
-    // Return a dummy test details
+    const { testId } = params;
     return HttpResponse.json({
-      id: params.testId,
-      timeLimit: 1800, // 30 minutes by default
-      statement: 'Bài kiểm tra trắc nghiệm',
+      id: testId,
+      statement: 'Đây là bài kiểm tra mẫu. Chọn đáp án đúng cho các câu hỏi sau.',
+      timeLimit: 1800,
     });
   }),
 
-  // Lấy danh sách câu hỏi cho Student (ẩn correctChoices)
-  http.get('/api/tests/:testId/questions', async () => {
+  // Lấy danh sách câu hỏi cho Student (ẩn correctChoices) hoặc Instructor (hiện correctChoices)
+  http.get('/api/tests/:testId/questions', async ({ request }) => {
+    const referer = request.headers.get('referer') || '';
+    const isInstructor = referer.includes('/instructor/');
+
     // Generate some dummy questions
     const questions = [
       {
@@ -60,11 +63,16 @@ export const testsHandlers = [
         isSingleChoice: true,
       },
     ];
-    // Omit correctChoices for the student response
+
+    if (isInstructor) {
+      return HttpResponse.json(questions);
+    }
+
+    // Học viên: ẩn correctChoices
     const studentQuestions = questions.map((q) => {
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const { correctChoices, ...rest } = q;
-      return rest;
+      const { correctChoices, ...studentQ } = q;
+      return studentQ;
     });
     return HttpResponse.json(studentQuestions);
   }),
@@ -81,6 +89,16 @@ export const testsHandlers = [
 
   // Cập nhật điểm câu hỏi
   http.patch('/api/tests/:testId/questions/:questionId', async () => {
+    return HttpResponse.json({ success: true });
+  }),
+
+  // Cập nhật thứ tự câu hỏi
+  http.patch('/api/tests/:testId/questions/:questionId/order', async () => {
+    return new HttpResponse(null, { status: 204 });
+  }),
+
+  // Lưu cài đặt test
+  http.put('/api/lessons/:lessonId/test', async () => {
     return HttpResponse.json({ success: true });
   }),
 

@@ -90,22 +90,4 @@ export const questionHandlers = [
       updatedAt: new Date().toISOString(),
     });
   }),
-
-  // ── GET /api/tests/:id/questions ───────────────────────────
-  http.get('/api/tests/:testId/questions', async () => {
-    await delay(300);
-    return HttpResponse.json(mockQuestions.map((q, i) => ({ ...q, point: 1, order: i })));
-  }),
-
-  // ── POST /api/tests/:id/questions ──────────────────────────
-  http.post('/api/tests/:testId/questions', async () => {
-    await delay(200);
-    return new HttpResponse(null, { status: 201 });
-  }),
-
-  // ── DELETE /api/tests/:testId/questions/:questionId ─────────
-  http.delete('/api/tests/:testId/questions/:questionId', async () => {
-    await delay(200);
-    return new HttpResponse(null, { status: 204 });
-  }),
 ];
