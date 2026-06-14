@@ -129,7 +129,7 @@ export function LessonPage() {
             <VideoLessonViewer video={lesson.video} />
           ) : lesson.type === 'blog' ? (
             <BlogLessonViewer blog={lesson.blog ?? { content: '' }} />
-          ) : lesson.lessonType === 'test' ? (
+          ) : lesson.type === 'test' ? (
             <div className="p-8 bg-muted/10 rounded-lg border flex flex-col items-center justify-center text-center space-y-6">
               <div className="max-w-md space-y-2">
                 <h3 className="text-xl font-semibold">Bài kiểm tra</h3>
