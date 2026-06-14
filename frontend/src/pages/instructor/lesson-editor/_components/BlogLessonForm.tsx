@@ -1,12 +1,13 @@
 import { RichTextEditor } from '@/components/rich-text-editor';
 
+import type { LessonDetailDto } from '@/types';
+
 interface BlogLessonFormProps {
-  lessonId: string;
-  initialHtml: string;
-  onChangeContent: (html: string) => void;
+  lesson: LessonDetailDto;
+  onChange?: (html: string) => void;
 }
 
-export function BlogLessonForm({ lessonId, initialHtml, onChangeContent }: BlogLessonFormProps) {
+export function BlogLessonForm({ lesson, onChange }: BlogLessonFormProps) {
   return (
     <div className="space-y-4">
       <div className="space-y-1">
@@ -18,12 +19,15 @@ export function BlogLessonForm({ lessonId, initialHtml, onChangeContent }: BlogL
       </div>
 
       <div className="relative rounded-lg overflow-hidden border border-border">
+        {/* We use a storageKey unique to this lesson so that drafts are preserved */}
         <RichTextEditor
-          storageKey={`blog-lesson-${lessonId}`}
-          initialHtml={initialHtml}
+          storageKey={`blog-lesson-${lesson.id}`}
+          initialHtml={lesson.blog?.content}
           onChange={async (editor) => {
-            const html = await editor.blocksToHTMLLossy(editor.document);
-            onChangeContent(html);
+            if (onChange) {
+              const html = await editor.blocksToHTMLLossy(editor.document);
+              onChange(html);
+            }
           }}
         />
       </div>

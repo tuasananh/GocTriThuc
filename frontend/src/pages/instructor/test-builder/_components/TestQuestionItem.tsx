@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Trash2, CheckCircle2 } from 'lucide-react';
+import { Trash2, CheckCircle2, ChevronUp, ChevronDown } from 'lucide-react';
 import type { QuestionDto } from '@/types';
 import { RichTextViewer } from '@/components/rich-text-editor/RichTextViewer';
 import {
@@ -25,6 +25,10 @@ interface TestQuestionItemProps {
   index: number;
   onRemove: () => void;
   onUpdatePoint?: (point: number) => void;
+  isFirst?: boolean;
+  isLast?: boolean;
+  onMoveUp?: () => void;
+  onMoveDown?: () => void;
 }
 
 export function TestQuestionItem({
@@ -32,6 +36,10 @@ export function TestQuestionItem({
   index,
   onRemove,
   onUpdatePoint,
+  isFirst,
+  isLast,
+  onMoveUp,
+  onMoveDown,
 }: TestQuestionItemProps) {
   const [localPoint, setLocalPoint] = useState(question.point ?? 1);
   const [prevPropPoint, setPrevPropPoint] = useState(question.point ?? 1);
@@ -85,36 +93,62 @@ export function TestQuestionItem({
               <RichTextViewer htmlContent={question.statement} />
             </div>
           </div>
-          <AlertDialog>
-            <AlertDialogTrigger asChild>
+          <div className="flex flex-col sm:flex-row items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+            {onMoveUp && (
               <Button
                 variant="ghost"
                 size="icon"
-                className="text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
-                title="Xóa khỏi đề thi"
+                onClick={onMoveUp}
+                disabled={isFirst}
+                className="text-muted-foreground hover:text-foreground"
+                title="Di chuyển lên"
               >
-                <Trash2 className="w-4 h-4" />
+                <ChevronUp className="w-4 h-4" />
               </Button>
-            </AlertDialogTrigger>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>Xóa câu hỏi này?</AlertDialogTitle>
-                <AlertDialogDescription>
-                  Hành động này sẽ xóa câu hỏi khỏi bài kiểm tra hiện tại. Bạn có chắc chắn muốn
-                  tiếp tục?
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>Hủy</AlertDialogCancel>
-                <AlertDialogAction
-                  onClick={onRemove}
-                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            )}
+            {onMoveDown && (
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={onMoveDown}
+                disabled={isLast}
+                className="text-muted-foreground hover:text-foreground"
+                title="Di chuyển xuống"
+              >
+                <ChevronDown className="w-4 h-4" />
+              </Button>
+            )}
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="text-muted-foreground hover:text-destructive"
+                  title="Xóa khỏi đề thi"
                 >
-                  Xóa câu hỏi
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
+                  <Trash2 className="w-4 h-4" />
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Xóa câu hỏi này?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Hành động này sẽ xóa câu hỏi khỏi bài kiểm tra hiện tại. Bạn có chắc chắn muốn
+                    tiếp tục?
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Hủy</AlertDialogCancel>
+                  <AlertDialogAction
+                    onClick={onRemove}
+                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                  >
+                    Xóa câu hỏi
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          </div>
         </div>
 
         <div className="space-y-2 mt-4">

@@ -88,6 +88,29 @@ export function TestBuilderPage() {
     }
   };
 
+  const moveQuestion = async (questionId: string, direction: 'up' | 'down') => {
+    if (!testId) return;
+    const idx = questions.findIndex((q) => q.id === questionId);
+    if (idx === -1) return;
+    if (direction === 'up' && idx === 0) return;
+    if (direction === 'down' && idx === questions.length - 1) return;
+
+    // Cập nhật giao diện trước (Optimistic UI)
+    const newQuestions = [...questions];
+    const swapIdx = direction === 'up' ? idx - 1 : idx + 1;
+    [newQuestions[idx], newQuestions[swapIdx]] = [newQuestions[swapIdx], newQuestions[idx]];
+    setQuestions(newQuestions);
+
+    try {
+      await api.patch(`/api/tests/${testId}/questions/${questionId}/order`, { direction });
+      // Không cần hiện toast vì có thể làm rối người dùng khi họ bấm nhiều lần liên tiếp
+    } catch {
+      toast.error('Không thể cập nhật thứ tự');
+      // Nếu lỗi thì revert lại state cũ
+      setQuestions(questions);
+    }
+  };
+
   if (loading) {
     return (
       <PageShell>
@@ -170,6 +193,10 @@ export function TestBuilderPage() {
                   index={i}
                   onRemove={() => removeQuestion(q.id)}
                   onUpdatePoint={(p) => updateQuestionPoint(q.id, p)}
+                  isFirst={i === 0}
+                  isLast={i === questions.length - 1}
+                  onMoveUp={() => moveQuestion(q.id, 'up')}
+                  onMoveDown={() => moveQuestion(q.id, 'down')}
                 />
               ))}
             </div>
