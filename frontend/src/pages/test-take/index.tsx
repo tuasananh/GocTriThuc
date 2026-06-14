@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { api } from '@/lib/api';
 import { ROUTES } from '@/lib/routes';
-import type { QuestionStudentDto, TestSessionDto, TestDto } from '@/types';
+import type { QuestionStudentDto, TestSessionDto, TestDto, LessonDetailDto } from '@/types';
 import { PageShell } from '@/components/PageShell';
 import { ErrorState } from '@/components/ErrorState';
 import { SkeletonCard } from '@/components/SkeletonCard';
@@ -33,13 +33,26 @@ export function TestTakePage() {
     setError(null);
     try {
       // Gọi 3 API đồng thời như trong tài liệu thiết kế Day 9
-      const [testRes, sessionRes, qRes] = await Promise.all([
-        api.get<TestDto>(`/api/tests/${testId}`),
+      const [lessonRes, sessionRes, qRes] = await Promise.all([
+        api.get<LessonDetailDto>(`/api/lessons/${testId}`),
         api.post<TestSessionDto>(`/api/tests/${testId}/sessions`),
         api.get<QuestionStudentDto[]>(`/api/tests/${testId}/questions`),
       ]);
 
-      setTestInfo(testRes.data);
+      const lessonData = lessonRes.data;
+      if (lessonData.test) {
+        setTestInfo({
+          id: lessonData.id,
+          statement: lessonData.test.statement,
+          timeLimit: lessonData.test.timeLimit,
+        });
+      } else {
+        setTestInfo({
+          id: lessonData.id,
+          statement: lessonData.title,
+          timeLimit: 1800,
+        });
+      }
       setSession(sessionRes.data);
       setQuestions(qRes.data);
 
