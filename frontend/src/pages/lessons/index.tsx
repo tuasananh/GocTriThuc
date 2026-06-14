@@ -229,7 +229,7 @@ export function LessonPage() {
                 )}
               </div>
               <Button size="lg" asChild className="gap-2 mt-4">
-                <Link to={lesson.test?.testId ? ROUTES.TEST_TAKE(lesson.test.testId) : '#'}>
+                <Link to={lesson.test ? ROUTES.TEST_TAKE(lesson.id) : '#'}>
                   <PlayCircle className="w-5 h-5" />
                   Bắt đầu làm bài
                 </Link>

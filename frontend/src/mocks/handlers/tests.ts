@@ -183,9 +183,9 @@ export const testsHandlers = [
     const testSessions = sessions.filter((s: Record<string, unknown>) => s.testId === testId);
     return HttpResponse.json(
       testSessions.map((s: Record<string, unknown>) => ({
-        id: s.id,
+        sessionId: s.id,
         userId: s.userId,
-        userDisplayName: 'Mock User',
+        displayName: 'Mock User',
         startedAt: s.startedAt,
         submittedAt: s.submittedAt,
         isDone: s.isDone,
@@ -331,11 +331,14 @@ export const testsHandlers = [
 
     return HttpResponse.json({
       sessionId,
-      totalScore,
-      maxScore,
-      percent,
-      duration,
-      answers: resultAnswers,
+      testId: session.testId,
+      score: percent,
+      correctCount: resultAnswers.filter((a) => a.isCorrect).length,
+      totalQuestions: questions.length,
+      startedAt: session.startedAt,
+      submittedAt: session.submittedAt,
+      timeTakenSeconds: duration,
+      questions: resultAnswers,
     });
   }),
 ];
