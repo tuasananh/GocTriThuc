@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { toast } from 'sonner';
 import {
   BookOpen,
@@ -51,6 +51,8 @@ export function QuestionBankPage() {
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [isDesktop, setIsDesktop] = useState(window.innerWidth >= 1024);
 
+  const requestRef = useRef(0);
+
   // ── Handle screen resize cho Responsive Dialog ───────────────
   useEffect(() => {
     const handleResize = () => setIsDesktop(window.innerWidth >= 1024);
@@ -71,16 +73,23 @@ export function QuestionBankPage() {
   const fetchQuestions = useCallback(async () => {
     setLoading(true);
     setError(null);
+    const reqId = ++requestRef.current;
     try {
       const res = await api.get<PageResponse<QuestionDto>>('/api/questions', {
         params: { search: debouncedSearch, page, size: 20 },
       });
-      setQuestions(res.data.content ?? []);
-      setTotalPages(res.data.totalPages ?? 0);
+      if (reqId === requestRef.current) {
+        setQuestions(res.data.content ?? []);
+        setTotalPages(res.data.totalPages ?? 0);
+      }
     } catch {
-      setError('Không thể tải danh sách câu hỏi. Vui lòng thử lại.');
+      if (reqId === requestRef.current) {
+        setError('Không thể tải danh sách câu hỏi. Vui lòng thử lại.');
+      }
     } finally {
-      setLoading(false);
+      if (reqId === requestRef.current) {
+        setLoading(false);
+      }
     }
   }, [debouncedSearch, page]);
 
