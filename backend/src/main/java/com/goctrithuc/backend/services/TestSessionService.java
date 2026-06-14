@@ -136,10 +136,7 @@ public class TestSessionService {
     Map<Long, List<Integer>> result = new HashMap<>();
     for (TestSessionAnswerEntity ans : answers) {
       if (ans.getQuestionAnswer() != null) {
-        List<Integer> choices = new ArrayList<>();
-        for (int c : ans.getQuestionAnswer()) {
-          choices.add(c);
-        }
+        List<Integer> choices = Arrays.stream(ans.getQuestionAnswer()).boxed().toList();
         result.put(ans.getQuestionId(), choices);
       }
     }
