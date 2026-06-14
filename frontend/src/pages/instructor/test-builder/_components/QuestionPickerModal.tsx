@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { Loader2, Plus, Search } from 'lucide-react';
 import { toast } from 'sonner';
 import { api } from '@/lib/api';
@@ -25,6 +25,8 @@ export function QuestionPickerModal({
   const [search, setSearch] = useState('');
   const [addingId, setAddingId] = useState<string | null>(null);
 
+  const searchRequestRef = useRef(0);
+
   // Simple debounce
   const [debouncedSearch, setDebouncedSearch] = useState(search);
   useEffect(() => {
@@ -35,15 +37,22 @@ export function QuestionPickerModal({
   const fetchQuestions = useCallback(async () => {
     if (!open) return;
     setLoading(true);
+    const reqId = ++searchRequestRef.current;
     try {
       const res = await api.get<PageResponse<QuestionDto>>('/api/questions', {
         params: { search: debouncedSearch, size: 50 },
       });
-      setQuestions(res.data.content || []);
+      if (reqId === searchRequestRef.current) {
+        setQuestions(res.data.content || []);
+      }
     } catch {
-      toast.error('Không thể tải danh sách câu hỏi');
+      if (reqId === searchRequestRef.current) {
+        toast.error('Không thể tải danh sách câu hỏi');
+      }
     } finally {
-      setLoading(false);
+      if (reqId === searchRequestRef.current) {
+        setLoading(false);
+      }
     }
   }, [open, debouncedSearch]);
 

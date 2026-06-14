@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { Plus, Search, BookOpen } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { PageShell } from '@/components/PageShell';
@@ -27,6 +27,8 @@ export function CourseListPage() {
   const [visibility, setVisibility] = useState<'public' | 'restricted' | 'private'>('public');
   const [showCreate, setShowCreate] = useState(false);
 
+  const requestRef = useRef(0);
+
   // Debounce search query
   useEffect(() => {
     const t = setTimeout(() => {
@@ -38,6 +40,7 @@ export function CourseListPage() {
   const fetchCourses = useCallback(async () => {
     setLoading(true);
     setError(null);
+    const reqId = ++requestRef.current;
     try {
       const res = await api.get<PageResponse<CourseDto>>('/api/courses', {
         params: {
@@ -48,11 +51,17 @@ export function CourseListPage() {
           own: visibility === 'private' ? true : undefined,
         },
       });
-      setCourses(res.data);
+      if (reqId === requestRef.current) {
+        setCourses(res.data);
+      }
     } catch {
-      setError('Không thể tải danh sách khóa học. Vui lòng thử lại.');
+      if (reqId === requestRef.current) {
+        setError('Không thể tải danh sách khóa học. Vui lòng thử lại.');
+      }
     } finally {
-      setLoading(false);
+      if (reqId === requestRef.current) {
+        setLoading(false);
+      }
     }
   }, [debouncedSearch, page, visibility]);
 
@@ -124,7 +133,7 @@ export function CourseListPage() {
             <SkeletonCard key={i} />
           ))}
         </div>
-      ) : courses?.content.length === 0 ? (
+      ) : !courses?.content || courses.content.length === 0 ? (
         <EmptyState
           icon={BookOpen}
           title="Chưa có khóa học nào"
@@ -132,7 +141,7 @@ export function CourseListPage() {
         />
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {courses?.content.map((c) => (
+          {courses.content.map((c) => (
             <CourseCard key={c.id} course={c} />
           ))}
         </div>

@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { api } from '@/lib/api';
@@ -26,6 +26,10 @@ export function TestTakePage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+
+  const requestCounterRef = useRef<Record<string, number>>({});
+  const submittingRef = useRef(false);
+  const lastSavedAnswersRef = useRef<Record<string, number[]>>({});
 
   const fetchData = useCallback(async () => {
     if (!testId) return;
@@ -63,6 +67,7 @@ export function TestTakePage() {
         );
         if (ansRes.data?.answers) {
           setAnswers(ansRes.data.answers);
+          lastSavedAnswersRef.current = ansRes.data.answers;
         }
       } catch (e) {
         console.warn('Could not restore answers', e);
@@ -89,7 +94,9 @@ export function TestTakePage() {
   const handleAnswerChange = async (questionId: string, newAnswers: number[]) => {
     if (!session) return;
 
-    const prevAnswers = answers[questionId];
+    // Tăng số thứ tự request của câu hỏi này
+    const nextSeq = (requestCounterRef.current[questionId] || 0) + 1;
+    requestCounterRef.current[questionId] = nextSeq;
 
     // Optimistic UI update
     setAnswers((prev) => ({ ...prev, [questionId]: newAnswers }));
@@ -99,23 +106,29 @@ export function TestTakePage() {
         questionId: questionId,
         selectedChoices: newAnswers,
       });
+      // Lưu lại giá trị đã lưu thành công
+      lastSavedAnswersRef.current[questionId] = newAnswers;
     } catch {
       toast.error('Có lỗi xảy ra khi lưu câu trả lời. Vui lòng kiểm tra mạng!');
-      // Rollback optimistic update
-      setAnswers((prev) => {
-        const updated = { ...prev };
-        if (prevAnswers === undefined) {
-          delete updated[questionId];
-        } else {
-          updated[questionId] = prevAnswers;
-        }
-        return updated;
-      });
+
+      // Chỉ rollback câu hỏi này về giá trị lưu thành công gần nhất nếu đây là request cuối cùng
+      if (requestCounterRef.current[questionId] === nextSeq) {
+        setAnswers((prev) => {
+          const updated = { ...prev };
+          const rollbackVal = lastSavedAnswersRef.current[questionId];
+          if (rollbackVal === undefined) {
+            delete updated[questionId];
+          } else {
+            updated[questionId] = rollbackVal;
+          }
+          return updated;
+        });
+      }
     }
   };
 
   const handleSubmit = async (isAutoSubmit = false) => {
-    if (!session) return;
+    if (!session || submittingRef.current) return;
 
     if (!isAutoSubmit) {
       const isConfirmed = window.confirm('Bạn có chắc chắn muốn nộp bài ngay bây giờ?');
@@ -124,6 +137,7 @@ export function TestTakePage() {
       toast.info('Đã hết thời gian làm bài. Đang tự động nộp bài...');
     }
 
+    submittingRef.current = true;
     setSubmitting(true);
     try {
       await api.post(`/api/sessions/${session.id}/submit`);
@@ -131,6 +145,7 @@ export function TestTakePage() {
       navigate(ROUTES.TEST_RESULT(session.id), { replace: true });
     } catch {
       toast.error('Lỗi nộp bài! Vui lòng liên hệ hỗ trợ.');
+      submittingRef.current = false;
       setSubmitting(false); // Only allow re-submit if it failed
     }
   };

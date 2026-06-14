@@ -102,66 +102,86 @@ export function LessonPage() {
 
   const handlePostComment = async (content: string) => {
     if (!lessonId) return;
-    const res = await api.post<CommentDto>(`/api/lessons/${lessonId}/comments`, {
-      content,
-    });
-    setComments((prev) => [res.data, ...prev]);
+    try {
+      const res = await api.post<CommentDto>(`/api/lessons/${lessonId}/comments`, {
+        content,
+      });
+      setComments((prev) => [res.data, ...prev]);
+      toast.success('Đã gửi bình luận');
+    } catch {
+      toast.error('Không thể gửi bình luận. Vui lòng thử lại.');
+    }
   };
 
   const handleReply = async (content: string, parentId: string) => {
     if (!lessonId) return;
-    const res = await api.post<CommentDto>(`/api/lessons/${lessonId}/comments`, {
-      content,
-      parentId,
-    });
-    const addReply = (nodes: CommentDto[]): CommentDto[] => {
-      return nodes.map((n) => {
-        if (n.id === parentId) {
-          return { ...n, replies: [res.data, ...(n.replies || [])] };
-        }
-        if (n.replies) {
-          return { ...n, replies: addReply(n.replies) };
-        }
-        return n;
+    try {
+      const res = await api.post<CommentDto>(`/api/lessons/${lessonId}/comments`, {
+        content,
+        parentId,
       });
-    };
-    setComments((prev) => addReply(prev));
+      const addReply = (nodes: CommentDto[]): CommentDto[] => {
+        return nodes.map((n) => {
+          if (n.id === parentId) {
+            return { ...n, replies: [res.data, ...(n.replies || [])] };
+          }
+          if (n.replies) {
+            return { ...n, replies: addReply(n.replies) };
+          }
+          return n;
+        });
+      };
+      setComments((prev) => addReply(prev));
+      toast.success('Đã gửi phản hồi');
+    } catch {
+      toast.error('Không thể gửi phản hồi. Vui lòng thử lại.');
+    }
   };
 
   const handleEdit = async (id: string, newContent: string) => {
-    const res = await api.patch<CommentDto>(`/api/lessons/comments/${id}`, {
-      content: newContent,
-    });
-    const updateNode = (nodes: CommentDto[]): CommentDto[] => {
-      return nodes.map((n) => {
-        if (n.id === id) {
-          return {
-            ...n,
-            content: res.data.content,
-            editedAt: res.data.editedAt,
-            updatedAt: res.data.updatedAt,
-          };
-        }
-        if (n.replies) {
-          return { ...n, replies: updateNode(n.replies) };
-        }
-        return n;
+    try {
+      const res = await api.patch<CommentDto>(`/api/lessons/comments/${id}`, {
+        content: newContent,
       });
-    };
-    setComments((prev) => updateNode(prev));
+      const updateNode = (nodes: CommentDto[]): CommentDto[] => {
+        return nodes.map((n) => {
+          if (n.id === id) {
+            return {
+              ...n,
+              content: res.data.content,
+              editedAt: res.data.editedAt,
+              updatedAt: res.data.updatedAt,
+            };
+          }
+          if (n.replies) {
+            return { ...n, replies: updateNode(n.replies) };
+          }
+          return n;
+        });
+      };
+      setComments((prev) => updateNode(prev));
+      toast.success('Đã sửa bình luận');
+    } catch {
+      toast.error('Không thể cập nhật bình luận. Vui lòng thử lại.');
+    }
   };
 
   const handleDelete = async (id: string) => {
-    await api.delete(`/api/lessons/comments/${id}`);
-    const removeNode = (nodes: CommentDto[]): CommentDto[] => {
-      return nodes
-        .filter((n) => n.id !== id)
-        .map((n) => ({
-          ...n,
-          replies: n.replies ? removeNode(n.replies) : [],
-        }));
-    };
-    setComments((prev) => removeNode(prev));
+    try {
+      await api.delete(`/api/lessons/comments/${id}`);
+      const removeNode = (nodes: CommentDto[]): CommentDto[] => {
+        return nodes
+          .filter((n) => n.id !== id)
+          .map((n) => ({
+            ...n,
+            replies: n.replies ? removeNode(n.replies) : [],
+          }));
+      };
+      setComments((prev) => removeNode(prev));
+      toast.success('Đã xóa bình luận');
+    } catch {
+      toast.error('Không thể xóa bình luận. Vui lòng thử lại.');
+    }
   };
 
   if (loading) {
