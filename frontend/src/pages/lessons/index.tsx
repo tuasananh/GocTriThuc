@@ -2,7 +2,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { api } from '@/lib/api';
 import { ROUTES } from '@/lib/routes';
-import type { LessonDetailDto, CommentDto, PageResponse } from '@/types';
+import type { LessonDetailDto, CommentDto, PageResponse, MyTestSessionDto } from '@/types';
 import { PageShell } from '@/components/PageShell';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -24,6 +24,7 @@ export function LessonPage() {
     null,
   );
   const [completing, setCompleting] = useState(false);
+  const [completedSessionId, setCompletedSessionId] = useState<string | null>(null);
 
   const [comments, setComments] = useState<CommentDto[]>([]);
   const [loadingComments, setLoadingComments] = useState(false);
@@ -34,9 +35,26 @@ export function LessonPage() {
     if (!courseId || !lessonId) return;
     setLoading(true);
     setError(null);
+    setCompletedSessionId(null);
     try {
       const res = await api.get<LessonDetailDto>(`/api/lessons/${lessonId}`);
       setLesson(res.data);
+
+      if (res.data.type === 'test' && res.data.completed) {
+        try {
+          const sessionsRes = await api.get<PageResponse<MyTestSessionDto>>(
+            '/api/tests/sessions/my',
+          );
+          const matchingSession = sessionsRes.data.content.find(
+            (s) => s.testId === res.data.id,
+          );
+          if (matchingSession) {
+            setCompletedSessionId(matchingSession.sessionId);
+          }
+        } catch (err) {
+          console.error('Failed to load completed test sessions', err);
+        }
+      }
     } catch (err) {
       console.error('Failed to load lesson details', err);
       setError({
@@ -228,7 +246,14 @@ export function LessonPage() {
                   </div>
                 )}
               </div>
-              {lesson.test ? (
+              {completedSessionId ? (
+                <Button size="lg" asChild className="gap-2 mt-4" variant="outline">
+                  <Link to={ROUTES.TEST_RESULT(completedSessionId)}>
+                    <CheckCircle2 className="w-5 h-5 text-emerald-500" />
+                    Xem kết quả bài làm
+                  </Link>
+                </Button>
+              ) : lesson.test ? (
                 <Button size="lg" asChild className="gap-2 mt-4">
                   <Link to={ROUTES.TEST_TAKE(lesson.id)}>
                     <PlayCircle className="w-5 h-5" />

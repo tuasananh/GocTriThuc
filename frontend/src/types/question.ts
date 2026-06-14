@@ -84,3 +84,16 @@ export interface TestResultDto {
   timeTakenSeconds: number;
   questions: QuestionResultItem[];
 }
+
+export interface MyTestSessionDto {
+  sessionId: string;
+  testId: string;
+  testTitle: string;
+  courseTitle: string;
+  courseId: number;
+  score: number;
+  correctCount: number;
+  totalQuestions: number;
+  submittedAt: string;
+}
+
