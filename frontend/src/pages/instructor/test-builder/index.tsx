@@ -35,10 +35,10 @@ export function TestBuilderPage() {
     try {
       const r = await api.get<LessonDetailDto>(`/api/lessons/${lessonId}`);
       if (r.data.test) {
-        setTestId(r.data.test.testId);
+        setTestId(r.data.id);
         setStatement(r.data.test.statement || '');
         setTimeLimit(r.data.test.timeLimit || 1800);
-        const qr = await api.get<TestQuestionDto[]>(`/api/tests/${r.data.test.testId}/questions`);
+        const qr = await api.get<TestQuestionDto[]>(`/api/tests/${r.data.id}/questions`);
         setQuestions(qr.data);
       }
     } catch {

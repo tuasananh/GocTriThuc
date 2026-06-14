@@ -100,7 +100,7 @@ export interface LessonDetailDto extends LessonDto {
     content: string; // HTML sanitized
   };
   test?: {
-    testId: string;
+    testId?: string;
     statement: string;
     timeLimit: number; // seconds
     settings?: Record<string, unknown>; // extensible config (passing_score, max_retakes, etc.)

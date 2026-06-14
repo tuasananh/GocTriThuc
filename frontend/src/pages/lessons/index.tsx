@@ -2,11 +2,11 @@ import { useEffect, useState, useCallback } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { api } from '@/lib/api';
 import { ROUTES } from '@/lib/routes';
-import type { LessonDetailDto, CommentDto, PageResponse } from '@/types';
+import type { LessonDetailDto, CommentDto, PageResponse, MyTestSessionDto } from '@/types';
 import { PageShell } from '@/components/PageShell';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { ArrowLeft, CheckCircle2, Loader2 } from 'lucide-react';
+import { ArrowLeft, CheckCircle2, Clock, PlayCircle, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { ErrorState } from '@/components/ErrorState';
 import { VideoLessonViewer } from './_components/VideoLessonViewer';
@@ -24,6 +24,7 @@ export function LessonPage() {
     null,
   );
   const [completing, setCompleting] = useState(false);
+  const [completedSessionId, setCompletedSessionId] = useState<string | null>(null);
 
   const [comments, setComments] = useState<CommentDto[]>([]);
   const [loadingComments, setLoadingComments] = useState(false);
@@ -34,9 +35,23 @@ export function LessonPage() {
     if (!courseId || !lessonId) return;
     setLoading(true);
     setError(null);
+    setCompletedSessionId(null);
     try {
       const res = await api.get<LessonDetailDto>(`/api/lessons/${lessonId}`);
       setLesson(res.data);
+
+      if (res.data.type === 'test' && res.data.completed) {
+        try {
+          const sessionsRes =
+            await api.get<PageResponse<MyTestSessionDto>>('/api/tests/sessions/my');
+          const matchingSession = sessionsRes.data.content.find((s) => s.testId === res.data.id);
+          if (matchingSession) {
+            setCompletedSessionId(matchingSession.sessionId);
+          }
+        } catch (err) {
+          console.error('Failed to load completed test sessions', err);
+        }
+      }
     } catch (err) {
       console.error('Failed to load lesson details', err);
       setError({
@@ -215,8 +230,39 @@ export function LessonPage() {
           ) : lesson.type === 'blog' ? (
             <BlogLessonViewer blog={lesson.blog ?? { content: '' }} />
           ) : lesson.type === 'test' ? (
-            <div className="p-8 text-center text-muted-foreground bg-muted/20 rounded-lg">
-              <p>Giao diện bài kiểm tra sẽ hiển thị tại đây.</p>
+            <div className="p-8 bg-muted/10 rounded-lg border flex flex-col items-center justify-center text-center space-y-6">
+              <div className="max-w-md space-y-2">
+                <h3 className="text-xl font-semibold">Bài kiểm tra</h3>
+                {lesson.test?.statement && (
+                  <p className="text-muted-foreground">{lesson.test.statement}</p>
+                )}
+                {lesson.test?.timeLimit && (
+                  <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground mt-4">
+                    <Clock className="w-4 h-4" />
+                    <span>Thời gian làm bài: {Math.floor(lesson.test.timeLimit / 60)} phút</span>
+                  </div>
+                )}
+              </div>
+              {completedSessionId ? (
+                <Button size="lg" asChild className="gap-2 mt-4" variant="outline">
+                  <Link to={ROUTES.TEST_RESULT(completedSessionId)}>
+                    <CheckCircle2 className="w-5 h-5 text-emerald-500" />
+                    Xem kết quả bài làm
+                  </Link>
+                </Button>
+              ) : lesson.test ? (
+                <Button size="lg" asChild className="gap-2 mt-4">
+                  <Link to={ROUTES.TEST_TAKE(lesson.id)}>
+                    <PlayCircle className="w-5 h-5" />
+                    Bắt đầu làm bài
+                  </Link>
+                </Button>
+              ) : (
+                <Button size="lg" disabled className="gap-2 mt-4">
+                  <PlayCircle className="w-5 h-5" />
+                  Bắt đầu làm bài (Chưa cấu hình)
+                </Button>
+              )}
             </div>
           ) : (
             <div className="p-8 text-center text-muted-foreground bg-muted/20 rounded-lg">

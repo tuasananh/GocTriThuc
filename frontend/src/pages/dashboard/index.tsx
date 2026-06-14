@@ -3,13 +3,13 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Navigate, Link, useNavigate } from 'react-router-dom';
 import { ROUTES } from '@/lib/routes';
 import { api } from '@/lib/api';
-import type { PageResponse, CourseDto, CourseProgressDto } from '@/types';
+import type { PageResponse, CourseDto, CourseProgressDto, MyTestSessionDto } from '@/types';
 import { PageShell } from '@/components/PageShell';
 import { SectionHeader } from '@/components/SectionHeader';
 import { EmptyState } from '@/components/EmptyState';
 import { ErrorState } from '@/components/ErrorState';
 import { SkeletonCard } from '@/components/SkeletonCard';
-import { BookOpen, User } from 'lucide-react';
+import { BookOpen, User, Clock } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -27,33 +27,55 @@ export const Dashboard = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const [sessions, setSessions] = useState<MyTestSessionDto[]>([]);
+  const [loadingSessions, setLoadingSessions] = useState(true);
+  const [sessionsError, setSessionsError] = useState<string | null>(null);
+
   const fetchData = useCallback(async () => {
     setLoading(true);
     setError(null);
-    try {
-      const res = await api.get<PageResponse<CourseDto>>('/api/courses?enrolled=true');
-      const coursesData = res.data.content;
+    setLoadingSessions(true);
+    setSessionsError(null);
 
-      // Fetch progress for each course concurrently
-      const progressPromises = coursesData.map(async (course) => {
-        try {
-          const progressRes = await api.get<CourseProgressDto>(
-            `/api/courses/${course.id}/progress`,
-          );
-          return { ...course, progress: progressRes.data };
-        } catch {
-          // If progress fetch fails, return course without progress
-          return course;
-        }
-      });
+    const fetchCourses = async () => {
+      try {
+        const res = await api.get<PageResponse<CourseDto>>('/api/courses?enrolled=true');
+        const coursesData = res.data.content;
 
-      const coursesWithProgress = await Promise.all(progressPromises);
-      setCourses(coursesWithProgress);
-    } catch {
-      setError('Không thể tải danh sách khóa học của bạn.');
-    } finally {
-      setLoading(false);
-    }
+        const progressPromises = coursesData.map(async (course) => {
+          try {
+            const progressRes = await api.get<CourseProgressDto>(
+              `/api/courses/${course.id}/progress`,
+            );
+            return { ...course, progress: progressRes.data };
+          } catch {
+            return course;
+          }
+        });
+
+        const coursesWithProgress = await Promise.all(progressPromises);
+        setCourses(coursesWithProgress);
+      } catch (err) {
+        console.error('Failed to load courses', err);
+        setError('Không thể tải danh sách khóa học của bạn.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    const fetchSessions = async () => {
+      try {
+        const res = await api.get<PageResponse<MyTestSessionDto>>('/api/tests/sessions/my');
+        setSessions(res.data.content);
+      } catch (err) {
+        console.error('Failed to load test sessions', err);
+        setSessionsError('Không thể tải lịch sử làm bài kiểm tra.');
+      } finally {
+        setLoadingSessions(false);
+      }
+    };
+
+    await Promise.all([fetchCourses(), fetchSessions()]);
   }, []);
 
   useEffect(() => {
@@ -190,6 +212,103 @@ export const Dashboard = () => {
           ))}
         </div>
       )}
+
+      {/* Lịch sử làm bài kiểm tra */}
+      <div className="mt-12 pt-6 border-t">
+        <SectionHeader
+          title="Lịch sử kiểm tra trắc nghiệm"
+          description="Kết quả các bài kiểm tra trắc nghiệm bạn đã tham gia làm bài."
+        />
+
+        {loadingSessions && (
+          <div className="space-y-3 mt-6">
+            {Array.from({ length: 3 }).map((_, i) => (
+              <div key={i} className="h-16 w-full bg-muted animate-pulse rounded-lg" />
+            ))}
+          </div>
+        )}
+
+        {sessionsError && (
+          <div className="mt-6">
+            <ErrorState message={sessionsError} onRetry={fetchData} />
+          </div>
+        )}
+
+        {!loadingSessions && !sessionsError && sessions.length === 0 && (
+          <div className="mt-6">
+            <EmptyState
+              icon={Clock}
+              title="Chưa có lượt thi nào"
+              description="Lịch sử thi của bạn hiện tại đang trống."
+            />
+          </div>
+        )}
+
+        {!loadingSessions && !sessionsError && sessions.length > 0 && (
+          <div className="mt-6 bg-card border rounded-xl overflow-hidden shadow-sm">
+            <div className="divide-y">
+              {sessions.map((session) => {
+                const scorePercent = Math.round(session.score);
+                const scoreColor =
+                  scorePercent >= 80
+                    ? 'text-green-600 dark:text-green-400'
+                    : scorePercent >= 50
+                      ? 'text-amber-600 dark:text-amber-400'
+                      : 'text-destructive';
+
+                const formattedDate = new Date(session.submittedAt).toLocaleDateString('vi-VN', {
+                  year: 'numeric',
+                  month: 'short',
+                  day: 'numeric',
+                  hour: '2-digit',
+                  minute: '2-digit',
+                });
+
+                return (
+                  <div
+                    key={session.sessionId}
+                    className="flex flex-col sm:flex-row sm:items-center justify-between p-4 sm:p-6 hover:bg-muted/30 transition-colors gap-4"
+                  >
+                    <div className="space-y-1">
+                      <h4 className="font-semibold text-base text-foreground leading-snug">
+                        {session.testTitle}
+                      </h4>
+                      <p className="text-sm text-muted-foreground flex items-center gap-2">
+                        <span>{session.courseTitle}</span>
+                        <span className="text-muted-foreground/30">•</span>
+                        <span>{formattedDate}</span>
+                      </p>
+                    </div>
+
+                    <div className="flex items-center justify-between sm:justify-end gap-6">
+                      <div className="text-left sm:text-right">
+                        <div className="text-lg font-bold">
+                          <span className={scoreColor}>{session.correctCount}</span>
+                          <span className="text-sm text-muted-foreground font-normal">
+                            /{session.totalQuestions} câu đúng
+                          </span>
+                        </div>
+                        <div className={`text-xs font-semibold ${scoreColor}`}>
+                          Đạt {scorePercent}%
+                        </div>
+                      </div>
+
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="shadow-sm hover:bg-accent"
+                        onClick={() => navigate(ROUTES.TEST_RESULT(session.sessionId))}
+                      >
+                        Xem chi tiết
+                      </Button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+      </div>
     </PageShell>
   );
 };

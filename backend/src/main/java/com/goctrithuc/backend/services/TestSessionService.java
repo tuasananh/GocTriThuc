@@ -120,6 +120,29 @@ public class TestSessionService {
     return TestSessionResponse.from(activeSession, remainingTime, false);
   }
 
+  @Transactional(readOnly = true)
+  public SessionAnswersResponse getSessionAnswers(Long sessionId, Long userId) {
+    TestSessionEntity session =
+        testSessionRepo
+            .findById(sessionId)
+            .orElseThrow(
+                () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Session not found"));
+
+    if (!session.getUser().getId().equals(userId)) {
+      throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You do not own this session");
+    }
+
+    List<TestSessionAnswerEntity> answers = testSessionAnswerRepository.findBySessionId(sessionId);
+    Map<Long, List<Integer>> result = new HashMap<>();
+    for (TestSessionAnswerEntity ans : answers) {
+      if (ans.getQuestionAnswer() != null) {
+        List<Integer> choices = Arrays.stream(ans.getQuestionAnswer()).boxed().toList();
+        result.put(ans.getQuestionId(), choices);
+      }
+    }
+    return new SessionAnswersResponse(result);
+  }
+
   @Transactional(noRollbackFor = ResponseStatusException.class)
   public void saveAnswer(Long sessionId, SaveAnswerRequest req, Long userId) {
     TestSessionEntity session =

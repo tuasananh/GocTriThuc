@@ -64,6 +64,16 @@ public class TestSessionController {
     return ResponseEntity.ok(res);
   }
 
+  @GetMapping("/sessions/{sessionId}/answers")
+  @PreAuthorize(
+      "@permissionService.hasPermission(#principal, T(com.goctrithuc.backend.common.PermissionConstants).ACCESS_TESTS)")
+  public ResponseEntity<SessionAnswersResponse> getSessionAnswers(
+      @PathVariable Long sessionId, @AuthenticationPrincipal OAuth2User principal) {
+    Long userId = AuthUtils.getCurrentUserId(principal, userRepository);
+    SessionAnswersResponse res = testSessionService.getSessionAnswers(sessionId, userId);
+    return ResponseEntity.ok(res);
+  }
+
   @PutMapping("/sessions/{sessionId}/answers")
   @PreAuthorize(
       "@permissionService.hasPermission(#principal, T(com.goctrithuc.backend.common.PermissionConstants).ACCESS_TESTS)")

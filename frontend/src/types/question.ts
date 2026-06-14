@@ -53,7 +53,7 @@ export interface TestSessionDto {
   testId: string;
   startedAt: string;
   submittedAt: string | null; // null khi đang làm bài
-  isDone: boolean;
+  isDone?: boolean;
   remainingTime: number; // seconds — tính từ server
   createdAt: string;
 }
@@ -63,19 +63,36 @@ export interface TestSessionAnswerDto {
   questionAnswer: number[] | null; // mảng index lựa chọn, ví dụ [0, 2]
 }
 
+export interface QuestionResultItem {
+  questionId: string;
+  statement: string;
+  choices: string[];
+  correctChoices: number[];
+  studentAnswer: number[] | null;
+  isCorrect: boolean;
+  point: number;
+}
+
 export interface TestResultDto {
   sessionId: string;
-  totalScore: number;
-  maxScore: number;
-  percent: number;
-  duration: number; // seconds
-  answers: {
-    questionId: string;
-    statement: string;
-    choices: string[];
-    correctChoices: number[];
-    studentAnswer: number[] | null;
-    isCorrect: boolean;
-    point: number;
-  }[];
+  testId: string;
+  score: number; // percentage score (0-100)
+  correctCount: number;
+  totalQuestions: number;
+  startedAt: string;
+  submittedAt: string | null;
+  timeTakenSeconds: number;
+  questions: QuestionResultItem[];
+}
+
+export interface MyTestSessionDto {
+  sessionId: string;
+  testId: string;
+  testTitle: string;
+  courseTitle: string;
+  courseId: number;
+  score: number;
+  correctCount: number;
+  totalQuestions: number;
+  submittedAt: string;
 }

@@ -46,11 +46,23 @@ export function TestResultPage() {
     return `${mins} phút ${secs} giây`;
   };
 
-  const getScoreColor = (percent: number) => {
-    if (percent >= 80) return 'text-green-600';
-    if (percent >= 50) return 'text-yellow-600';
+  const getScoreColor = (pct: number) => {
+    if (pct >= 80) return 'text-green-600';
+    if (pct >= 50) return 'text-yellow-600';
     return 'text-destructive';
   };
+
+  const percent = data ? Math.round(data.score) : 0;
+  const duration = data ? data.timeTakenSeconds : 0;
+  const answers = data ? data.questions : [];
+  const totalScore = data
+    ? Number(
+        data.questions.reduce((sum, q) => sum + (q.isCorrect ? (q.point ?? 1) : 0), 0).toFixed(2),
+      )
+    : 0;
+  const maxScore = data
+    ? Number(data.questions.reduce((sum, q) => sum + (q.point ?? 1), 0).toFixed(2))
+    : 0;
 
   return (
     <PageShell>
@@ -94,12 +106,10 @@ export function TestResultPage() {
                   <span className="font-medium uppercase tracking-wider text-sm">Điểm số</span>
                 </div>
                 <div className="text-5xl font-bold tracking-tight">
-                  <span className={getScoreColor(data.percent)}>{data.totalScore}</span>
-                  <span className="text-3xl text-muted-foreground">/{data.maxScore}</span>
+                  <span className={getScoreColor(percent)}>{totalScore}</span>
+                  <span className="text-3xl text-muted-foreground">/{maxScore}</span>
                 </div>
-                <div className="mt-2 text-lg font-medium text-muted-foreground">
-                  Đạt {data.percent}%
-                </div>
+                <div className="mt-2 text-lg font-medium text-muted-foreground">Đạt {percent}%</div>
               </div>
               <Separator orientation="vertical" className="hidden md:block h-24" />
               <div className="space-y-2">
@@ -108,7 +118,7 @@ export function TestResultPage() {
                   <span className="font-medium uppercase tracking-wider text-sm">Thời gian</span>
                 </div>
                 <div className="text-4xl font-semibold tracking-tight">
-                  {formatDuration(data.duration)}
+                  {formatDuration(duration)}
                 </div>
               </div>
             </CardContent>
@@ -117,7 +127,7 @@ export function TestResultPage() {
           {/* Breakdown */}
           <div className="space-y-6">
             <h3 className="text-2xl font-semibold flex items-center gap-2">Chi tiết câu trả lời</h3>
-            {data.answers.map((answer, idx) => (
+            {answers.map((answer, idx) => (
               <Card
                 key={answer.questionId}
                 className={cn(
@@ -136,7 +146,7 @@ export function TestResultPage() {
                     variant={answer.isCorrect ? 'default' : 'destructive'}
                     className="ml-4 whitespace-nowrap"
                   >
-                    {answer.isCorrect ? 'Đúng' : 'Sai'} ({answer.point} điểm)
+                    {answer.isCorrect ? 'Đúng' : 'Sai'} ({answer.point ?? 1} điểm)
                   </Badge>
                 </CardHeader>
                 <CardContent>

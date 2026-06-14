@@ -12,6 +12,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.goctrithuc.backend.BaseIntegrationTest;
 import com.goctrithuc.backend.dtos.SaveAnswerRequest;
+import com.goctrithuc.backend.dtos.SessionAnswersResponse;
 import com.goctrithuc.backend.entities.*;
 import com.goctrithuc.backend.repositories.*;
 import java.time.ZonedDateTime;
@@ -24,6 +25,7 @@ import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
 
 @AutoConfigureMockMvc
 public class TestSessionControllerIntegrationTest extends BaseIntegrationTest {
@@ -295,6 +297,85 @@ public class TestSessionControllerIntegrationTest extends BaseIntegrationTest {
     mockMvc
         .perform(
             get("/api/tests/" + testEntity.getId() + "/sessions/active")
+                .with(
+                    oauth2Login().attributes(attrs -> attrs.put("email", studentUser.getEmail()))))
+        .andExpect(status().isNotFound())
+        .andDo(print());
+  }
+
+  @Test
+  void getSessionAnswers_returnsSavedAnswers() throws Exception {
+    mockMvc
+        .perform(
+            post("/api/tests/" + testEntity.getId() + "/sessions")
+                .with(oauth2Login().attributes(attrs -> attrs.put("email", studentUser.getEmail())))
+                .with(csrf()))
+        .andExpect(status().isCreated());
+
+    TestSessionEntity session =
+        testSessionRepository
+            .findByUserIdAndTestIdAndIsDoneFalse(studentUser.getId(), testEntity.getId())
+            .orElseThrow();
+
+    // Save answer
+    SaveAnswerRequest req = new SaveAnswerRequest(q1.getId(), List.of(0));
+    mockMvc
+        .perform(
+            put("/api/sessions/" + session.getId() + "/answers")
+                .with(oauth2Login().attributes(attrs -> attrs.put("email", studentUser.getEmail())))
+                .with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(req)))
+        .andExpect(status().isOk());
+
+    // Get answers
+    MvcResult mvcResult =
+        mockMvc
+            .perform(
+                get("/api/sessions/" + session.getId() + "/answers")
+                    .with(
+                        oauth2Login()
+                            .attributes(attrs -> attrs.put("email", studentUser.getEmail()))))
+            .andExpect(status().isOk())
+            .andDo(print())
+            .andReturn();
+
+    SessionAnswersResponse response =
+        objectMapper.readValue(
+            mvcResult.getResponse().getContentAsString(), SessionAnswersResponse.class);
+
+    assertThat(response.answers()).containsKey(q1.getId());
+    assertThat(response.answers().get(q1.getId())).containsExactly(0);
+  }
+
+  @Test
+  void getSessionAnswers_notOwner_returns403() throws Exception {
+    mockMvc
+        .perform(
+            post("/api/tests/" + testEntity.getId() + "/sessions")
+                .with(oauth2Login().attributes(attrs -> attrs.put("email", studentUser.getEmail())))
+                .with(csrf()))
+        .andExpect(status().isCreated());
+
+    TestSessionEntity session =
+        testSessionRepository
+            .findByUserIdAndTestIdAndIsDoneFalse(studentUser.getId(), testEntity.getId())
+            .orElseThrow();
+
+    mockMvc
+        .perform(
+            get("/api/sessions/" + session.getId() + "/answers")
+                .with(
+                    oauth2Login().attributes(attrs -> attrs.put("email", studentUser2.getEmail()))))
+        .andExpect(status().isForbidden())
+        .andDo(print());
+  }
+
+  @Test
+  void getSessionAnswers_sessionNotFound_returns404() throws Exception {
+    mockMvc
+        .perform(
+            get("/api/sessions/99999/answers")
                 .with(
                     oauth2Login().attributes(attrs -> attrs.put("email", studentUser.getEmail()))))
         .andExpect(status().isNotFound())

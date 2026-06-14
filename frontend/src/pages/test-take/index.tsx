@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { api } from '@/lib/api';
 import { ROUTES } from '@/lib/routes';
-import type { QuestionStudentDto, TestSessionDto, TestDto } from '@/types';
+import type { QuestionStudentDto, TestSessionDto, TestDto, LessonDetailDto } from '@/types';
 import { PageShell } from '@/components/PageShell';
 import { ErrorState } from '@/components/ErrorState';
 import { SkeletonCard } from '@/components/SkeletonCard';
@@ -33,30 +33,36 @@ export function TestTakePage() {
     setError(null);
     try {
       // Gọi 3 API đồng thời như trong tài liệu thiết kế Day 9
-      const [testRes, sessionRes, qRes] = await Promise.all([
-        api.get<TestDto>(`/api/tests/${testId}`),
+      const [lessonRes, sessionRes, qRes] = await Promise.all([
+        api.get<LessonDetailDto>(`/api/lessons/${testId}`),
         api.post<TestSessionDto>(`/api/tests/${testId}/sessions`),
         api.get<QuestionStudentDto[]>(`/api/tests/${testId}/questions`),
       ]);
 
-      setTestInfo(testRes.data);
+      const lessonData = lessonRes.data;
+      if (lessonData.test) {
+        setTestInfo({
+          id: lessonData.id,
+          statement: lessonData.test.statement,
+          timeLimit: lessonData.test.timeLimit,
+        });
+      } else {
+        setTestInfo({
+          id: lessonData.id,
+          statement: lessonData.title,
+          timeLimit: 1800,
+        });
+      }
       setSession(sessionRes.data);
       setQuestions(qRes.data);
 
-      // Nếu API trả về đã làm xong (409 Already Submitted thì interceptor báo lỗi hoặc ta tự handle)
-      if (sessionRes.data.isDone) {
-        toast.info('Bạn đã nộp bài thi này rồi!');
-        navigate(ROUTES.TEST_RESULT(sessionRes.data.id), { replace: true });
-        return;
-      }
-
       // Khôi phục câu trả lời nếu refresh trang
       try {
-        const ansRes = await api.get<Record<string, number[]>>(
-          `/api/tests/sessions/${sessionRes.data.id}/answers`,
+        const ansRes = await api.get<{ answers: Record<string, number[]> }>(
+          `/api/sessions/${sessionRes.data.id}/answers`,
         );
-        if (ansRes.data) {
-          setAnswers(ansRes.data);
+        if (ansRes.data?.answers) {
+          setAnswers(ansRes.data.answers);
         }
       } catch (e) {
         console.warn('Could not restore answers', e);
@@ -83,15 +89,28 @@ export function TestTakePage() {
   const handleAnswerChange = async (questionId: string, newAnswers: number[]) => {
     if (!session) return;
 
+    const prevAnswers = answers[questionId];
+
     // Optimistic UI update
     setAnswers((prev) => ({ ...prev, [questionId]: newAnswers }));
 
     try {
-      await api.put(`/api/tests/sessions/${session.id}/answers/${questionId}`, {
-        answer: newAnswers,
+      await api.put(`/api/sessions/${session.id}/answers`, {
+        questionId: questionId,
+        selectedChoices: newAnswers,
       });
     } catch {
       toast.error('Có lỗi xảy ra khi lưu câu trả lời. Vui lòng kiểm tra mạng!');
+      // Rollback optimistic update
+      setAnswers((prev) => {
+        const updated = { ...prev };
+        if (prevAnswers === undefined) {
+          delete updated[questionId];
+        } else {
+          updated[questionId] = prevAnswers;
+        }
+        return updated;
+      });
     }
   };
 
@@ -107,7 +126,7 @@ export function TestTakePage() {
 
     setSubmitting(true);
     try {
-      await api.post(`/api/tests/sessions/${session.id}/submit`);
+      await api.post(`/api/sessions/${session.id}/submit`);
       toast.success('Nộp bài thành công!');
       navigate(ROUTES.TEST_RESULT(session.id), { replace: true });
     } catch {
