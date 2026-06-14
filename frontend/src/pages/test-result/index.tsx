@@ -56,10 +56,12 @@ export function TestResultPage() {
   const duration = data ? data.timeTakenSeconds : 0;
   const answers = data ? data.questions : [];
   const totalScore = data
-    ? Number(data.questions.reduce((sum, q) => sum + (q.isCorrect ? q.point : 0), 0).toFixed(2))
+    ? Number(
+        data.questions.reduce((sum, q) => sum + (q.isCorrect ? (q.point ?? 1) : 0), 0).toFixed(2),
+      )
     : 0;
   const maxScore = data
-    ? Number(data.questions.reduce((sum, q) => sum + q.point, 0).toFixed(2))
+    ? Number(data.questions.reduce((sum, q) => sum + (q.point ?? 1), 0).toFixed(2))
     : 0;
 
   return (
@@ -144,7 +146,7 @@ export function TestResultPage() {
                     variant={answer.isCorrect ? 'default' : 'destructive'}
                     className="ml-4 whitespace-nowrap"
                   >
-                    {answer.isCorrect ? 'Đúng' : 'Sai'} ({answer.point} điểm)
+                    {answer.isCorrect ? 'Đúng' : 'Sai'} ({answer.point ?? 1} điểm)
                   </Badge>
                 </CardHeader>
                 <CardContent>

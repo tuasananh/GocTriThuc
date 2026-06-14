@@ -204,11 +204,11 @@ export const testsHandlers = [
     // Simulate pagination format
     return HttpResponse.json({
       content: mySessions.map((s: Record<string, unknown>) => ({
-        id: s.id,
+        sessionId: s.id,
         testId: s.testId,
-        lessonTitle: 'Mock Lesson',
+        testTitle: 'Mock Lesson',
         courseTitle: 'Mock Course',
-        courseId: 'course-1',
+        courseId: 1,
         score: 4,
         correctCount: 3,
         totalQuestions: 3,

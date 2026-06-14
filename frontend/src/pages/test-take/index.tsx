@@ -83,6 +83,8 @@ export function TestTakePage() {
   const handleAnswerChange = async (questionId: string, newAnswers: number[]) => {
     if (!session) return;
 
+    const prevAnswers = answers[questionId];
+
     // Optimistic UI update
     setAnswers((prev) => ({ ...prev, [questionId]: newAnswers }));
 
@@ -93,6 +95,16 @@ export function TestTakePage() {
       });
     } catch {
       toast.error('Có lỗi xảy ra khi lưu câu trả lời. Vui lòng kiểm tra mạng!');
+      // Rollback optimistic update
+      setAnswers((prev) => {
+        const updated = { ...prev };
+        if (prevAnswers === undefined) {
+          delete updated[questionId];
+        } else {
+          updated[questionId] = prevAnswers;
+        }
+        return updated;
+      });
     }
   };
 

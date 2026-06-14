@@ -228,12 +228,19 @@ export function LessonPage() {
                   </div>
                 )}
               </div>
-              <Button size="lg" asChild className="gap-2 mt-4">
-                <Link to={lesson.test ? ROUTES.TEST_TAKE(lesson.id) : '#'}>
+              {lesson.test ? (
+                <Button size="lg" asChild className="gap-2 mt-4">
+                  <Link to={ROUTES.TEST_TAKE(lesson.id)}>
+                    <PlayCircle className="w-5 h-5" />
+                    Bắt đầu làm bài
+                  </Link>
+                </Button>
+              ) : (
+                <Button size="lg" disabled className="gap-2 mt-4">
                   <PlayCircle className="w-5 h-5" />
-                  Bắt đầu làm bài
-                </Link>
-              </Button>
+                  Bắt đầu làm bài (Chưa cấu hình)
+                </Button>
+              )}
             </div>
           ) : (
             <div className="p-8 text-center text-muted-foreground bg-muted/20 rounded-lg">
