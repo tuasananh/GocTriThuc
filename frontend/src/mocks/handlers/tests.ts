@@ -84,11 +84,6 @@ export const testsHandlers = [
     return HttpResponse.json({ success: true });
   }),
 
-  // Lưu cài đặt test
-  http.put('/api/lessons/:lessonId/test', async () => {
-    return HttpResponse.json({ success: true });
-  }),
-
   // Bắt đầu hoặc tiếp tục Test Session
   http.post('/api/tests/:testId/sessions', async ({ params }) => {
     const { testId } = params;

@@ -3,9 +3,10 @@ import { RichTextEditor } from '@/components/rich-text-editor';
 
 interface BlogLessonFormProps {
   lesson: LessonDetailDto;
+  onChange?: (html: string) => void;
 }
 
-export function BlogLessonForm({ lesson }: BlogLessonFormProps) {
+export function BlogLessonForm({ lesson, onChange }: BlogLessonFormProps) {
   return (
     <div className="space-y-4">
       <div className="space-y-1">
@@ -18,7 +19,16 @@ export function BlogLessonForm({ lesson }: BlogLessonFormProps) {
 
       <div className="relative rounded-lg overflow-hidden border border-border">
         {/* We use a storageKey unique to this lesson so that drafts are preserved */}
-        <RichTextEditor storageKey={`blog-lesson-${lesson.id}`} />
+        <RichTextEditor
+          storageKey={`blog-lesson-${lesson.id}`}
+          initialHtml={lesson.blog?.content}
+          onChange={async (editor) => {
+            if (onChange) {
+              const html = await editor.blocksToHTMLLossy(editor.document);
+              onChange(html);
+            }
+          }}
+        />
       </div>
     </div>
   );
