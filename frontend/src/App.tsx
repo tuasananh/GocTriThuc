@@ -15,6 +15,7 @@ import { InstructorDashboardPage } from './pages/instructor';
 import { AdminDashboardPage } from './pages/admin';
 import { TestResultPage } from '@/pages/test-result';
 import { CommentThreadSinglePage } from '@/pages/comments';
+import { ClassroomPage } from '@/pages/classroom';
 import { QuestionBankPage } from './pages/instructor/QuestionBankPage';
 import { GuestRoute } from '@/components/GuestRoute';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
@@ -61,7 +62,7 @@ function App() {
                     path={ROUTE_PATTERNS.COMMENT_THREAD}
                     element={<CommentThreadSinglePage />}
                   />
-                  {/* <Route path={ROUTES.CLASSROOM(':id')} element={<ClassroomPage />} /> */}
+                  <Route path={ROUTES.CLASSROOM(':id')} element={<ClassroomPage />} />
                 </Route>
               </Route>
 
