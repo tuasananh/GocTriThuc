@@ -90,24 +90,38 @@ export function TestBuilderPage() {
 
   const moveQuestion = async (questionId: string, direction: 'up' | 'down') => {
     if (!testId) return;
-    const idx = questions.findIndex((q) => q.id === questionId);
-    if (idx === -1) return;
-    if (direction === 'up' && idx === 0) return;
-    if (direction === 'down' && idx === questions.length - 1) return;
 
-    // Cập nhật giao diện trước (Optimistic UI)
-    const newQuestions = [...questions];
-    const swapIdx = direction === 'up' ? idx - 1 : idx + 1;
-    [newQuestions[idx], newQuestions[swapIdx]] = [newQuestions[swapIdx], newQuestions[idx]];
-    setQuestions(newQuestions);
+    // Cập nhật giao diện trước (Optimistic UI) bằng functional update để tránh stale closure
+    setQuestions((prev) => {
+      const idx = prev.findIndex((q) => q.id === questionId);
+      if (idx === -1) return prev;
+      if (direction === 'up' && idx === 0) return prev;
+      if (direction === 'down' && idx === prev.length - 1) return prev;
+
+      const newQuestions = [...prev];
+      const swapIdx = direction === 'up' ? idx - 1 : idx + 1;
+      [newQuestions[idx], newQuestions[swapIdx]] = [newQuestions[swapIdx], newQuestions[idx]];
+      return newQuestions;
+    });
 
     try {
       await api.patch(`/api/tests/${testId}/questions/${questionId}/order`, { direction });
       // Không cần hiện toast vì có thể làm rối người dùng khi họ bấm nhiều lần liên tiếp
     } catch {
       toast.error('Không thể cập nhật thứ tự');
-      // Nếu lỗi thì revert lại state cũ
-      setQuestions(questions);
+      // Nếu lỗi thì revert lại swap cũ
+      setQuestions((prev) => {
+        const idx = prev.findIndex((q) => q.id === questionId);
+        if (idx === -1) return prev;
+        const revDir = direction === 'up' ? 'down' : 'up';
+        if (revDir === 'up' && idx === 0) return prev;
+        if (revDir === 'down' && idx === prev.length - 1) return prev;
+
+        const newQuestions = [...prev];
+        const swapIdx = revDir === 'up' ? idx - 1 : idx + 1;
+        [newQuestions[idx], newQuestions[swapIdx]] = [newQuestions[swapIdx], newQuestions[idx]];
+        return newQuestions;
+      });
     }
   };
 
