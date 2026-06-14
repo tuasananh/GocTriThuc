@@ -184,11 +184,7 @@ export function ModuleSidebar({ courseId, visible }: ModuleSidebarProps) {
                       key={lesson.id}
                       lesson={lesson}
                       onClick={() => {
-                        if (lesson.lessonType === 'test') {
-                          navigate(ROUTES.TEST_TAKE(lesson.id));
-                        } else {
-                          navigate(ROUTES.LESSON(courseId, lesson.id));
-                        }
+                        navigate(ROUTES.LESSON(courseId, lesson.id));
                       }}
                     />
                   ))}

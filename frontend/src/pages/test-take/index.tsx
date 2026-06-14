@@ -52,11 +52,11 @@ export function TestTakePage() {
 
       // Khôi phục câu trả lời nếu refresh trang
       try {
-        const ansRes = await api.get<Record<string, number[]>>(
+        const ansRes = await api.get<{ answers: Record<string, number[]> }>(
           `/api/sessions/${sessionRes.data.id}/answers`,
         );
-        if (ansRes.data) {
-          setAnswers(ansRes.data);
+        if (ansRes.data?.answers) {
+          setAnswers(ansRes.data.answers);
         }
       } catch (e) {
         console.warn('Could not restore answers', e);

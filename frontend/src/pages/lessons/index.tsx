@@ -6,7 +6,7 @@ import type { LessonDetailDto } from '@/types';
 import { PageShell } from '@/components/PageShell';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { ArrowLeft, CheckCircle2 } from 'lucide-react';
+import { ArrowLeft, CheckCircle2, Clock, PlayCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import { ErrorState } from '@/components/ErrorState';
 import { VideoLessonViewer } from './_components/VideoLessonViewer';
@@ -130,8 +130,23 @@ export function LessonPage() {
           ) : lesson.lessonType === 'blog' ? (
             <BlogLessonViewer blog={lesson.blog ?? { content: '' }} />
           ) : lesson.lessonType === 'test' ? (
-            <div className="p-8 text-center text-muted-foreground bg-muted/20 rounded-lg">
-              <p>Giao diện bài kiểm tra sẽ hiển thị tại đây.</p>
+            <div className="p-8 bg-muted/10 rounded-lg border flex flex-col items-center justify-center text-center space-y-6">
+              <div className="max-w-md space-y-2">
+                <h3 className="text-xl font-semibold">Bài kiểm tra</h3>
+                {lesson.test?.statement && <p className="text-muted-foreground">{lesson.test.statement}</p>}
+                {lesson.test?.timeLimit && (
+                  <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground mt-4">
+                    <Clock className="w-4 h-4" />
+                    <span>Thời gian làm bài: {Math.floor(lesson.test.timeLimit / 60)} phút</span>
+                  </div>
+                )}
+              </div>
+              <Button size="lg" asChild className="gap-2 mt-4">
+                <Link to={lesson.test?.testId ? ROUTES.TEST_TAKE(lesson.test.testId) : '#'}>
+                  <PlayCircle className="w-5 h-5" />
+                  Bắt đầu làm bài
+                </Link>
+              </Button>
             </div>
           ) : (
             <div className="p-8 text-center text-muted-foreground bg-muted/20 rounded-lg">

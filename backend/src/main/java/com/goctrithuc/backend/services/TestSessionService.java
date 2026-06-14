@@ -121,7 +121,7 @@ public class TestSessionService {
   }
 
   @Transactional(readOnly = true)
-  public Map<Long, List<Integer>> getSessionAnswers(Long sessionId, Long userId) {
+  public SessionAnswersResponse getSessionAnswers(Long sessionId, Long userId) {
     TestSessionEntity session =
         testSessionRepo
             .findById(sessionId)
@@ -143,7 +143,7 @@ public class TestSessionService {
         result.put(ans.getQuestionId(), choices);
       }
     }
-    return result;
+    return new SessionAnswersResponse(result);
   }
 
   @Transactional(noRollbackFor = ResponseStatusException.class)

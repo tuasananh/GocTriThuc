@@ -143,11 +143,72 @@ export const testsHandlers = [
     );
   }),
 
+  // Lấy session active hiện tại
+  http.get('/api/tests/:testId/sessions/active', async ({ params }) => {
+    const { testId } = params;
+    const userId = 'user-1'; // Mock user
+    const sessions = getSessions();
+    const active = sessions.find(
+      (s: Record<string, unknown>) => s.testId === testId && s.userId === userId && !s.isDone,
+    );
+    if (!active) {
+      return new HttpResponse(null, { status: 404, statusText: 'No active session found' });
+    }
+    const elapsed = Math.floor(Date.now() / 1000) - (active.startedAtTs as number);
+    const timeLimit = 1800;
+    const remaining = Math.max(0, timeLimit - elapsed);
+    return HttpResponse.json({
+      ...active,
+      remainingTime: remaining,
+    });
+  }),
+
+  // Lấy danh sách sessions của test
+  http.get('/api/tests/:testId/sessions', async ({ params }) => {
+    const { testId } = params;
+    const sessions = getSessions();
+    const testSessions = sessions.filter((s: Record<string, unknown>) => s.testId === testId);
+    return HttpResponse.json(testSessions.map((s: Record<string, unknown>) => ({
+      id: s.id,
+      userId: s.userId,
+      userDisplayName: 'Mock User',
+      startedAt: s.startedAt,
+      submittedAt: s.submittedAt,
+      isDone: s.isDone,
+    })));
+  }),
+
+  // Lấy lịch sử sessions của mình
+  http.get('/api/tests/sessions/my', async () => {
+    const userId = 'user-1';
+    const sessions = getSessions();
+    const mySessions = sessions.filter((s: Record<string, unknown>) => s.userId === userId && s.isDone);
+    
+    // Simulate pagination format
+    return HttpResponse.json({
+      content: mySessions.map((s: Record<string, unknown>) => ({
+        id: s.id,
+        testId: s.testId,
+        lessonTitle: 'Mock Lesson',
+        courseTitle: 'Mock Course',
+        courseId: 'course-1',
+        score: 4,
+        correctCount: 3,
+        totalQuestions: 3,
+        submittedAt: s.submittedAt,
+      })),
+      pageable: { pageNumber: 0, pageSize: 20 },
+      totalElements: mySessions.length,
+      totalPages: 1,
+      last: true,
+    });
+  }),
+
   // Lấy câu trả lời hiện tại của session (để restore khi f5)
   http.get('/api/sessions/:sessionId/answers', async ({ params }) => {
     const { sessionId } = params;
     const answers = getAnswers();
-    return HttpResponse.json(answers[sessionId as string] || {});
+    return HttpResponse.json({ answers: answers[sessionId as string] || {} });
   }),
 
   // Lưu câu trả lời
