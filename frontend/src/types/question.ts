@@ -96,4 +96,3 @@ export interface MyTestSessionDto {
   totalQuestions: number;
   submittedAt: string;
 }
-

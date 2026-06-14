@@ -42,12 +42,9 @@ export function LessonPage() {
 
       if (res.data.type === 'test' && res.data.completed) {
         try {
-          const sessionsRes = await api.get<PageResponse<MyTestSessionDto>>(
-            '/api/tests/sessions/my',
-          );
-          const matchingSession = sessionsRes.data.content.find(
-            (s) => s.testId === res.data.id,
-          );
+          const sessionsRes =
+            await api.get<PageResponse<MyTestSessionDto>>('/api/tests/sessions/my');
+          const matchingSession = sessionsRes.data.content.find((s) => s.testId === res.data.id);
           if (matchingSession) {
             setCompletedSessionId(matchingSession.sessionId);
           }
