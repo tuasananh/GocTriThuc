@@ -109,7 +109,7 @@ export function TestBuilderPage() {
       // Không cần hiện toast vì có thể làm rối người dùng khi họ bấm nhiều lần liên tiếp
     } catch {
       toast.error('Không thể cập nhật thứ tự');
-      // Nếu lỗi thì revert lại swap cũ
+      // Nếu lỗi thì revert lại swap cũ để UI phản hồi ngay lập tức
       setQuestions((prev) => {
         const idx = prev.findIndex((q) => q.id === questionId);
         if (idx === -1) return prev;
@@ -122,6 +122,14 @@ export function TestBuilderPage() {
         [newQuestions[idx], newQuestions[swapIdx]] = [newQuestions[swapIdx], newQuestions[idx]];
         return newQuestions;
       });
+
+      // Lấy lại dữ liệu ngầm (Silently Refetch) để đảm bảo đồng bộ tuyệt đối với Server
+      try {
+        const res = await api.get<TestQuestionDto[]>(`/api/tests/${testId}/questions`);
+        setQuestions(res.data);
+      } catch (err) {
+        console.error('Failed to silently refetch questions', err);
+      }
     }
   };
 
