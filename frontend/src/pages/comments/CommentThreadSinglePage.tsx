@@ -23,7 +23,7 @@ export function CommentThreadSinglePage() {
   const fetchComment = useCallback(async () => {
     if (!type || !contextId || !commentId) return;
     try {
-      const res = await api.get(`/api/${type}s/${contextId}/comments/${commentId}`);
+      const res = await api.get(`/api/${type}s/comments/${commentId}/thread`);
       setComment(res.data);
     } catch {
       setError('Không thể tải nhánh bình luận hoặc nhánh không tồn tại.');
@@ -60,7 +60,7 @@ export function CommentThreadSinglePage() {
 
   const handleEdit = async (id: string, newContent: string) => {
     try {
-      await api.put(`/api/${type}s/${contextId}/comments/${id}`, { content: newContent });
+      await api.patch(`/api/${type}s/comments/${id}`, { content: newContent });
       toast.success('Đã cập nhật bình luận');
       fetchComment();
     } catch {
@@ -70,7 +70,7 @@ export function CommentThreadSinglePage() {
 
   const handleDelete = async (id: string) => {
     try {
-      await api.delete(`/api/${type}s/${contextId}/comments/${id}`);
+      await api.delete(`/api/${type}s/comments/${id}`);
       toast.success('Đã xóa bình luận');
       if (id === commentId) {
         navigate(-1);

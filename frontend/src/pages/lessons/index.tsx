@@ -2,7 +2,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { api } from '@/lib/api';
 import { ROUTES } from '@/lib/routes';
-import type { LessonDetailDto } from '@/types';
+import type { LessonDetailDto, CommentDto, PageResponse } from '@/types';
 import { PageShell } from '@/components/PageShell';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -12,6 +12,8 @@ import { ErrorState } from '@/components/ErrorState';
 import { VideoLessonViewer } from './_components/VideoLessonViewer';
 import { BlogLessonViewer } from './_components/BlogLessonViewer';
 import { LessonResourceList } from './_components/LessonResourceList';
+import { CommentThread } from '@/components/CommentThread';
+import { useAuth } from '@/contexts/AuthContext';
 
 export function LessonPage() {
   const { courseId, lessonId } = useParams<{ courseId: string; lessonId: string }>();
@@ -22,6 +24,11 @@ export function LessonPage() {
     null,
   );
   const [completing, setCompleting] = useState(false);
+
+  const [comments, setComments] = useState<CommentDto[]>([]);
+  const [loadingComments, setLoadingComments] = useState(false);
+  const auth = useAuth();
+  const currentUserId = auth && auth.isAuthenticated ? auth.user.id : undefined;
 
   const fetchLesson = useCallback(async () => {
     if (!courseId || !lessonId) return;
@@ -41,12 +48,26 @@ export function LessonPage() {
     }
   }, [courseId, lessonId]);
 
+  const fetchComments = useCallback(async () => {
+    if (!lessonId) return;
+    setLoadingComments(true);
+    try {
+      const res = await api.get<PageResponse<CommentDto>>(`/api/lessons/${lessonId}/comments`);
+      setComments(res.data.content);
+    } catch (err) {
+      console.error('Failed to load comments', err);
+    } finally {
+      setLoadingComments(false);
+    }
+  }, [lessonId]);
+
   useEffect(() => {
     const t = setTimeout(() => {
       fetchLesson();
+      fetchComments();
     }, 0);
     return () => clearTimeout(t);
-  }, [fetchLesson]);
+  }, [fetchLesson, fetchComments]);
 
   const markAsCompleted = async () => {
     if (!lessonId) return;
@@ -62,6 +83,70 @@ export function LessonPage() {
     } finally {
       setCompleting(false);
     }
+  };
+
+  const handlePostComment = async (content: string) => {
+    if (!lessonId) return;
+    const res = await api.post<CommentDto>(`/api/lessons/${lessonId}/comments`, {
+      content,
+    });
+    setComments((prev) => [res.data, ...prev]);
+  };
+
+  const handleReply = async (content: string, parentId: string) => {
+    if (!lessonId) return;
+    const res = await api.post<CommentDto>(`/api/lessons/${lessonId}/comments`, {
+      content,
+      parentId,
+    });
+    const addReply = (nodes: CommentDto[]): CommentDto[] => {
+      return nodes.map((n) => {
+        if (n.id === parentId) {
+          return { ...n, replies: [res.data, ...(n.replies || [])] };
+        }
+        if (n.replies) {
+          return { ...n, replies: addReply(n.replies) };
+        }
+        return n;
+      });
+    };
+    setComments((prev) => addReply(prev));
+  };
+
+  const handleEdit = async (id: string, newContent: string) => {
+    const res = await api.patch<CommentDto>(`/api/lessons/comments/${id}`, {
+      content: newContent,
+    });
+    const updateNode = (nodes: CommentDto[]): CommentDto[] => {
+      return nodes.map((n) => {
+        if (n.id === id) {
+          return {
+            ...n,
+            content: res.data.content,
+            editedAt: res.data.editedAt,
+            updatedAt: res.data.updatedAt,
+          };
+        }
+        if (n.replies) {
+          return { ...n, replies: updateNode(n.replies) };
+        }
+        return n;
+      });
+    };
+    setComments((prev) => updateNode(prev));
+  };
+
+  const handleDelete = async (id: string) => {
+    await api.delete(`/api/lessons/comments/${id}`);
+    const removeNode = (nodes: CommentDto[]): CommentDto[] => {
+      return nodes
+        .filter((n) => n.id !== id)
+        .map((n) => ({
+          ...n,
+          replies: n.replies ? removeNode(n.replies) : [],
+        }));
+    };
+    setComments((prev) => removeNode(prev));
   };
 
   if (loading) {
@@ -158,6 +243,27 @@ export function LessonPage() {
         </div>
 
         {lesson.resources && <LessonResourceList resources={lesson.resources} />}
+
+        {/* Comments Section */}
+        <div className="bg-card rounded-xl border p-6 shadow-sm mt-8">
+          <h3 className="text-xl font-bold mb-6">Thảo luận bài học</h3>
+          {loadingComments ? (
+            <div className="flex justify-center py-8">
+              <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
+            </div>
+          ) : (
+            <CommentThread
+              comments={comments}
+              currentUserId={currentUserId}
+              contextType="lesson"
+              contextId={lessonId!}
+              onPostComment={handlePostComment}
+              onReply={handleReply}
+              onEdit={handleEdit}
+              onDelete={handleDelete}
+            />
+          )}
+        </div>
       </div>
     </PageShell>
   );

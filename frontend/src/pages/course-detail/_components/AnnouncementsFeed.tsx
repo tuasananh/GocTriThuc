@@ -186,8 +186,10 @@ function AnnouncementItem({
   const fetchComments = async () => {
     setLoadingComments(true);
     try {
-      const res = await api.get<CommentDto[]>(`/api/announcements/${announcement.id}/comments`);
-      setComments(res.data);
+      const res = await api.get<PageResponse<CommentDto>>(
+        `/api/announcements/${announcement.id}/comments`,
+      );
+      setComments(res.data.content);
     } catch (err) {
       console.error(err);
     } finally {
@@ -230,7 +232,7 @@ function AnnouncementItem({
   };
 
   const handleEdit = async (id: string, newContent: string) => {
-    const res = await api.put<CommentDto>(`/api/announcements/comments/${id}`, {
+    const res = await api.patch<CommentDto>(`/api/announcements/comments/${id}`, {
       content: newContent,
     });
     const updateNode = (nodes: CommentDto[]): CommentDto[] => {
