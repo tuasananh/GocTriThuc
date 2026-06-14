@@ -12,6 +12,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.goctrithuc.backend.BaseIntegrationTest;
 import com.goctrithuc.backend.dtos.SaveAnswerRequest;
+import com.goctrithuc.backend.dtos.SessionAnswersResponse;
 import com.goctrithuc.backend.entities.*;
 import com.goctrithuc.backend.repositories.*;
 import java.time.ZonedDateTime;
@@ -327,16 +328,23 @@ public class TestSessionControllerIntegrationTest extends BaseIntegrationTest {
         .andExpect(status().isOk());
 
     // Get answers
-    mockMvc
-        .perform(
-            get("/api/sessions/" + session.getId() + "/answers")
-                .with(
-                    oauth2Login().attributes(attrs -> attrs.put("email", studentUser.getEmail()))))
-        .andExpect(status().isOk())
-        .andExpect(jsonPath("$.answers").exists())
-        .andExpect(jsonPath("$.answers['" + q1.getId() + "']").isArray())
-        .andExpect(jsonPath("$.answers['" + q1.getId() + "'][0]").value(0))
-        .andDo(print());
+    MvcResult mvcResult =
+        mockMvc
+            .perform(
+                get("/api/sessions/" + session.getId() + "/answers")
+                    .with(
+                        oauth2Login()
+                            .attributes(attrs -> attrs.put("email", studentUser.getEmail()))))
+            .andExpect(status().isOk())
+            .andDo(print())
+            .andReturn();
+
+    SessionAnswersResponse response =
+        objectMapper.readValue(
+            mvcResult.getResponse().getContentAsString(), SessionAnswersResponse.class);
+
+    assertThat(response.answers()).containsKey(q1.getId());
+    assertThat(response.answers().get(q1.getId())).containsExactly(0);
   }
 
   @Test
