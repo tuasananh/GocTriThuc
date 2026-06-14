@@ -53,7 +53,7 @@ export interface TestSessionDto {
   testId: string;
   startedAt: string;
   submittedAt: string | null; // null khi đang làm bài
-  isDone: boolean;
+  isDone?: boolean;
   remainingTime: number; // seconds — tính từ server
   createdAt: string;
 }

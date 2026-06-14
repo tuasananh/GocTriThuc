@@ -56,13 +56,6 @@ export function TestTakePage() {
       setSession(sessionRes.data);
       setQuestions(qRes.data);
 
-      // Nếu API trả về đã làm xong (409 Already Submitted thì interceptor báo lỗi hoặc ta tự handle)
-      if (sessionRes.data.isDone) {
-        toast.info('Bạn đã nộp bài thi này rồi!');
-        navigate(ROUTES.TEST_RESULT(sessionRes.data.id), { replace: true });
-        return;
-      }
-
       // Khôi phục câu trả lời nếu refresh trang
       try {
         const ansRes = await api.get<{ answers: Record<string, number[]> }>(
