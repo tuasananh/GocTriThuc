@@ -6,7 +6,7 @@ import type { LessonDetailDto, CommentDto, PageResponse } from '@/types';
 import { PageShell } from '@/components/PageShell';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { ArrowLeft, CheckCircle2, Clock, PlayCircle } from 'lucide-react';
+import { ArrowLeft, CheckCircle2, Clock, PlayCircle, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { ErrorState } from '@/components/ErrorState';
 import { VideoLessonViewer } from './_components/VideoLessonViewer';
