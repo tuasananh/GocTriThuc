@@ -6,35 +6,50 @@ services:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: goctrithuc
+    ports:
+      - "127.0.0.1:${POSTGRES_PORT:-5432}:5432"
     volumes:
-      - pgdata:/var/lib/postgresql/data
+      - pgdata:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d goctrithuc"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
     networks:
       - goctrithuc-network
 
   app:
-    # Instead of building locally, pull the pre-packaged App from GitHub Container Registry
-    # Use: 'docker compose -f docker-compose.prod.yml pull' to fetch the latest
+    # Uses pre-packaged App from GHCR or builds from local source context
     image: ghcr.io/tuasananh/goctrithuc/goctrithuc-app:latest
+    build:
+      context: ./backend
     restart: always
     ports:
       - "${APP_PORT:-8080}:${APP_PORT:-8080}"
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     environment:
-      # These pass your server's .env file directly into the Spring Boot container
       - APP_PORT=${APP_PORT:-8080}
       - DB_HOST=db
+      - POSTGRES_PORT=${POSTGRES_PORT:-5432}
       - POSTGRES_DB=goctrithuc
       - POSTGRES_USER=${POSTGRES_USER}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
       - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
       - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
+      - GITHUB_CLIENT_ID=${GITHUB_CLIENT_ID}
+      - GITHUB_CLIENT_SECRET=${GITHUB_CLIENT_SECRET}
+      - FRONTEND_PORT=${FRONTEND_PORT:-5173}
+      - UPLOAD_DIR=/app/uploads
+    volumes:
+      - uploads:/app/uploads
     networks:
       - goctrithuc-network
 
 volumes:
   pgdata:
-
+  uploads:
 
 networks:
   goctrithuc-network:

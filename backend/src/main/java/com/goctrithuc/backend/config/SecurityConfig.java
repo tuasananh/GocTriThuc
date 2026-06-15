@@ -41,16 +41,9 @@ public class SecurityConfig {
             auth ->
                 auth // Allow accessing frontend resources
                     .requestMatchers(
-                        HttpMethod.GET,
-                        "/",
-                        "/index.html",
-                        "/dashboard",
-                        "/login",
-                        "/favicon.svg",
-                        "/icons.svg",
-                        "/assets/**")
-                    .permitAll()
-                    .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html")
+                        req ->
+                            HttpMethod.GET.name().equals(req.getMethod())
+                                && !req.getRequestURI().startsWith(req.getContextPath() + "/api"))
                     .permitAll()
                     .requestMatchers(HttpMethod.GET, "/api/users/me")
                     .permitAll()
