@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
+import { isAxiosError } from 'axios';
 import { Loader2, Plus, Search } from 'lucide-react';
 import { toast } from 'sonner';
 import { api } from '@/lib/api';
@@ -66,16 +67,44 @@ export function QuestionPickerModal({
     try {
       // Default point is 1, order is handled by backend or length
       const point = 1;
-      const order = 0;
       await api.post(`/api/tests/${testId}/questions`, {
         questionId: q.id,
-        order,
+        order: null,
         point,
       });
       toast.success('Đã thêm câu hỏi vào đề thi');
-      onAdded({ ...q, point, order });
-    } catch {
-      toast.error('Không thể thêm câu hỏi');
+      onAdded({ ...q, point, order: 0 });
+    } catch (err: unknown) {
+      if (isAxiosError(err) && err.response) {
+        const status = err.response.status;
+        const msg = err.response.data?.message;
+
+        if (status === 409) {
+          if (msg === 'Question is already added to this test') {
+            toast.error('Câu hỏi này đã được thêm vào bài kiểm tra.');
+          } else if (msg === 'Order is already taken for this test') {
+            toast.error('Thứ tự câu hỏi đã tồn tại trong bài kiểm tra.');
+          } else {
+            toast.error(msg || 'Xung đột dữ liệu khi thêm câu hỏi.');
+          }
+        } else if (status === 404) {
+          if (msg === 'Question not found') {
+            toast.error('Không tìm thấy câu hỏi.');
+          } else if (msg === 'Test not found') {
+            toast.error('Không tìm thấy bài kiểm tra.');
+          } else {
+            toast.error(msg || 'Không tìm thấy dữ liệu.');
+          }
+        } else if (status === 400) {
+          toast.error(msg || 'Yêu cầu không hợp lệ.');
+        } else if (status === 403 || status >= 500) {
+          // Interceptor already toasts for 403 and 500+ errors, skip here
+        } else {
+          toast.error(msg || 'Không thể thêm câu hỏi');
+        }
+      } else {
+        toast.error('Không thể kết nối đến server.');
+      }
     } finally {
       setAddingId(null);
     }
