@@ -20,6 +20,17 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
+import { useAuth } from '@/contexts/AuthContext';
+
+export const getInitials = (name: string) => {
+  return name
+    .split(' ')
+    .filter(Boolean)
+    .map((n) => n[0])
+    .join('')
+    .toUpperCase()
+    .slice(0, 2);
+};
 
 interface CommentItemProps {
   comment: CommentDto;
@@ -98,15 +109,6 @@ function CommentItem({
     } finally {
       setSubmitting(false);
     }
-  };
-
-  const getInitials = (name: string) => {
-    return name
-      .split(' ')
-      .map((n) => n[0])
-      .join('')
-      .toUpperCase()
-      .slice(0, 2);
   };
 
   return (
@@ -306,6 +308,8 @@ export function CommentThread({
   const [newComment, setNewComment] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const isAdmin = useIsAdmin();
+  const auth = useAuth();
+  const currentUser = auth?.user;
 
   const handleSubmit = async () => {
     if (!newComment.trim()) return;
@@ -323,7 +327,10 @@ export function CommentThread({
       {/* Root comment input */}
       <div className="flex gap-3 items-start">
         <Avatar className="h-10 w-10 shrink-0">
-          <AvatarFallback className="bg-primary/10 text-primary">ME</AvatarFallback>
+          <AvatarImage src={currentUser?.avatarUrl || ''} />
+          <AvatarFallback className="bg-primary/10 text-primary">
+            {currentUser?.displayName ? getInitials(currentUser.displayName) : 'ME'}
+          </AvatarFallback>
         </Avatar>
         <div className="flex-1 space-y-2">
           <Textarea
