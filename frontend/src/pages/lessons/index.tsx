@@ -31,7 +31,14 @@ import { toast } from 'sonner';
 import { ErrorState } from '@/components/ErrorState';
 import { EmptyState } from '@/components/EmptyState';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { VideoLessonViewer } from './_components/VideoLessonViewer';
 import { BlogLessonViewer } from './_components/BlogLessonViewer';
@@ -67,7 +74,9 @@ export function LessonPage() {
     Record<string, { score: number; correctCount: number; totalQuestions: number }>
   >({});
 
-  const isAuthor = Boolean(currentUserId && course?.author?.id && currentUserId === course.author.id);
+  const isAuthor = Boolean(
+    currentUserId && course?.author?.id && currentUserId === course.author.id,
+  );
   const canViewResults = isAdmin || isAuthor;
 
   const maxAttempts =
@@ -164,7 +173,9 @@ export function LessonPage() {
       const doneSessions = res.data.filter((s) => s.isDone);
       const scorePromises = doneSessions.map(async (session) => {
         try {
-          const detailRes = await api.get<TestResultDto>(`/api/sessions/${session.sessionId}/result`);
+          const detailRes = await api.get<TestResultDto>(
+            `/api/sessions/${session.sessionId}/result`,
+          );
           return {
             sessionId: session.sessionId,
             score: detailRes.data.score,
@@ -178,7 +189,10 @@ export function LessonPage() {
       });
 
       const results = await Promise.all(scorePromises);
-      const scoresMap: Record<string, { score: number; correctCount: number; totalQuestions: number }> = {};
+      const scoresMap: Record<
+        string,
+        { score: number; correctCount: number; totalQuestions: number }
+      > = {};
       results.forEach((r) => {
         if (r) {
           scoresMap[r.sessionId] = {
@@ -387,13 +401,20 @@ export function LessonPage() {
                   <div className="bg-card rounded-lg border shadow-sm overflow-hidden text-left">
                     <div className="p-4 border-b bg-muted/50 flex items-center justify-between">
                       <h3 className="font-semibold text-lg">Danh sách học sinh làm bài</h3>
-                      <Button variant="outline" size="sm" onClick={fetchSessions} disabled={loadingSessions}>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={fetchSessions}
+                        disabled={loadingSessions}
+                      >
                         Làm mới
                       </Button>
                     </div>
-                    
+
                     {loadingSessions ? (
-                      <div className="p-8 text-center text-muted-foreground">Đang tải dữ liệu...</div>
+                      <div className="p-8 text-center text-muted-foreground">
+                        Đang tải dữ liệu...
+                      </div>
                     ) : sessions.length === 0 ? (
                       <div className="p-12 text-center">
                         <EmptyState
@@ -419,7 +440,12 @@ export function LessonPage() {
                               <TableCell className="font-medium">{session.displayName}</TableCell>
                               <TableCell>
                                 {session.isDone ? (
-                                  <Badge variant="default" className="bg-green-500 hover:bg-green-600 text-white">Đã nộp</Badge>
+                                  <Badge
+                                    variant="default"
+                                    className="bg-green-500 hover:bg-green-600 text-white"
+                                  >
+                                    Đã nộp
+                                  </Badge>
                                 ) : (
                                   <Badge variant="secondary">Đang làm</Badge>
                                 )}
@@ -429,10 +455,13 @@ export function LessonPage() {
                                   sessionScores[session.sessionId] ? (
                                     <span className="font-semibold text-emerald-600 dark:text-emerald-400">
                                       {sessionScores[session.sessionId].correctCount}/
-                                      {sessionScores[session.sessionId].totalQuestions} ({Math.round(sessionScores[session.sessionId].score)}%)
+                                      {sessionScores[session.sessionId].totalQuestions} (
+                                      {Math.round(sessionScores[session.sessionId].score)}%)
                                     </span>
                                   ) : (
-                                    <span className="text-muted-foreground animate-pulse">Đang tải...</span>
+                                    <span className="text-muted-foreground animate-pulse">
+                                      Đang tải...
+                                    </span>
                                   )
                                 ) : (
                                   <span className="text-muted-foreground">-</span>
@@ -442,12 +471,18 @@ export function LessonPage() {
                                 {new Date(session.startedAt).toLocaleString('vi-VN')}
                               </TableCell>
                               <TableCell>
-                                {session.submittedAt ? new Date(session.submittedAt).toLocaleString('vi-VN') : '-'}
+                                {session.submittedAt
+                                  ? new Date(session.submittedAt).toLocaleString('vi-VN')
+                                  : '-'}
                               </TableCell>
                               <TableCell className="text-right">
                                 {session.isDone && (
                                   <Button size="sm" variant="ghost" asChild>
-                                    <Link to={ROUTES.TEST_RESULT(session.sessionId)} target="_blank" className="flex items-center gap-2">
+                                    <Link
+                                      to={ROUTES.TEST_RESULT(session.sessionId)}
+                                      target="_blank"
+                                      className="flex items-center gap-2"
+                                    >
                                       <Eye size={16} /> Chi tiết
                                     </Link>
                                   </Button>
@@ -472,12 +507,17 @@ export function LessonPage() {
                         <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-sm text-muted-foreground mt-4">
                           <div className="flex items-center gap-2">
                             <Clock className="w-4 h-4" />
-                            <span>Thời gian làm bài: {Math.floor(lesson.test.timeLimit / 60)} phút</span>
+                            <span>
+                              Thời gian làm bài: {Math.floor(lesson.test.timeLimit / 60)} phút
+                            </span>
                           </div>
                           <div className="flex items-center gap-2">
                             <PlayCircle className="w-4 h-4" />
                             <span>
-                              Lượt làm bài: {maxAttempts === 0 ? 'Không giới hạn' : `${pastAttempts.length} / ${maxAttempts}`}
+                              Lượt làm bài:{' '}
+                              {maxAttempts === 0
+                                ? 'Không giới hạn'
+                                : `${pastAttempts.length} / ${maxAttempts}`}
                             </span>
                           </div>
                         </div>
@@ -561,16 +601,15 @@ export function LessonPage() {
                                   : pct >= 50
                                     ? 'text-yellow-600 dark:text-yellow-400'
                                     : 'text-destructive';
-                              const submittedDate = new Date(attempt.submittedAt).toLocaleDateString(
-                                'vi-VN',
-                                {
-                                  day: '2-digit',
-                                  month: '2-digit',
-                                  year: 'numeric',
-                                  hour: '2-digit',
-                                  minute: '2-digit',
-                                },
-                              );
+                              const submittedDate = new Date(
+                                attempt.submittedAt,
+                              ).toLocaleDateString('vi-VN', {
+                                day: '2-digit',
+                                month: '2-digit',
+                                year: 'numeric',
+                                hour: '2-digit',
+                                minute: '2-digit',
+                              });
                               return (
                                 <div
                                   key={attempt.sessionId}
@@ -590,7 +629,12 @@ export function LessonPage() {
                                       </div>
                                     </div>
                                   </div>
-                                  <Button size="sm" variant="ghost" asChild className="gap-1.5 text-xs">
+                                  <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    asChild
+                                    className="gap-1.5 text-xs"
+                                  >
                                     <Link to={ROUTES.TEST_RESULT(attempt.sessionId)}>
                                       <ExternalLink className="w-3.5 h-3.5" />
                                       Xem kết quả
@@ -617,7 +661,9 @@ export function LessonPage() {
                     <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-sm text-muted-foreground mt-4">
                       <div className="flex items-center gap-2">
                         <Clock className="w-4 h-4" />
-                        <span>Thời gian làm bài: {Math.floor(lesson.test.timeLimit / 60)} phút</span>
+                        <span>
+                          Thời gian làm bài: {Math.floor(lesson.test.timeLimit / 60)} phút
+                        </span>
                       </div>
                       <div className="flex items-center gap-2">
                         <PlayCircle className="w-4 h-4" />

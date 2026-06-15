@@ -7,7 +7,14 @@ import { EmptyState } from '@/components/EmptyState';
 import { ErrorState } from '@/components/ErrorState';
 import { SkeletonCard } from '@/components/SkeletonCard';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Link } from 'react-router-dom';
 import { ROUTES } from '@/lib/routes';
@@ -282,11 +289,16 @@ export function TestBuilderPage() {
           <div className="bg-card rounded-lg border shadow-sm overflow-hidden">
             <div className="p-4 border-b bg-muted/50 flex items-center justify-between">
               <h3 className="font-semibold text-lg">Danh sách học sinh làm bài</h3>
-              <Button variant="outline" size="sm" onClick={fetchSessions} disabled={loadingSessions}>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={fetchSessions}
+                disabled={loadingSessions}
+              >
                 Làm mới
               </Button>
             </div>
-            
+
             {loadingSessions ? (
               <div className="p-8 text-center text-muted-foreground">Đang tải dữ liệu...</div>
             ) : sessions.length === 0 ? (
@@ -313,21 +325,27 @@ export function TestBuilderPage() {
                       <TableCell className="font-medium">{session.displayName}</TableCell>
                       <TableCell>
                         {session.isDone ? (
-                          <Badge variant="default" className="bg-green-500 hover:bg-green-600">Đã nộp</Badge>
+                          <Badge variant="default" className="bg-green-500 hover:bg-green-600">
+                            Đã nộp
+                          </Badge>
                         ) : (
                           <Badge variant="secondary">Đang làm</Badge>
                         )}
                       </TableCell>
+                      <TableCell>{new Date(session.startedAt).toLocaleString('vi-VN')}</TableCell>
                       <TableCell>
-                        {new Date(session.startedAt).toLocaleString('vi-VN')}
-                      </TableCell>
-                      <TableCell>
-                        {session.submittedAt ? new Date(session.submittedAt).toLocaleString('vi-VN') : '-'}
+                        {session.submittedAt
+                          ? new Date(session.submittedAt).toLocaleString('vi-VN')
+                          : '-'}
                       </TableCell>
                       <TableCell className="text-right">
                         {session.isDone && (
                           <Button size="sm" variant="ghost" asChild>
-                            <Link to={ROUTES.TEST_RESULT(session.sessionId)} target="_blank" className="flex items-center gap-2">
+                            <Link
+                              to={ROUTES.TEST_RESULT(session.sessionId)}
+                              target="_blank"
+                              className="flex items-center gap-2"
+                            >
                               <Eye size={16} /> Chi tiết
                             </Link>
                           </Button>
