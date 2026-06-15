@@ -12,6 +12,8 @@ export const ROUTES = {
   LOGIN: '/login',
   COURSES: '/courses',
   COURSE_DETAIL: (id: string) => `/courses/${id}`,
+  ABOUT: '/about',
+  HELP: '/help',
 
   // ── Classroom (Enrolled student) ───────────────
   CLASSROOM: (courseId: string) => `/courses/${courseId}/classroom`,
