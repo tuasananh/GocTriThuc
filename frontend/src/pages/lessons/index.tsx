@@ -212,8 +212,10 @@ export function LessonPage() {
 
   useEffect(() => {
     if (canViewResults && lesson?.type === 'test') {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      fetchSessions();
+      const t = setTimeout(() => {
+        fetchSessions();
+      }, 0);
+      return () => clearTimeout(t);
     }
   }, [canViewResults, lesson?.type, fetchSessions]);
 
