@@ -7,13 +7,17 @@ FROM eclipse-temurin:21-jre-alpine
 
 # Create a non-root user for security (Prevents container breakout attacks)
 RUN addgroup -S spring && adduser -S spring -G spring
-USER spring:spring
 
 # Set the working directory
 WORKDIR /app
 
-# Copy the compiled jar from your target folder into the container
-COPY target/*.jar app.jar
+# Create the uploads directory and configure permissions before switching user
+RUN mkdir -p /app/uploads && chown -R spring:spring /app
+
+USER spring:spring
+
+# Copy the compiled jar with correct ownership
+COPY --chown=spring:spring target/*.jar app.jar
 
 # Expose the standard web port
 ARG APP_PORT=8080
