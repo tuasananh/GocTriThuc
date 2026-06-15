@@ -95,6 +95,11 @@ export function TestBuilderPage() {
   }, [testId, fetchSessions]);
 
   const saveSettings = async () => {
+    const minutes = Math.floor(timeLimit / 60);
+    if (isNaN(minutes) || minutes < 1 || minutes > 180) {
+      toast.error('Thời gian làm bài phải là số nguyên dương từ 1 đến 180 phút');
+      return;
+    }
     setSaving(true);
     try {
       await api.put(`/api/lessons/${lessonId}/test`, {
