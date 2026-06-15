@@ -96,18 +96,18 @@ export function CreateCourseModal({
           <DialogTitle>Tạo khóa học mới</DialogTitle>
         </DialogHeader>
         <div className="space-y-4">
-          <div>
+          <div className="space-y-1.5">
             <Label htmlFor="course-title">Tên khóa học *</Label>
             <Input id="course-title" value={title} onChange={(e) => setTitle(e.target.value)} />
             {errors.title && <p className="mt-1 text-xs text-destructive">{errors.title}</p>}
           </div>
-          <div>
+          <div className="space-y-1.5">
             <Label>Ảnh bìa (Thumbnail)</Label>
             <div className="mt-1">
               <ThumbnailUpload value={thumbnailUrl} onChange={setThumbnailUrl} />
             </div>
           </div>
-          <div>
+          <div className="space-y-1.5">
             <Label htmlFor="course-desc">Mô tả</Label>
             <Textarea
               id="course-desc"
@@ -119,7 +119,7 @@ export function CreateCourseModal({
               <p className="mt-1 text-xs text-destructive">{errors.description}</p>
             )}
           </div>
-          <div>
+          <div className="space-y-1.5">
             <Label htmlFor="course-visibility">Chế độ hiển thị</Label>
             <Select
               value={visibility}

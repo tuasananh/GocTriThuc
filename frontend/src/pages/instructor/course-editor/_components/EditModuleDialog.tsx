@@ -9,6 +9,7 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { api } from '@/lib/api';
 import { toast } from 'sonner';
 
@@ -48,10 +49,8 @@ export function EditModuleDialog({ module, open, onOpenChange, onSuccess }: Edit
           <DialogDescription>Thay đổi tiêu đề của học phần này.</DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4 pt-4">
-          <div className="space-y-2">
-            <label htmlFor="title" className="text-sm font-medium">
-              Tên học phần
-            </label>
+          <div className="space-y-1.5">
+            <Label htmlFor="title">Tên học phần</Label>
             <Input
               id="title"
               value={title}
