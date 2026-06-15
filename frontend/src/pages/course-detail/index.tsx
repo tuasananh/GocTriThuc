@@ -323,29 +323,31 @@ export function CourseDetailPage() {
       />
 
       {/* Course Content — Modules & Announcements */}
-      <div className="mt-8">
-        <Tabs defaultValue="modules" className="w-full">
-          <TabsList className="mb-6 h-auto p-1 bg-muted/50 w-full sm:w-auto flex flex-col sm:flex-row justify-start">
-            <TabsTrigger value="modules" className="w-full sm:w-auto px-6 py-2.5 text-base">
-              Nội dung bài học
-            </TabsTrigger>
-            <TabsTrigger value="announcements" className="w-full sm:w-auto px-6 py-2.5 text-base">
-              Thông báo
-            </TabsTrigger>
-          </TabsList>
+      {(accessStatus === 'enrolled' || isAuthor || isAdmin) && (
+        <div className="mt-8">
+          <Tabs defaultValue="modules" className="w-full">
+            <TabsList className="mb-6 h-auto p-1 bg-muted/50 w-full sm:w-auto flex flex-col sm:flex-row justify-start">
+              <TabsTrigger value="modules" className="w-full sm:w-auto px-6 py-2.5 text-base">
+                Nội dung bài học
+              </TabsTrigger>
+              <TabsTrigger value="announcements" className="w-full sm:w-auto px-6 py-2.5 text-base">
+                Thông báo
+              </TabsTrigger>
+            </TabsList>
 
-          <TabsContent value="modules" className="mt-0">
-            <ModuleSidebar
-              courseId={id!}
-              visible={accessStatus === 'enrolled' || isAuthor || isAdmin}
-            />
-          </TabsContent>
+            <TabsContent value="modules" className="mt-0">
+              <ModuleSidebar
+                courseId={id!}
+                visible={accessStatus === 'enrolled' || isAuthor || isAdmin}
+              />
+            </TabsContent>
 
-          <TabsContent value="announcements" className="mt-0">
-            <AnnouncementsFeed courseId={id!} isAuthor={isAuthor} />
-          </TabsContent>
-        </Tabs>
-      </div>
+            <TabsContent value="announcements" className="mt-0">
+              <AnnouncementsFeed courseId={id!} isAuthor={isAuthor} />
+            </TabsContent>
+          </Tabs>
+        </div>
+      )}
     </PageShell>
   );
 }
