@@ -7,7 +7,6 @@ import {
   Plus,
   Search,
   CheckCircle2,
-  XCircle,
   ChevronLeft,
   ChevronRight,
 } from 'lucide-react';
@@ -23,7 +22,7 @@ import { RichTextViewer } from '@/components/rich-text-editor/RichTextViewer';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import {
@@ -374,7 +373,7 @@ function QuestionCard({
                 ) : (
                   <div className="w-3.5 h-3.5 rounded-full border border-muted-foreground/30 shrink-0" />
                 )}
-                <div className={cn("flex-1 min-w-0", isCorrect && "font-medium")}>
+                <div className={cn('flex-1 min-w-0', isCorrect && 'font-medium')}>
                   <RichTextViewer htmlContent={choice} />
                 </div>
               </div>

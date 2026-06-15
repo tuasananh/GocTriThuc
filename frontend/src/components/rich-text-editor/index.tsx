@@ -85,7 +85,12 @@ interface RichTextEditorProps {
   className?: string;
 }
 
-export function RichTextEditor({ storageKey, initialHtml, onChange, className }: RichTextEditorProps) {
+export function RichTextEditor({
+  storageKey,
+  initialHtml,
+  onChange,
+  className,
+}: RichTextEditorProps) {
   const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastSaveTimeRef = useRef<number>(0);
 
@@ -168,7 +173,9 @@ export function RichTextEditor({ storageKey, initialHtml, onChange, className }:
   }, [storageKey, saveToStorage, onChange, editor]);
 
   return (
-    <div className={`w-full h-full border border-border rounded-xl shadow-sm bg-background flex flex-col ${className || 'min-h-[500px]'}`}>
+    <div
+      className={`w-full h-full border border-border rounded-xl shadow-sm bg-background flex flex-col ${className || 'min-h-[500px]'}`}
+    >
       <style>{`
         @media not (pointer: coarse) {
           math-field::part(virtual-keyboard-toggle) {

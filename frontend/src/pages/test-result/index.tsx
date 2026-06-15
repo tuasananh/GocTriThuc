@@ -185,7 +185,9 @@ export function TestResultPage() {
                               isStudentChoice && 'font-semibold',
                             )}
                           >
-                            <span className="shrink-0 mt-0.5">{String.fromCharCode(65 + choiceIdx)}.</span>
+                            <span className="shrink-0 mt-0.5">
+                              {String.fromCharCode(65 + choiceIdx)}.
+                            </span>
                             <RichTextViewer htmlContent={choice} className="flex-1 min-w-0" />
                           </div>
                           {icon && <div>{icon}</div>}

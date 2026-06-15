@@ -4,7 +4,6 @@ import { Plus, X, Loader2, HelpCircle } from 'lucide-react';
 import { api } from '@/lib/api';
 import type { QuestionDto, ApiError } from '@/types';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
@@ -21,8 +20,8 @@ export function QuestionForm({ onSaved, initialData }: QuestionFormProps) {
 
   const [statement, setStatement] = useState(initialData?.statement ?? '');
   const [choices, setChoices] = useState<string[]>(initialData?.choices ?? ['', '']);
-  const [choiceIds, setChoiceIds] = useState<string[]>(() => 
-    (initialData?.choices ?? ['', '']).map(() => Math.random().toString(36).substring(2, 9))
+  const [choiceIds, setChoiceIds] = useState<string[]>(() =>
+    (initialData?.choices ?? ['', '']).map(() => Math.random().toString(36).substring(2, 9)),
   );
   const [correctChoices, setCorrectChoices] = useState<number[]>(initialData?.correctChoices ?? []);
   const [isSingleChoice, setIsSingleChoice] = useState(initialData?.isSingleChoice ?? true);
@@ -141,7 +140,10 @@ export function QuestionForm({ onSaved, initialData }: QuestionFormProps) {
         // Reset form sau khi tạo mới thành công
         setStatement('');
         setChoices(['', '']);
-        setChoiceIds([Math.random().toString(36).substring(2, 9), Math.random().toString(36).substring(2, 9)]);
+        setChoiceIds([
+          Math.random().toString(36).substring(2, 9),
+          Math.random().toString(36).substring(2, 9),
+        ]);
         setCorrectChoices([]);
         setIsSingleChoice(true);
         setEditorKey((k) => k + 1);

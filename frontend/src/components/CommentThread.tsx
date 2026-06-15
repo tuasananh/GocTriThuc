@@ -22,7 +22,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { useAuth } from '@/contexts/AuthContext';
 
-export const getInitials = (name: string) => {
+const getInitials = (name: string) => {
   return name
     .split(' ')
     .filter(Boolean)
