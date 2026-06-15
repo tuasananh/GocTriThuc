@@ -241,4 +241,144 @@ public class TestSessionServiceTest {
     assertThat(results.get(0).score()).isEqualTo(95.0);
     assertThat(results.get(0).testTitle()).isEqualTo("Test Title");
   }
+
+  @Test
+  void startSession_maxAttemptsReached_throws409() {
+    LessonTestEntity test = mock(LessonTestEntity.class);
+    LessonEntity lesson = mock(LessonEntity.class);
+    ModuleEntity module = mock(ModuleEntity.class);
+    Course course = mock(Course.class);
+    User author = mock(User.class);
+    User user = mock(User.class);
+
+    when(author.getId()).thenReturn(99L);
+    when(course.getAuthor()).thenReturn(author);
+    when(course.getId()).thenReturn(10L);
+    when(module.getCourse()).thenReturn(course);
+    when(lesson.getModule()).thenReturn(module);
+    when(test.getLesson()).thenReturn(lesson);
+    when(test.getTimeLimit()).thenReturn(60);
+    when(test.getSettings()).thenReturn(Map.of("maxAttempts", 2));
+    when(user.getId()).thenReturn(1L);
+
+    when(lessonTestRepo.findById(42L)).thenReturn(Optional.of(test));
+    when(permissionService.isAdmin(1L)).thenReturn(false);
+    when(enrollmentRepo.existsById(any())).thenReturn(true);
+    when(testSessionRepo.countByUserIdAndTestIdAndIsDoneTrue(1L, 42L)).thenReturn(2L);
+    when(testSessionRepo.findByUserIdAndTestIdAndIsDoneFalse(1L, 42L)).thenReturn(Optional.empty());
+    when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+
+    assertThatThrownBy(() -> testSessionService.startSession(42L, 1L))
+        .isInstanceOf(ResponseStatusException.class)
+        .satisfies(
+            ex ->
+                assertThat(((ResponseStatusException) ex).getStatusCode())
+                    .isEqualTo(HttpStatus.CONFLICT));
+  }
+
+  @Test
+  void startSession_maxAttemptsUnlimited_success() {
+    LessonTestEntity test = mock(LessonTestEntity.class);
+    LessonEntity lesson = mock(LessonEntity.class);
+    ModuleEntity module = mock(ModuleEntity.class);
+    Course course = mock(Course.class);
+    User author = mock(User.class);
+    User user = mock(User.class);
+
+    when(author.getId()).thenReturn(99L);
+    when(course.getAuthor()).thenReturn(author);
+    when(course.getId()).thenReturn(10L);
+    when(module.getCourse()).thenReturn(course);
+    when(lesson.getModule()).thenReturn(module);
+    when(test.getLesson()).thenReturn(lesson);
+    when(test.getTimeLimit()).thenReturn(60);
+    when(test.getSettings()).thenReturn(Map.of("maxAttempts", 0));
+    when(user.getId()).thenReturn(1L);
+
+    when(lessonTestRepo.findById(42L)).thenReturn(Optional.of(test));
+    when(permissionService.isAdmin(1L)).thenReturn(false);
+    when(enrollmentRepo.existsById(any())).thenReturn(true);
+    when(testSessionRepo.findByUserIdAndTestIdAndIsDoneFalse(1L, 42L)).thenReturn(Optional.empty());
+    when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+
+    TestSessionEntity savedSession = mock(TestSessionEntity.class);
+    when(savedSession.getId()).thenReturn(100L);
+    when(savedSession.getTest()).thenReturn(test);
+    when(savedSession.getUser()).thenReturn(user);
+    when(testSessionRepo.save(any())).thenReturn(savedSession);
+
+    var response = testSessionService.startSession(42L, 1L);
+    assertThat(response.id()).isEqualTo(100L);
+    verify(testSessionRepo, never()).countByUserIdAndTestIdAndIsDoneTrue(anyLong(), anyLong());
+  }
+
+  @Test
+  void startSession_maxAttemptsDefaultToOne_throws409() {
+    LessonTestEntity test = mock(LessonTestEntity.class);
+    LessonEntity lesson = mock(LessonEntity.class);
+    ModuleEntity module = mock(ModuleEntity.class);
+    Course course = mock(Course.class);
+    User author = mock(User.class);
+    User user = mock(User.class);
+
+    when(author.getId()).thenReturn(99L);
+    when(course.getAuthor()).thenReturn(author);
+    when(course.getId()).thenReturn(10L);
+    when(module.getCourse()).thenReturn(course);
+    when(lesson.getModule()).thenReturn(module);
+    when(test.getLesson()).thenReturn(lesson);
+    when(test.getTimeLimit()).thenReturn(60);
+    when(test.getSettings()).thenReturn(null);
+    when(user.getId()).thenReturn(1L);
+
+    when(lessonTestRepo.findById(42L)).thenReturn(Optional.of(test));
+    when(permissionService.isAdmin(1L)).thenReturn(false);
+    when(enrollmentRepo.existsById(any())).thenReturn(true);
+    when(testSessionRepo.countByUserIdAndTestIdAndIsDoneTrue(1L, 42L)).thenReturn(1L);
+    when(testSessionRepo.findByUserIdAndTestIdAndIsDoneFalse(1L, 42L)).thenReturn(Optional.empty());
+    when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+
+    assertThatThrownBy(() -> testSessionService.startSession(42L, 1L))
+        .isInstanceOf(ResponseStatusException.class)
+        .satisfies(
+            ex ->
+                assertThat(((ResponseStatusException) ex).getStatusCode())
+                    .isEqualTo(HttpStatus.CONFLICT));
+  }
+
+  @Test
+  void startSession_maxAttemptsNotExceeded_success() {
+    LessonTestEntity test = mock(LessonTestEntity.class);
+    LessonEntity lesson = mock(LessonEntity.class);
+    ModuleEntity module = mock(ModuleEntity.class);
+    Course course = mock(Course.class);
+    User author = mock(User.class);
+    User user = mock(User.class);
+
+    when(author.getId()).thenReturn(99L);
+    when(course.getAuthor()).thenReturn(author);
+    when(course.getId()).thenReturn(10L);
+    when(module.getCourse()).thenReturn(course);
+    when(lesson.getModule()).thenReturn(module);
+    when(test.getLesson()).thenReturn(lesson);
+    when(test.getTimeLimit()).thenReturn(60);
+    when(test.getSettings()).thenReturn(Map.of("maxAttempts", 3));
+    when(user.getId()).thenReturn(1L);
+
+    when(lessonTestRepo.findById(42L)).thenReturn(Optional.of(test));
+    when(permissionService.isAdmin(1L)).thenReturn(false);
+    when(enrollmentRepo.existsById(any())).thenReturn(true);
+    when(testSessionRepo.countByUserIdAndTestIdAndIsDoneTrue(1L, 42L)).thenReturn(2L);
+    when(testSessionRepo.findByUserIdAndTestIdAndIsDoneFalse(1L, 42L)).thenReturn(Optional.empty());
+    when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+
+    TestSessionEntity savedSession = mock(TestSessionEntity.class);
+    when(savedSession.getId()).thenReturn(100L);
+    when(savedSession.getTest()).thenReturn(test);
+    when(savedSession.getUser()).thenReturn(user);
+    when(testSessionRepo.save(any())).thenReturn(savedSession);
+
+    var response = testSessionService.startSession(42L, 1L);
+    assertThat(response.id()).isEqualTo(100L);
+  }
 }

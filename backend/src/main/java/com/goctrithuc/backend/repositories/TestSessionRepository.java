@@ -16,6 +16,8 @@ public interface TestSessionRepository extends JpaRepository<TestSessionEntity, 
 
   boolean existsByUserIdAndTestIdAndIsDoneTrue(Long userId, Long testId);
 
+  long countByUserIdAndTestIdAndIsDoneTrue(Long userId, Long testId);
+
   @Query(
       "SELECT ts FROM TestSessionEntity ts "
           + "JOIN FETCH ts.user "

@@ -66,9 +66,21 @@ public class TestSessionService {
       throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Access denied to this test");
     }
 
-    if (testSessionRepo.existsByUserIdAndTestIdAndIsDoneTrue(userId, testId)) {
-      throw new ResponseStatusException(
-          HttpStatus.CONFLICT, "You have already completed this test");
+    int maxAttempts = 1;
+    if (test.getSettings() != null && test.getSettings().containsKey("maxAttempts")) {
+      Object val = test.getSettings().get("maxAttempts");
+      if (val instanceof Number num) {
+        maxAttempts = num.intValue();
+      }
+    }
+
+    if (maxAttempts > 0) {
+      long completedCount = testSessionRepo.countByUserIdAndTestIdAndIsDoneTrue(userId, testId);
+      if (completedCount >= maxAttempts) {
+        throw new ResponseStatusException(
+            HttpStatus.CONFLICT,
+            "You have reached the maximum number of attempts allowed for this test");
+      }
     }
 
     Optional<TestSessionEntity> activeSessionOpt =

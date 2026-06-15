@@ -50,6 +50,13 @@ export function LessonPage() {
   const auth = useAuth();
   const currentUserId = auth && auth.isAuthenticated ? auth.user.id : undefined;
 
+  const maxAttempts =
+    lesson?.test?.settings && typeof lesson.test.settings.maxAttempts === 'number'
+      ? lesson.test.settings.maxAttempts
+      : 1;
+
+  const hasReachedLimit = maxAttempts > 0 && pastAttempts.length >= maxAttempts;
+
   const fetchLesson = useCallback(async () => {
     if (!courseId || !lessonId) return;
     setLoading(true);
@@ -299,129 +306,143 @@ export function LessonPage() {
                   <p className="text-muted-foreground">{lesson.test.statement}</p>
                 )}
                 {lesson.test?.timeLimit && (
-                  <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground mt-4">
-                    <Clock className="w-4 h-4" />
-                    <span>Thời gian làm bài: {Math.floor(lesson.test.timeLimit / 60)} phút</span>
+                  <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-sm text-muted-foreground mt-4">
+                    <div className="flex items-center gap-2">
+                      <Clock className="w-4 h-4" />
+                      <span>Thời gian làm bài: {Math.floor(lesson.test.timeLimit / 60)} phút</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <PlayCircle className="w-4 h-4" />
+                      <span>
+                        Lượt làm bài:{' '}
+                        {maxAttempts === 0
+                          ? 'Không giới hạn'
+                          : `${pastAttempts.length} / ${maxAttempts}`}
+                      </span>
+                    </div>
                   </div>
                 )}
               </div>
 
-              {activeSession || pastAttempts.length > 0 ? (
-                <div className="w-full max-w-lg space-y-6">
-                  {/* Active Session Display */}
-                  {activeSession && (
-                    <div className="bg-amber-500/10 border border-amber-500/30 rounded-lg p-5 text-left space-y-4 shadow-sm">
-                      <div className="flex items-start gap-3">
-                        <Clock className="w-5 h-5 text-amber-600 dark:text-amber-500 shrink-0 mt-0.5" />
-                        <div className="space-y-1">
-                          <h4 className="font-semibold text-amber-900 dark:text-amber-400 text-sm">
-                            Bạn đang có một phiên làm bài chưa hoàn thành
-                          </h4>
-                          <p className="text-xs text-amber-700 dark:text-amber-500">
-                            Bắt đầu lúc:{' '}
-                            {new Date(activeSession.startedAt).toLocaleDateString('vi-VN', {
-                              day: '2-digit',
-                              month: '2-digit',
-                              year: 'numeric',
-                              hour: '2-digit',
-                              minute: '2-digit',
-                            })}
-                          </p>
-                        </div>
+              <div className="w-full max-w-lg space-y-6">
+                {/* Active Session Display */}
+                {activeSession && (
+                  <div className="bg-amber-500/10 border border-amber-500/30 rounded-lg p-5 text-left space-y-4 shadow-sm">
+                    <div className="flex items-start gap-3">
+                      <Clock className="w-5 h-5 text-amber-600 dark:text-amber-500 shrink-0 mt-0.5" />
+                      <div className="space-y-1">
+                        <h4 className="font-semibold text-amber-900 dark:text-amber-400 text-sm">
+                          Bạn đang có một phiên làm bài chưa hoàn thành
+                        </h4>
+                        <p className="text-xs text-amber-700 dark:text-amber-500">
+                          Bắt đầu lúc:{' '}
+                          {new Date(activeSession.startedAt).toLocaleDateString('vi-VN', {
+                            day: '2-digit',
+                            month: '2-digit',
+                            year: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit',
+                          })}
+                        </p>
                       </div>
-                      <Button
-                        size="sm"
-                        className="w-full bg-amber-600 hover:bg-amber-700 dark:bg-amber-500 dark:hover:bg-amber-600 text-white gap-2 font-medium"
-                        asChild
-                      >
+                    </div>
+                    <Button
+                      size="sm"
+                      className="w-full bg-amber-600 hover:bg-amber-700 dark:bg-amber-500 dark:hover:bg-amber-600 text-white gap-2 font-medium"
+                      asChild
+                    >
+                      <Link to={ROUTES.TEST_TAKE(lesson.id)}>
+                        <PlayCircle className="w-4 h-4" />
+                        Tiếp tục làm bài
+                      </Link>
+                    </Button>
+                  </div>
+                )}
+
+                {/* Show start/retry button or limit message if there is no active session */}
+                {!activeSession && (
+                  <>
+                    {hasReachedLimit ? (
+                      <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-lg p-4 flex items-center gap-3 justify-center">
+                        <CheckCircle2 className="w-5 h-5 text-emerald-500 shrink-0" />
+                        <span className="text-emerald-700 dark:text-emerald-400 font-medium text-sm">
+                          Bạn đã sử dụng hết số lượt làm bài cho phép ({pastAttempts.length}/
+                          {maxAttempts} lượt)
+                        </span>
+                      </div>
+                    ) : lesson.test ? (
+                      <Button size="lg" asChild className="gap-2 mt-4">
                         <Link to={ROUTES.TEST_TAKE(lesson.id)}>
-                          <PlayCircle className="w-4 h-4" />
-                          Tiếp tục làm bài
+                          <PlayCircle className="w-5 h-5" />
+                          {pastAttempts.length > 0 ? 'Làm bài lại' : 'Bắt đầu làm bài'}
                         </Link>
                       </Button>
-                    </div>
-                  )}
+                    ) : (
+                      <Button size="lg" disabled className="gap-2 mt-4">
+                        <PlayCircle className="w-5 h-5" />
+                        Bắt đầu làm bài (Chưa cấu hình)
+                      </Button>
+                    )}
+                  </>
+                )}
 
-                  {/* Completed Notification (if student has finished attempt(s) but no active session) */}
-                  {pastAttempts.length > 0 && !activeSession && (
-                    <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-lg p-4 flex items-center gap-3">
-                      <CheckCircle2 className="w-5 h-5 text-emerald-500 shrink-0" />
-                      <span className="text-emerald-700 dark:text-emerald-400 font-medium text-sm">
-                        Bạn đã hoàn thành bài kiểm tra này
-                      </span>
-                    </div>
-                  )}
-
-                  {/* Past Attempts History */}
-                  {pastAttempts.length > 0 && (
-                    <div className="text-left space-y-2">
-                      <p className="text-sm font-medium text-muted-foreground uppercase tracking-wider">
-                        Lịch sử làm bài ({pastAttempts.length} lần)
-                      </p>
-                      <div className="space-y-2">
-                        {pastAttempts.map((attempt, idx) => {
-                          const pct = Math.round(attempt.score);
-                          const scoreColor =
-                            pct >= 80
-                              ? 'text-emerald-600 dark:text-emerald-400'
-                              : pct >= 50
-                                ? 'text-yellow-600 dark:text-yellow-400'
-                                : 'text-destructive';
-                          const submittedDate = new Date(attempt.submittedAt).toLocaleDateString(
-                            'vi-VN',
-                            {
-                              day: '2-digit',
-                              month: '2-digit',
-                              year: 'numeric',
-                              hour: '2-digit',
-                              minute: '2-digit',
-                            },
-                          );
-                          return (
-                            <div
-                              key={attempt.sessionId}
-                              className="flex items-center justify-between p-3 rounded-lg border bg-background hover:bg-muted/30 transition-colors"
-                            >
-                              <div className="flex items-center gap-3">
-                                <span className="text-xs text-muted-foreground w-6 text-center font-mono">
-                                  #{idx + 1}
-                                </span>
-                                <div className="text-left">
-                                  <div className={`font-semibold text-sm ${scoreColor}`}>
-                                    {attempt.correctCount}/{attempt.totalQuestions} câu đúng
-                                    <span className="ml-1 font-normal text-xs">({pct}%)</span>
-                                  </div>
-                                  <div className="text-xs text-muted-foreground mt-0.5">
-                                    {submittedDate}
-                                  </div>
+                {/* Past Attempts History */}
+                {pastAttempts.length > 0 && (
+                  <div className="text-left space-y-2">
+                    <p className="text-sm font-medium text-muted-foreground uppercase tracking-wider">
+                      Lịch sử làm bài ({pastAttempts.length} lần)
+                    </p>
+                    <div className="space-y-2">
+                      {pastAttempts.map((attempt, idx) => {
+                        const pct = Math.round(attempt.score);
+                        const scoreColor =
+                          pct >= 80
+                            ? 'text-emerald-600 dark:text-emerald-400'
+                            : pct >= 50
+                              ? 'text-yellow-600 dark:text-yellow-400'
+                              : 'text-destructive';
+                        const submittedDate = new Date(attempt.submittedAt).toLocaleDateString(
+                          'vi-VN',
+                          {
+                            day: '2-digit',
+                            month: '2-digit',
+                            year: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit',
+                          },
+                        );
+                        return (
+                          <div
+                            key={attempt.sessionId}
+                            className="flex items-center justify-between p-3 rounded-lg border bg-background hover:bg-muted/30 transition-colors"
+                          >
+                            <div className="flex items-center gap-3">
+                              <span className="text-xs text-muted-foreground w-6 text-center font-mono">
+                                #{idx + 1}
+                              </span>
+                              <div className="text-left">
+                                <div className={`font-semibold text-sm ${scoreColor}`}>
+                                  {attempt.correctCount}/{attempt.totalQuestions} câu đúng
+                                  <span className="ml-1 font-normal text-xs">({pct}%)</span>
+                                </div>
+                                <div className="text-xs text-muted-foreground mt-0.5">
+                                  {submittedDate}
                                 </div>
                               </div>
-                              <Button size="sm" variant="ghost" asChild className="gap-1.5 text-xs">
-                                <Link to={ROUTES.TEST_RESULT(attempt.sessionId)}>
-                                  <ExternalLink className="w-3.5 h-3.5" />
-                                  Xem kết quả
-                                </Link>
-                              </Button>
                             </div>
-                          );
-                        })}
-                      </div>
+                            <Button size="sm" variant="ghost" asChild className="gap-1.5 text-xs">
+                              <Link to={ROUTES.TEST_RESULT(attempt.sessionId)}>
+                                <ExternalLink className="w-3.5 h-3.5" />
+                                Xem kết quả
+                              </Link>
+                            </Button>
+                          </div>
+                        );
+                      })}
                     </div>
-                  )}
-                </div>
-              ) : lesson.test ? (
-                <Button size="lg" asChild className="gap-2 mt-4">
-                  <Link to={ROUTES.TEST_TAKE(lesson.id)}>
-                    <PlayCircle className="w-5 h-5" />
-                    Bắt đầu làm bài
-                  </Link>
-                </Button>
-              ) : (
-                <Button size="lg" disabled className="gap-2 mt-4">
-                  <PlayCircle className="w-5 h-5" />
-                  Bắt đầu làm bài (Chưa cấu hình)
-                </Button>
-              )}
+                  </div>
+                )}
+              </div>
             </div>
           ) : (
             <div className="p-8 text-center text-muted-foreground bg-muted/20 rounded-lg">

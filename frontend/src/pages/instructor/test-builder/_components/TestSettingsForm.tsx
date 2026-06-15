@@ -9,12 +9,15 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 
 interface TestSettingsFormProps {
   statement: string;
   onStatementChange: (value: string) => void;
   timeLimit: number;
   onTimeLimitChange: (value: number) => void;
+  maxAttempts: number;
+  onMaxAttemptsChange: (value: number) => void;
   onSave: () => void;
   saving: boolean;
 }
@@ -24,6 +27,8 @@ export function TestSettingsForm({
   onStatementChange,
   timeLimit,
   onTimeLimitChange,
+  maxAttempts,
+  onMaxAttemptsChange,
   onSave,
   saving,
 }: TestSettingsFormProps) {
@@ -58,6 +63,22 @@ export function TestSettingsForm({
               <SelectItem value="7200">120 phút</SelectItem>
             </SelectContent>
           </Select>
+        </div>
+        <div className="space-y-2">
+          <Label className="text-foreground font-medium">Số lượt làm bài tối đa</Label>
+          <Input
+            type="number"
+            min={0}
+            placeholder="Không giới hạn"
+            value={maxAttempts === 0 ? '' : maxAttempts}
+            onChange={(e) => {
+              const val = e.target.value === '' ? 0 : parseInt(e.target.value, 10);
+              onMaxAttemptsChange(isNaN(val) || val < 0 ? 0 : val);
+            }}
+          />
+          <p className="text-xs text-muted-foreground">
+            Nhập số lượt làm bài cho phép. Nhập 0 hoặc để trống để không giới hạn.
+          </p>
         </div>
         <Button className="w-full mt-2" onClick={onSave} disabled={saving}>
           {saving ? 'Đang lưu...' : 'Lưu cài đặt'}
