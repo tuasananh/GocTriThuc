@@ -1,13 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 
@@ -49,20 +42,19 @@ export function TestSettingsForm({
           />
         </div>
         <div className="space-y-2">
-          <Label className="text-foreground font-medium">Thời gian làm bài</Label>
-          <Select value={String(timeLimit)} onValueChange={(v) => onTimeLimitChange(Number(v))}>
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="900">15 phút</SelectItem>
-              <SelectItem value="1800">30 phút</SelectItem>
-              <SelectItem value="2700">45 phút</SelectItem>
-              <SelectItem value="3600">60 phút</SelectItem>
-              <SelectItem value="5400">90 phút</SelectItem>
-              <SelectItem value="7200">120 phút</SelectItem>
-            </SelectContent>
-          </Select>
+          <Label className="text-foreground font-medium">Thời gian làm bài (phút)</Label>
+          <Input
+            type="number"
+            min={1}
+            max={180}
+            placeholder="Nhập số phút (1 - 180)..."
+            value={timeLimit === 0 ? '' : Math.floor(timeLimit / 60)}
+            onChange={(e) => {
+              const val = e.target.value === '' ? 0 : parseInt(e.target.value, 10);
+              onTimeLimitChange(isNaN(val) ? 0 : val * 60);
+            }}
+          />
+          <p className="text-xs text-muted-foreground">Thời gian làm bài từ 1 đến 180 phút.</p>
         </div>
         <div className="space-y-2">
           <Label className="text-foreground font-medium">Số lượt làm bài tối đa</Label>

@@ -10,6 +10,8 @@ import type {
   PageResponse,
   MyTestSessionDto,
   TestSessionDto,
+  TestSessionSummaryDto,
+  CourseDto,
 } from '@/types';
 import { PageShell } from '@/components/PageShell';
 import { Button } from '@/components/ui/button';
@@ -22,14 +24,27 @@ import {
   PlayCircle,
   Loader2,
   ExternalLink,
+  Eye,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { ErrorState } from '@/components/ErrorState';
+import { EmptyState } from '@/components/EmptyState';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import { Badge } from '@/components/ui/badge';
 import { VideoLessonViewer } from './_components/VideoLessonViewer';
 import { BlogLessonViewer } from './_components/BlogLessonViewer';
 import { LessonResourceList } from './_components/LessonResourceList';
 import { CommentThread } from '@/components/CommentThread';
 import { useAuth } from '@/contexts/AuthContext';
+import { useIsAdmin } from '@/lib/permissions';
 
 export function LessonPage() {
   const { courseId, lessonId } = useParams<{ courseId: string; lessonId: string }>();
@@ -50,6 +65,16 @@ export function LessonPage() {
   const auth = useAuth();
   const currentUserId = auth && auth.isAuthenticated ? auth.user.id : undefined;
 
+  const isAdmin = useIsAdmin();
+  const [course, setCourse] = useState<CourseDto | null>(null);
+  const [sessions, setSessions] = useState<TestSessionSummaryDto[]>([]);
+  const [loadingSessions, setLoadingSessions] = useState(false);
+
+  const isAuthor = Boolean(
+    currentUserId && course?.author?.id && currentUserId === course.author.id,
+  );
+  const canViewResults = isAdmin || isAuthor;
+
   const maxAttempts =
     lesson?.test?.settings && typeof lesson.test.settings.maxAttempts === 'number'
       ? lesson.test.settings.maxAttempts
@@ -66,6 +91,13 @@ export function LessonPage() {
     try {
       const res = await api.get<LessonDetailDto>(`/api/lessons/${lessonId}`);
       setLesson(res.data);
+
+      try {
+        const courseRes = await api.get<CourseDto>(`/api/courses/${courseId}`);
+        setCourse(courseRes.data);
+      } catch (err) {
+        console.error('Failed to load course details', err);
+      }
 
       if (res.data.type === 'test' && res.data.test) {
         try {
@@ -125,6 +157,28 @@ export function LessonPage() {
       setLoadingComments(false);
     }
   }, [lessonId]);
+
+  const fetchSessions = useCallback(async () => {
+    if (!lessonId) return;
+    setLoadingSessions(true);
+    try {
+      const res = await api.get<TestSessionSummaryDto[]>(`/api/tests/${lessonId}/sessions`);
+      setSessions(res.data);
+    } catch {
+      toast.error('Không thể tải danh sách kết quả học sinh');
+    } finally {
+      setLoadingSessions(false);
+    }
+  }, [lessonId]);
+
+  useEffect(() => {
+    if (canViewResults && lesson?.type === 'test') {
+      const t = setTimeout(() => {
+        fetchSessions();
+      }, 0);
+      return () => clearTimeout(t);
+    }
+  }, [canViewResults, lesson?.type, fetchSessions]);
 
   useEffect(() => {
     const t = setTimeout(() => {
@@ -300,151 +354,411 @@ export function LessonPage() {
           ) : lesson.type === 'blog' ? (
             <BlogLessonViewer blog={lesson.blog ?? { content: '' }} />
           ) : lesson.type === 'test' ? (
-            <div className="p-8 bg-muted/10 rounded-lg border flex flex-col items-center justify-center text-center space-y-6">
-              <div className="max-w-md space-y-2">
-                <h3 className="text-xl font-semibold">Bài kiểm tra</h3>
-                {lesson.test?.statement && (
-                  <p className="text-muted-foreground">{lesson.test.statement}</p>
-                )}
-                {lesson.test?.timeLimit && (
-                  <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-sm text-muted-foreground mt-4">
-                    <div className="flex items-center gap-2">
-                      <Clock className="w-4 h-4" />
-                      <span>Thời gian làm bài: {Math.floor(lesson.test.timeLimit / 60)} phút</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <PlayCircle className="w-4 h-4" />
-                      <span>
-                        Lượt làm bài:{' '}
-                        {maxAttempts === 0
-                          ? 'Không giới hạn'
-                          : `${pastAttempts.length} / ${maxAttempts}`}
-                      </span>
-                    </div>
-                  </div>
-                )}
-              </div>
+            canViewResults ? (
+              <Tabs defaultValue="results" className="w-full">
+                <TabsList className="mb-6">
+                  <TabsTrigger value="results">Kết quả học sinh</TabsTrigger>
+                  <TabsTrigger value="preview">Xem trước & Làm thử</TabsTrigger>
+                </TabsList>
 
-              <div className="w-full max-w-lg space-y-6">
-                {/* Active Session Display */}
-                {activeSession && (
-                  <div className="bg-amber-500/10 border border-amber-500/30 rounded-lg p-5 text-left space-y-4 shadow-sm">
-                    <div className="flex items-start gap-3">
-                      <Clock className="w-5 h-5 text-amber-600 dark:text-amber-500 shrink-0 mt-0.5" />
-                      <div className="space-y-1">
-                        <h4 className="font-semibold text-amber-900 dark:text-amber-400 text-sm">
-                          Bạn đang có một phiên làm bài chưa hoàn thành
-                        </h4>
-                        <p className="text-xs text-amber-700 dark:text-amber-500">
-                          Bắt đầu lúc:{' '}
-                          {new Date(activeSession.startedAt).toLocaleDateString('vi-VN', {
-                            day: '2-digit',
-                            month: '2-digit',
-                            year: 'numeric',
-                            hour: '2-digit',
-                            minute: '2-digit',
-                          })}
-                        </p>
-                      </div>
-                    </div>
-                    <Button
-                      size="sm"
-                      className="w-full bg-amber-600 hover:bg-amber-700 dark:bg-amber-500 dark:hover:bg-amber-600 text-white gap-2 font-medium"
-                      asChild
-                    >
-                      <Link to={ROUTES.TEST_TAKE(lesson.id)}>
-                        <PlayCircle className="w-4 h-4" />
-                        Tiếp tục làm bài
-                      </Link>
-                    </Button>
-                  </div>
-                )}
-
-                {/* Show start/retry button or limit message if there is no active session */}
-                {!activeSession && (
-                  <>
-                    {hasReachedLimit ? (
-                      <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-lg p-4 flex items-center gap-3 justify-center">
-                        <CheckCircle2 className="w-5 h-5 text-emerald-500 shrink-0" />
-                        <span className="text-emerald-700 dark:text-emerald-400 font-medium text-sm">
-                          Bạn đã sử dụng hết số lượt làm bài cho phép ({pastAttempts.length}/
-                          {maxAttempts} lượt)
-                        </span>
-                      </div>
-                    ) : lesson.test ? (
-                      <Button size="lg" asChild className="gap-2 mt-4">
-                        <Link to={ROUTES.TEST_TAKE(lesson.id)}>
-                          <PlayCircle className="w-5 h-5" />
-                          {pastAttempts.length > 0 ? 'Làm bài lại' : 'Bắt đầu làm bài'}
-                        </Link>
+                <TabsContent value="results">
+                  <div className="bg-card rounded-lg border shadow-sm overflow-hidden text-left">
+                    <div className="p-4 border-b bg-muted/50 flex items-center justify-between">
+                      <h3 className="font-semibold text-lg">Danh sách học sinh làm bài</h3>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={fetchSessions}
+                        disabled={loadingSessions}
+                      >
+                        Làm mới
                       </Button>
+                    </div>
+
+                    {loadingSessions ? (
+                      <div className="p-8 text-center text-muted-foreground">
+                        Đang tải dữ liệu...
+                      </div>
+                    ) : sessions.length === 0 ? (
+                      <div className="p-12 text-center">
+                        <EmptyState
+                          title="Chưa có kết quả"
+                          description="Chưa có học sinh nào làm bài kiểm tra này."
+                        />
+                      </div>
                     ) : (
-                      <Button size="lg" disabled className="gap-2 mt-4">
-                        <PlayCircle className="w-5 h-5" />
-                        Bắt đầu làm bài (Chưa cấu hình)
-                      </Button>
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Học viên</TableHead>
+                            <TableHead>Trạng thái</TableHead>
+                            <TableHead>Điểm số</TableHead>
+                            <TableHead>Bắt đầu lúc</TableHead>
+                            <TableHead>Nộp bài lúc</TableHead>
+                            <TableHead className="text-right">Thao tác</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {sessions.map((session) => (
+                            <TableRow key={session.sessionId}>
+                              <TableCell className="font-medium">{session.displayName}</TableCell>
+                              <TableCell>
+                                {session.isDone ? (
+                                  <Badge
+                                    variant="default"
+                                    className="bg-green-500 hover:bg-green-600 text-white"
+                                  >
+                                    Đã nộp
+                                  </Badge>
+                                ) : (
+                                  <Badge variant="secondary">Đang làm</Badge>
+                                )}
+                              </TableCell>
+                              <TableCell>
+                                {session.isDone &&
+                                typeof session.score === 'number' &&
+                                typeof session.correctCount === 'number' &&
+                                typeof session.totalQuestions === 'number' ? (
+                                  <span className="font-semibold text-emerald-600 dark:text-emerald-400">
+                                    {session.correctCount}/{session.totalQuestions} (
+                                    {Math.round(session.score)}%)
+                                  </span>
+                                ) : (
+                                  <span className="text-muted-foreground">-</span>
+                                )}
+                              </TableCell>
+                              <TableCell>
+                                {new Date(session.startedAt).toLocaleString('vi-VN')}
+                              </TableCell>
+                              <TableCell>
+                                {session.submittedAt
+                                  ? new Date(session.submittedAt).toLocaleString('vi-VN')
+                                  : '-'}
+                              </TableCell>
+                              <TableCell className="text-right">
+                                {session.isDone && (
+                                  <Button size="sm" variant="ghost" asChild>
+                                    <Link
+                                      to={ROUTES.TEST_RESULT(session.sessionId)}
+                                      target="_blank"
+                                      className="flex items-center gap-2"
+                                    >
+                                      <Eye size={16} /> Chi tiết
+                                    </Link>
+                                  </Button>
+                                )}
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
                     )}
-                  </>
-                )}
+                  </div>
+                </TabsContent>
 
-                {/* Past Attempts History */}
-                {pastAttempts.length > 0 && (
-                  <div className="text-left space-y-2">
-                    <p className="text-sm font-medium text-muted-foreground uppercase tracking-wider">
-                      Lịch sử làm bài ({pastAttempts.length} lần)
-                    </p>
-                    <div className="space-y-2">
-                      {pastAttempts.map((attempt, idx) => {
-                        const pct = Math.round(attempt.score);
-                        const scoreColor =
-                          pct >= 80
-                            ? 'text-emerald-600 dark:text-emerald-400'
-                            : pct >= 50
-                              ? 'text-yellow-600 dark:text-yellow-400'
-                              : 'text-destructive';
-                        const submittedDate = new Date(attempt.submittedAt).toLocaleDateString(
-                          'vi-VN',
-                          {
-                            day: '2-digit',
-                            month: '2-digit',
-                            year: 'numeric',
-                            hour: '2-digit',
-                            minute: '2-digit',
-                          },
-                        );
-                        return (
-                          <div
-                            key={attempt.sessionId}
-                            className="flex items-center justify-between p-3 rounded-lg border bg-background hover:bg-muted/30 transition-colors"
-                          >
-                            <div className="flex items-center gap-3">
-                              <span className="text-xs text-muted-foreground w-6 text-center font-mono">
-                                #{idx + 1}
-                              </span>
-                              <div className="text-left">
-                                <div className={`font-semibold text-sm ${scoreColor}`}>
-                                  {attempt.correctCount}/{attempt.totalQuestions} câu đúng
-                                  <span className="ml-1 font-normal text-xs">({pct}%)</span>
-                                </div>
-                                <div className="text-xs text-muted-foreground mt-0.5">
-                                  {submittedDate}
-                                </div>
-                              </div>
+                <TabsContent value="preview" className="space-y-6">
+                  <div className="p-8 bg-muted/10 rounded-lg border flex flex-col items-center justify-center text-center space-y-6">
+                    <div className="max-w-md space-y-2">
+                      <h3 className="text-xl font-semibold">Bài kiểm tra (Chế độ giảng viên)</h3>
+                      {lesson.test?.statement && (
+                        <p className="text-muted-foreground">{lesson.test.statement}</p>
+                      )}
+                      {lesson.test?.timeLimit && (
+                        <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-sm text-muted-foreground mt-4">
+                          <div className="flex items-center gap-2">
+                            <Clock className="w-4 h-4" />
+                            <span>
+                              Thời gian làm bài: {Math.floor(lesson.test.timeLimit / 60)} phút
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <PlayCircle className="w-4 h-4" />
+                            <span>
+                              Lượt làm bài:{' '}
+                              {maxAttempts === 0
+                                ? 'Không giới hạn'
+                                : `${pastAttempts.length} / ${maxAttempts}`}
+                            </span>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="w-full max-w-lg space-y-6">
+                      {/* Active Session Display */}
+                      {activeSession && (
+                        <div className="bg-amber-500/10 border border-amber-500/30 rounded-lg p-5 text-left space-y-4 shadow-sm">
+                          <div className="flex items-start gap-3">
+                            <Clock className="w-5 h-5 text-amber-600 dark:text-amber-500 shrink-0 mt-0.5" />
+                            <div className="space-y-1">
+                              <h4 className="font-semibold text-amber-900 dark:text-amber-400 text-sm">
+                                Bạn đang có một phiên làm bài chưa hoàn thành
+                              </h4>
+                              <p className="text-xs text-amber-700 dark:text-amber-500">
+                                Bắt đầu lúc:{' '}
+                                {new Date(activeSession.startedAt).toLocaleDateString('vi-VN', {
+                                  day: '2-digit',
+                                  month: '2-digit',
+                                  year: 'numeric',
+                                  hour: '2-digit',
+                                  minute: '2-digit',
+                                })}
+                              </p>
                             </div>
-                            <Button size="sm" variant="ghost" asChild className="gap-1.5 text-xs">
-                              <Link to={ROUTES.TEST_RESULT(attempt.sessionId)}>
-                                <ExternalLink className="w-3.5 h-3.5" />
-                                Xem kết quả
+                          </div>
+                          <Button
+                            size="sm"
+                            className="w-full bg-amber-600 hover:bg-amber-700 dark:bg-amber-500 dark:hover:bg-amber-600 text-white gap-2 font-medium"
+                            asChild
+                          >
+                            <Link to={ROUTES.TEST_TAKE(lesson.id)}>
+                              <PlayCircle className="w-4 h-4" />
+                              Tiếp tục làm bài
+                            </Link>
+                          </Button>
+                        </div>
+                      )}
+
+                      {/* Show start/retry button or limit message if there is no active session */}
+                      {!activeSession && (
+                        <>
+                          {hasReachedLimit ? (
+                            <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-lg p-4 flex items-center gap-3 justify-center">
+                              <CheckCircle2 className="w-5 h-5 text-emerald-500 shrink-0" />
+                              <span className="text-emerald-700 dark:text-emerald-400 font-medium text-sm">
+                                Bạn đã sử dụng hết số lượt làm bài cho phép ({pastAttempts.length}/
+                                {maxAttempts} lượt)
+                              </span>
+                            </div>
+                          ) : lesson.test ? (
+                            <Button size="lg" asChild className="gap-2 mt-4">
+                              <Link to={ROUTES.TEST_TAKE(lesson.id)}>
+                                <PlayCircle className="w-5 h-5" />
+                                {pastAttempts.length > 0 ? 'Làm bài lại' : 'Bắt đầu làm bài'}
                               </Link>
                             </Button>
+                          ) : (
+                            <Button size="lg" disabled className="gap-2 mt-4">
+                              <PlayCircle className="w-5 h-5" />
+                              Bắt đầu làm bài (Chưa cấu hình)
+                            </Button>
+                          )}
+                        </>
+                      )}
+
+                      {/* Past Attempts History */}
+                      {pastAttempts.length > 0 && (
+                        <div className="text-left space-y-2">
+                          <p className="text-sm font-medium text-muted-foreground uppercase tracking-wider">
+                            Lịch sử làm bài của bạn ({pastAttempts.length} lần)
+                          </p>
+                          <div className="space-y-2">
+                            {pastAttempts.map((attempt, idx) => {
+                              const pct = Math.round(attempt.score);
+                              const scoreColor =
+                                pct >= 80
+                                  ? 'text-emerald-600 dark:text-emerald-400'
+                                  : pct >= 50
+                                    ? 'text-yellow-600 dark:text-yellow-400'
+                                    : 'text-destructive';
+                              const submittedDate = new Date(
+                                attempt.submittedAt,
+                              ).toLocaleDateString('vi-VN', {
+                                day: '2-digit',
+                                month: '2-digit',
+                                year: 'numeric',
+                                hour: '2-digit',
+                                minute: '2-digit',
+                              });
+                              return (
+                                <div
+                                  key={attempt.sessionId}
+                                  className="flex items-center justify-between p-3 rounded-lg border bg-background hover:bg-muted/30 transition-colors"
+                                >
+                                  <div className="flex items-center gap-3">
+                                    <span className="text-xs text-muted-foreground w-6 text-center font-mono">
+                                      #{idx + 1}
+                                    </span>
+                                    <div className="text-left">
+                                      <div className={`font-semibold text-sm ${scoreColor}`}>
+                                        {attempt.correctCount}/{attempt.totalQuestions} câu đúng
+                                        <span className="ml-1 font-normal text-xs">({pct}%)</span>
+                                      </div>
+                                      <div className="text-xs text-muted-foreground mt-0.5">
+                                        {submittedDate}
+                                      </div>
+                                    </div>
+                                  </div>
+                                  <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    asChild
+                                    className="gap-1.5 text-xs"
+                                  >
+                                    <Link to={ROUTES.TEST_RESULT(attempt.sessionId)}>
+                                      <ExternalLink className="w-3.5 h-3.5" />
+                                      Xem kết quả
+                                    </Link>
+                                  </Button>
+                                </div>
+                              );
+                            })}
                           </div>
-                        );
-                      })}
+                        </div>
+                      )}
                     </div>
                   </div>
-                )}
+                </TabsContent>
+              </Tabs>
+            ) : (
+              <div className="p-8 bg-muted/10 rounded-lg border flex flex-col items-center justify-center text-center space-y-6">
+                <div className="max-w-md space-y-2">
+                  <h3 className="text-xl font-semibold">Bài kiểm tra</h3>
+                  {lesson.test?.statement && (
+                    <p className="text-muted-foreground">{lesson.test.statement}</p>
+                  )}
+                  {lesson.test?.timeLimit && (
+                    <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-sm text-muted-foreground mt-4">
+                      <div className="flex items-center gap-2">
+                        <Clock className="w-4 h-4" />
+                        <span>
+                          Thời gian làm bài: {Math.floor(lesson.test.timeLimit / 60)} phút
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <PlayCircle className="w-4 h-4" />
+                        <span>
+                          Lượt làm bài:{' '}
+                          {maxAttempts === 0
+                            ? 'Không giới hạn'
+                            : `${pastAttempts.length} / ${maxAttempts}`}
+                        </span>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                <div className="w-full max-w-lg space-y-6">
+                  {/* Active Session Display */}
+                  {activeSession && (
+                    <div className="bg-amber-500/10 border border-amber-500/30 rounded-lg p-5 text-left space-y-4 shadow-sm">
+                      <div className="flex items-start gap-3">
+                        <Clock className="w-5 h-5 text-amber-600 dark:text-amber-500 shrink-0 mt-0.5" />
+                        <div className="space-y-1">
+                          <h4 className="font-semibold text-amber-900 dark:text-amber-400 text-sm">
+                            Bạn đang có một phiên làm bài chưa hoàn thành
+                          </h4>
+                          <p className="text-xs text-amber-700 dark:text-amber-500">
+                            Bắt đầu lúc:{' '}
+                            {new Date(activeSession.startedAt).toLocaleDateString('vi-VN', {
+                              day: '2-digit',
+                              month: '2-digit',
+                              year: 'numeric',
+                              hour: '2-digit',
+                              minute: '2-digit',
+                            })}
+                          </p>
+                        </div>
+                      </div>
+                      <Button
+                        size="sm"
+                        className="w-full bg-amber-600 hover:bg-amber-700 dark:bg-amber-500 dark:hover:bg-amber-600 text-white gap-2 font-medium"
+                        asChild
+                      >
+                        <Link to={ROUTES.TEST_TAKE(lesson.id)}>
+                          <PlayCircle className="w-4 h-4" />
+                          Tiếp tục làm bài
+                        </Link>
+                      </Button>
+                    </div>
+                  )}
+
+                  {/* Show start/retry button or limit message if there is no active session */}
+                  {!activeSession && (
+                    <>
+                      {hasReachedLimit ? (
+                        <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-lg p-4 flex items-center gap-3 justify-center">
+                          <CheckCircle2 className="w-5 h-5 text-emerald-500 shrink-0" />
+                          <span className="text-emerald-700 dark:text-emerald-400 font-medium text-sm">
+                            Bạn đã sử dụng hết số lượt làm bài cho phép ({pastAttempts.length}/
+                            {maxAttempts} lượt)
+                          </span>
+                        </div>
+                      ) : lesson.test ? (
+                        <Button size="lg" asChild className="gap-2 mt-4">
+                          <Link to={ROUTES.TEST_TAKE(lesson.id)}>
+                            <PlayCircle className="w-5 h-5" />
+                            {pastAttempts.length > 0 ? 'Làm bài lại' : 'Bắt đầu làm bài'}
+                          </Link>
+                        </Button>
+                      ) : (
+                        <Button size="lg" disabled className="gap-2 mt-4">
+                          <PlayCircle className="w-5 h-5" />
+                          Bắt đầu làm bài (Chưa cấu hình)
+                        </Button>
+                      )}
+                    </>
+                  )}
+
+                  {/* Past Attempts History */}
+                  {pastAttempts.length > 0 && (
+                    <div className="text-left space-y-2">
+                      <p className="text-sm font-medium text-muted-foreground uppercase tracking-wider">
+                        Lịch sử làm bài ({pastAttempts.length} lần)
+                      </p>
+                      <div className="space-y-2">
+                        {pastAttempts.map((attempt, idx) => {
+                          const pct = Math.round(attempt.score);
+                          const scoreColor =
+                            pct >= 80
+                              ? 'text-emerald-600 dark:text-emerald-400'
+                              : pct >= 50
+                                ? 'text-yellow-600 dark:text-yellow-400'
+                                : 'text-destructive';
+                          const submittedDate = new Date(attempt.submittedAt).toLocaleDateString(
+                            'vi-VN',
+                            {
+                              day: '2-digit',
+                              month: '2-digit',
+                              year: 'numeric',
+                              hour: '2-digit',
+                              minute: '2-digit',
+                            },
+                          );
+                          return (
+                            <div
+                              key={attempt.sessionId}
+                              className="flex items-center justify-between p-3 rounded-lg border bg-background hover:bg-muted/30 transition-colors"
+                            >
+                              <div className="flex items-center gap-3">
+                                <span className="text-xs text-muted-foreground w-6 text-center font-mono">
+                                  #{idx + 1}
+                                </span>
+                                <div className="text-left">
+                                  <div className={`font-semibold text-sm ${scoreColor}`}>
+                                    {attempt.correctCount}/{attempt.totalQuestions} câu đúng
+                                    <span className="ml-1 font-normal text-xs">({pct}%)</span>
+                                  </div>
+                                  <div className="text-xs text-muted-foreground mt-0.5">
+                                    {submittedDate}
+                                  </div>
+                                </div>
+                              </div>
+                              <Button size="sm" variant="ghost" asChild className="gap-1.5 text-xs">
+                                <Link to={ROUTES.TEST_RESULT(attempt.sessionId)}>
+                                  <ExternalLink className="w-3.5 h-3.5" />
+                                  Xem kết quả
+                                </Link>
+                              </Button>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
-            </div>
+            )
           ) : (
             <div className="p-8 text-center text-muted-foreground bg-muted/20 rounded-lg">
               <p>Nội dung bài học chưa được cập nhật.</p>

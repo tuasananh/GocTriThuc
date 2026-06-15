@@ -2,15 +2,26 @@ import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { api } from '@/lib/api';
-import type { LessonDetailDto, TestQuestionDto } from '@/types';
-import { PageShell } from '@/components/PageShell';
-import { SectionHeader } from '@/components/SectionHeader';
-import { Button } from '@/components/ui/button';
-
-import { Plus, ArrowLeft } from 'lucide-react';
+import { Plus, ArrowLeft, Eye } from 'lucide-react';
 import { EmptyState } from '@/components/EmptyState';
 import { ErrorState } from '@/components/ErrorState';
 import { SkeletonCard } from '@/components/SkeletonCard';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import { Badge } from '@/components/ui/badge';
+import { Link } from 'react-router-dom';
+import { ROUTES } from '@/lib/routes';
+import type { LessonDetailDto, TestQuestionDto, TestSessionSummaryDto } from '@/types';
+import { PageShell } from '@/components/PageShell';
+import { SectionHeader } from '@/components/SectionHeader';
+import { Button } from '@/components/ui/button';
 import { TestQuestionItem } from './_components/TestQuestionItem';
 import { QuestionPickerModal } from './_components/QuestionPickerModal';
 import { TestSettingsForm } from './_components/TestSettingsForm';
@@ -29,6 +40,8 @@ export function TestBuilderPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [sessions, setSessions] = useState<TestSessionSummaryDto[]>([]);
+  const [loadingSessions, setLoadingSessions] = useState(false);
 
   const fetchData = useCallback(async () => {
     if (!lessonId) return;
@@ -62,7 +75,34 @@ export function TestBuilderPage() {
     fetchData();
   }, [fetchData]);
 
+  const fetchSessions = useCallback(async () => {
+    if (!testId) return;
+    setLoadingSessions(true);
+    try {
+      const res = await api.get<TestSessionSummaryDto[]>(`/api/tests/${testId}/sessions`);
+      setSessions(res.data);
+    } catch {
+      toast.error('Không thể tải danh sách kết quả học sinh');
+    } finally {
+      setLoadingSessions(false);
+    }
+  }, [testId]);
+
+  useEffect(() => {
+    if (testId) {
+      const t = setTimeout(() => {
+        fetchSessions();
+      }, 0);
+      return () => clearTimeout(t);
+    }
+  }, [testId, fetchSessions]);
+
   const saveSettings = async () => {
+    const minutes = Math.floor(timeLimit / 60);
+    if (isNaN(minutes) || minutes < 1 || minutes > 180) {
+      toast.error('Thời gian làm bài phải là số nguyên dương từ 1 đến 180 phút');
+      return;
+    }
     setSaving(true);
     try {
       await api.put(`/api/lessons/${lessonId}/test`, {
@@ -193,57 +233,154 @@ export function TestBuilderPage() {
         <SectionHeader title="Thiết lập bài kiểm tra" />
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-3">
-        {/* Settings panel */}
-        <TestSettingsForm
-          statement={statement}
-          onStatementChange={setStatement}
-          timeLimit={timeLimit}
-          onTimeLimitChange={setTimeLimit}
-          maxAttempts={maxAttempts}
-          onMaxAttemptsChange={setMaxAttempts}
-          onSave={saveSettings}
-          saving={saving}
-        />
+      <Tabs defaultValue="builder" className="w-full">
+        <TabsList className="mb-6">
+          <TabsTrigger value="builder">Soạn đề & Cài đặt</TabsTrigger>
+          <TabsTrigger value="results">Kết quả học sinh</TabsTrigger>
+        </TabsList>
 
-        {/* Question list */}
-        <div className="lg:col-span-2 space-y-4">
-          <div className="flex justify-between items-center mb-6">
-            <h3 className="text-xl font-semibold tracking-tight">
-              Danh sách câu hỏi ({questions.length})
-            </h3>
-            <Button onClick={() => setShowPicker(true)}>
-              <Plus size={16} className="mr-2" /> Thêm câu hỏi
-            </Button>
+        <TabsContent value="builder" className="space-y-6">
+          <div className="grid gap-6 lg:grid-cols-3">
+            {/* Settings panel */}
+            <TestSettingsForm
+              statement={statement}
+              onStatementChange={setStatement}
+              timeLimit={timeLimit}
+              onTimeLimitChange={setTimeLimit}
+              maxAttempts={maxAttempts}
+              onMaxAttemptsChange={setMaxAttempts}
+              onSave={saveSettings}
+              saving={saving}
+            />
+
+            {/* Question list */}
+            <div className="lg:col-span-2 space-y-4">
+              <div className="flex justify-between items-center mb-6">
+                <h3 className="text-xl font-semibold tracking-tight">
+                  Danh sách câu hỏi ({questions.length})
+                </h3>
+                <Button onClick={() => setShowPicker(true)}>
+                  <Plus size={16} className="mr-2" /> Thêm câu hỏi
+                </Button>
+              </div>
+
+              {questions.length === 0 ? (
+                <div className="mt-8">
+                  <EmptyState
+                    title="Chưa có câu hỏi nào"
+                    description="Hãy thêm câu hỏi từ Ngân hàng đề để bắt đầu xây dựng bài kiểm tra."
+                    action={<Button onClick={() => setShowPicker(true)}>Thêm câu hỏi ngay</Button>}
+                  />
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {questions.map((q, i) => (
+                    <TestQuestionItem
+                      key={q.id}
+                      question={q}
+                      index={i}
+                      onRemove={() => removeQuestion(q.id)}
+                      onUpdatePoint={(p) => updateQuestionPoint(q.id, p)}
+                      isFirst={i === 0}
+                      isLast={i === questions.length - 1}
+                      onMoveUp={() => moveQuestion(q.id, 'up')}
+                      onMoveDown={() => moveQuestion(q.id, 'down')}
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
+        </TabsContent>
 
-          {questions.length === 0 ? (
-            <div className="mt-8">
-              <EmptyState
-                title="Chưa có câu hỏi nào"
-                description="Hãy thêm câu hỏi từ Ngân hàng đề để bắt đầu xây dựng bài kiểm tra."
-                action={<Button onClick={() => setShowPicker(true)}>Thêm câu hỏi ngay</Button>}
-              />
+        <TabsContent value="results">
+          <div className="bg-card rounded-lg border shadow-sm overflow-hidden">
+            <div className="p-4 border-b bg-muted/50 flex items-center justify-between">
+              <h3 className="font-semibold text-lg">Danh sách học sinh làm bài</h3>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={fetchSessions}
+                disabled={loadingSessions}
+              >
+                Làm mới
+              </Button>
             </div>
-          ) : (
-            <div className="space-y-4">
-              {questions.map((q, i) => (
-                <TestQuestionItem
-                  key={q.id}
-                  question={q}
-                  index={i}
-                  onRemove={() => removeQuestion(q.id)}
-                  onUpdatePoint={(p) => updateQuestionPoint(q.id, p)}
-                  isFirst={i === 0}
-                  isLast={i === questions.length - 1}
-                  onMoveUp={() => moveQuestion(q.id, 'up')}
-                  onMoveDown={() => moveQuestion(q.id, 'down')}
+
+            {loadingSessions ? (
+              <div className="p-8 text-center text-muted-foreground">Đang tải dữ liệu...</div>
+            ) : sessions.length === 0 ? (
+              <div className="p-12 text-center">
+                <EmptyState
+                  title="Chưa có kết quả"
+                  description="Chưa có học sinh nào làm bài kiểm tra này."
                 />
-              ))}
-            </div>
-          )}
-        </div>
-      </div>
+              </div>
+            ) : (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Học viên</TableHead>
+                    <TableHead>Trạng thái</TableHead>
+                    <TableHead>Điểm số</TableHead>
+                    <TableHead>Bắt đầu lúc</TableHead>
+                    <TableHead>Nộp bài lúc</TableHead>
+                    <TableHead className="text-right">Thao tác</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {sessions.map((session) => (
+                    <TableRow key={session.sessionId}>
+                      <TableCell className="font-medium">{session.displayName}</TableCell>
+                      <TableCell>
+                        {session.isDone ? (
+                          <Badge variant="default" className="bg-green-500 hover:bg-green-600">
+                            Đã nộp
+                          </Badge>
+                        ) : (
+                          <Badge variant="secondary">Đang làm</Badge>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        {session.isDone &&
+                        typeof session.score === 'number' &&
+                        typeof session.correctCount === 'number' &&
+                        typeof session.totalQuestions === 'number' ? (
+                          <span className="font-semibold text-emerald-600 dark:text-emerald-400">
+                            {session.correctCount}/{session.totalQuestions} (
+                            {Math.round(session.score)}%)
+                          </span>
+                        ) : (
+                          <span className="text-muted-foreground">-</span>
+                        )}
+                      </TableCell>
+                      <TableCell>{new Date(session.startedAt).toLocaleString('vi-VN')}</TableCell>
+                      <TableCell>
+                        {session.submittedAt
+                          ? new Date(session.submittedAt).toLocaleString('vi-VN')
+                          : '-'}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        {session.isDone && (
+                          <Button size="sm" variant="ghost" asChild>
+                            <Link
+                              to={ROUTES.TEST_RESULT(session.sessionId)}
+                              target="_blank"
+                              className="flex items-center gap-2"
+                            >
+                              <Eye size={16} /> Chi tiết
+                            </Link>
+                          </Button>
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            )}
+          </div>
+        </TabsContent>
+      </Tabs>
 
       {testId && (
         <QuestionPickerModal

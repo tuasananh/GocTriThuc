@@ -31,6 +31,7 @@ export type {
   TestSessionAnswerDto,
   TestResultDto,
   MyTestSessionDto,
+  TestSessionSummaryDto,
 } from './question';
 export type {
   CommentDto,
