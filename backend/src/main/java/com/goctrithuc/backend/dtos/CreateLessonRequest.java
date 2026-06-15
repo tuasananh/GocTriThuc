@@ -9,4 +9,4 @@ public record CreateLessonRequest(
     @NotBlank(message = "Title is required")
         @Size(max = 200, message = "Title cannot exceed 200 characters")
         String title,
-    @NotNull(message = "Lesson type is required") LessonType lessonType) {}
+    @NotNull(message = "Lesson type is required") LessonType type) {}
