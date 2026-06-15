@@ -62,6 +62,28 @@ public class LessonCompletionService {
     }
   }
 
+  /**
+   * Idempotently marks a lesson as completed for the given user. No-op if already marked. Intended
+   * to be called internally (e.g. after test submission) — skips enrollment check.
+   */
+  @Transactional
+  public void markComplete(Long userId, Long lessonId) {
+    LessonCompletionId id = new LessonCompletionId(userId, lessonId);
+    if (completionRepo.existsById(id)) {
+      return; // already done
+    }
+    LessonEntity lesson =
+        lessonRepo
+            .findById(lessonId)
+            .orElseThrow(
+                () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Lesson not found"));
+    User user =
+        userRepo
+            .findById(userId)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+    completionRepo.save(new LessonCompletionEntity(user, lesson));
+  }
+
   @Transactional(readOnly = true)
   public CourseProgressResponse getProgress(
       Long userId, Long courseId, boolean bypassEnrollmentCheck) {

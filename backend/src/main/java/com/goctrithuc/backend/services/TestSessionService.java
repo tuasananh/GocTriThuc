@@ -24,6 +24,7 @@ public class TestSessionService {
   private final PermissionService permissionService;
   private final SessionLifecycleService lifecycleService;
   private final QuizScoringService quizScoringService;
+  private final LessonCompletionService lessonCompletionService;
 
   public TestSessionService(
       TestSessionRepository testSessionRepo,
@@ -33,7 +34,8 @@ public class TestSessionService {
       UserRepository userRepository,
       PermissionService permissionService,
       SessionLifecycleService lifecycleService,
-      QuizScoringService quizScoringService) {
+      QuizScoringService quizScoringService,
+      LessonCompletionService lessonCompletionService) {
     this.testSessionRepo = testSessionRepo;
     this.testSessionAnswerRepository = testSessionAnswerRepository;
     this.lessonTestRepo = lessonTestRepo;
@@ -42,6 +44,7 @@ public class TestSessionService {
     this.permissionService = permissionService;
     this.lifecycleService = lifecycleService;
     this.quizScoringService = quizScoringService;
+    this.lessonCompletionService = lessonCompletionService;
   }
 
   @Transactional(noRollbackFor = ResponseStatusException.class)
@@ -63,9 +66,21 @@ public class TestSessionService {
       throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Access denied to this test");
     }
 
-    if (testSessionRepo.existsByUserIdAndTestIdAndIsDoneTrue(userId, testId)) {
-      throw new ResponseStatusException(
-          HttpStatus.CONFLICT, "You have already completed this test");
+    int maxAttempts = 1;
+    if (test.getSettings() != null && test.getSettings().containsKey("maxAttempts")) {
+      Object val = test.getSettings().get("maxAttempts");
+      if (val instanceof Number num) {
+        maxAttempts = num.intValue();
+      }
+    }
+
+    if (maxAttempts > 0) {
+      long completedCount = testSessionRepo.countByUserIdAndTestIdAndIsDoneTrue(userId, testId);
+      if (completedCount >= maxAttempts) {
+        throw new ResponseStatusException(
+            HttpStatus.CONFLICT,
+            "You have reached the maximum number of attempts allowed for this test");
+      }
     }
 
     Optional<TestSessionEntity> activeSessionOpt =
@@ -204,6 +219,9 @@ public class TestSessionService {
     session.setSubmittedAt(ZonedDateTime.now());
     session = testSessionRepo.save(session);
 
+    // lessonId == testId by shared-PK schema — auto-mark the lesson as completed
+    lessonCompletionService.markComplete(userId, session.getTest().getId());
+
     return quizScoringService.calculateResult(session);
   }
 
@@ -277,5 +295,45 @@ public class TestSessionService {
               result.totalQuestions(),
               session.getSubmittedAt());
         });
+  }
+
+  @Transactional(readOnly = true)
+  public List<MyTestSessionResponse> getMySessionsForTest(Long testId, Long userId) {
+    LessonTestEntity test =
+        lessonTestRepo
+            .findById(testId)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Test not found"));
+
+    LessonEntity lesson = test.getLesson();
+    Long courseId = lesson.getModule().getCourse().getId();
+    boolean isCourseAuthor = lesson.getModule().getCourse().getAuthor().getId().equals(userId);
+    boolean isAdmin = permissionService.isAdmin(userId);
+    boolean isEnrolled = enrollmentRepo.existsById(new EnrollmentId(userId, courseId));
+
+    if (!isCourseAuthor && !isAdmin && !isEnrolled) {
+      throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Access denied to this test");
+    }
+
+    List<TestSessionEntity> sessions =
+        testSessionRepo.findCompletedByUserIdAndTestId(userId, testId);
+    Map<Long, TestResultResponse> results = quizScoringService.calculateResults(sessions);
+
+    return sessions.stream()
+        .map(
+            session -> {
+              TestResultResponse result = results.get(session.getId());
+              Course course = lesson.getModule().getCourse();
+              return new MyTestSessionResponse(
+                  session.getId(),
+                  session.getTest().getId(),
+                  lesson.getTitle(),
+                  course.getTitle(),
+                  course.getId(),
+                  result.score(),
+                  result.correctCount(),
+                  result.totalQuestions(),
+                  session.getSubmittedAt());
+            })
+        .toList();
   }
 }

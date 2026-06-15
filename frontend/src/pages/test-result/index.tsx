@@ -9,10 +9,11 @@ import { ErrorState } from '@/components/ErrorState';
 import { SkeletonCard } from '@/components/SkeletonCard';
 import { BookOpen, CheckCircle2, XCircle, Clock, Award, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
+import { RichTextViewer } from '@/components/rich-text-editor/RichTextViewer';
 
 export function TestResultPage() {
   const { sessionId } = useParams<{ sessionId: string }>();
@@ -136,11 +137,11 @@ export function TestResultPage() {
                 )}
               >
                 <CardHeader className="pb-3 flex flex-row items-start justify-between space-y-0">
-                  <div className="space-y-1">
-                    <CardTitle className="text-lg leading-relaxed">
-                      <span className="text-muted-foreground mr-2 font-normal">Câu {idx + 1}:</span>
-                      {answer.statement}
-                    </CardTitle>
+                  <div className="flex items-start gap-2 flex-1">
+                    <span className="text-muted-foreground mr-2 font-normal shrink-0 mt-0.5">
+                      Câu {idx + 1}:
+                    </span>
+                    <RichTextViewer htmlContent={answer.statement} className="flex-1" />
                   </div>
                   <Badge
                     variant={answer.isCorrect ? 'default' : 'destructive'}

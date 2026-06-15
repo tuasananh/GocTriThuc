@@ -24,6 +24,8 @@ export function TestBuilderPage() {
   const [showPicker, setShowPicker] = useState(false);
   const [statement, setStatement] = useState('');
   const [timeLimit, setTimeLimit] = useState(1800); // 30 min default
+  const [maxAttempts, setMaxAttempts] = useState<number>(1);
+  const [settings, setSettings] = useState<Record<string, unknown>>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
@@ -38,6 +40,13 @@ export function TestBuilderPage() {
         setTestId(r.data.id);
         setStatement(r.data.test.statement || '');
         setTimeLimit(r.data.test.timeLimit || 1800);
+
+        const testSettings = r.data.test.settings || {};
+        setSettings(testSettings);
+        const attempts =
+          typeof testSettings.maxAttempts === 'number' ? testSettings.maxAttempts : 1;
+        setMaxAttempts(attempts);
+
         const qr = await api.get<TestQuestionDto[]>(`/api/tests/${r.data.id}/questions`);
         setQuestions(qr.data);
       }
@@ -56,7 +65,15 @@ export function TestBuilderPage() {
   const saveSettings = async () => {
     setSaving(true);
     try {
-      await api.put(`/api/lessons/${lessonId}/test`, { statement, timeLimit });
+      await api.put(`/api/lessons/${lessonId}/test`, {
+        statement,
+        timeLimit,
+        settings: {
+          ...settings,
+          maxAttempts,
+        },
+      });
+      setSettings((prev) => ({ ...prev, maxAttempts }));
       toast.success('Đã lưu cài đặt bài kiểm tra');
     } catch {
       toast.error('Không thể lưu cài đặt');
@@ -183,6 +200,8 @@ export function TestBuilderPage() {
           onStatementChange={setStatement}
           timeLimit={timeLimit}
           onTimeLimitChange={setTimeLimit}
+          maxAttempts={maxAttempts}
+          onMaxAttemptsChange={setMaxAttempts}
           onSave={saveSettings}
           saving={saving}
         />

@@ -26,32 +26,37 @@ export function CourseEditorPage() {
   const [isAddModuleOpen, setIsAddModuleOpen] = useState(false);
   const [isEditCourseOpen, setIsEditCourseOpen] = useState(false);
 
-  const fetchData = useCallback(async () => {
-    if (!id) return;
-    setLoading(true);
-    setError(null);
-    try {
-      const [courseRes, modulesRes] = await Promise.all([
-        api.get<CourseDto>(`/api/courses/${id}`),
-        api.get<ModuleDto[]>(`/api/courses/${id}/modules`),
-      ]);
-      setCourse(courseRes.data);
+  const fetchData = useCallback(
+    async (isInitial = false) => {
+      if (!id) return;
+      if (isInitial) {
+        setLoading(true);
+      }
+      setError(null);
+      try {
+        const [courseRes, modulesRes] = await Promise.all([
+          api.get<CourseDto>(`/api/courses/${id}`),
+          api.get<ModuleDto[]>(`/api/courses/${id}/modules`),
+        ]);
+        setCourse(courseRes.data);
 
-      // Sort modules by order
-      const sortedModules = modulesRes.data.sort((a, b) => a.order - b.order);
-      // Sort lessons inside modules by order
-      sortedModules.forEach((m) => m.lessons.sort((a, b) => a.order - b.order));
-      setModules(sortedModules);
-    } catch {
-      setError('Lỗi khi tải thông tin khóa học');
-    } finally {
-      setLoading(false);
-    }
-  }, [id]);
+        // Sort modules by order
+        const sortedModules = modulesRes.data.sort((a, b) => a.order - b.order);
+        // Sort lessons inside modules by order
+        sortedModules.forEach((m) => m.lessons.sort((a, b) => a.order - b.order));
+        setModules(sortedModules);
+      } catch {
+        setError('Lỗi khi tải thông tin khóa học');
+      } finally {
+        setLoading(false);
+      }
+    },
+    [id],
+  );
 
   useEffect(() => {
     const t = setTimeout(() => {
-      fetchData();
+      fetchData(true);
     }, 0);
     return () => clearTimeout(t);
   }, [fetchData]);

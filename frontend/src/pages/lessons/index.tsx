@@ -2,11 +2,27 @@ import { useEffect, useState, useCallback } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { api } from '@/lib/api';
 import { ROUTES } from '@/lib/routes';
-import type { LessonDetailDto, CommentDto, PageResponse, MyTestSessionDto } from '@/types';
+import type {
+  LessonDetailDto,
+  LessonDto,
+  ModuleDto,
+  CommentDto,
+  PageResponse,
+  MyTestSessionDto,
+  TestSessionDto,
+} from '@/types';
 import { PageShell } from '@/components/PageShell';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { ArrowLeft, CheckCircle2, Clock, PlayCircle, Loader2 } from 'lucide-react';
+import {
+  ArrowLeft,
+  ArrowRight,
+  CheckCircle2,
+  Clock,
+  PlayCircle,
+  Loader2,
+  ExternalLink,
+} from 'lucide-react';
 import { toast } from 'sonner';
 import { ErrorState } from '@/components/ErrorState';
 import { VideoLessonViewer } from './_components/VideoLessonViewer';
@@ -19,38 +35,72 @@ export function LessonPage() {
   const { courseId, lessonId } = useParams<{ courseId: string; lessonId: string }>();
 
   const [lesson, setLesson] = useState<LessonDetailDto | null>(null);
+  const [prevLesson, setPrevLesson] = useState<LessonDto | null>(null);
+  const [nextLesson, setNextLesson] = useState<LessonDto | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<{ type: 'not_found' | 'network'; message: string } | null>(
     null,
   );
   const [completing, setCompleting] = useState(false);
-  const [completedSessionId, setCompletedSessionId] = useState<string | null>(null);
+  const [pastAttempts, setPastAttempts] = useState<MyTestSessionDto[]>([]);
+  const [activeSession, setActiveSession] = useState<TestSessionDto | null>(null);
 
   const [comments, setComments] = useState<CommentDto[]>([]);
   const [loadingComments, setLoadingComments] = useState(false);
   const auth = useAuth();
   const currentUserId = auth && auth.isAuthenticated ? auth.user.id : undefined;
 
+  const maxAttempts =
+    lesson?.test?.settings && typeof lesson.test.settings.maxAttempts === 'number'
+      ? lesson.test.settings.maxAttempts
+      : 1;
+
+  const hasReachedLimit = maxAttempts > 0 && pastAttempts.length >= maxAttempts;
+
   const fetchLesson = useCallback(async () => {
     if (!courseId || !lessonId) return;
     setLoading(true);
     setError(null);
-    setCompletedSessionId(null);
+    setPastAttempts([]);
+    setActiveSession(null);
     try {
       const res = await api.get<LessonDetailDto>(`/api/lessons/${lessonId}`);
       setLesson(res.data);
 
-      if (res.data.type === 'test' && res.data.completed) {
+      if (res.data.type === 'test' && res.data.test) {
         try {
-          const sessionsRes =
-            await api.get<PageResponse<MyTestSessionDto>>('/api/tests/sessions/my');
-          const matchingSession = sessionsRes.data.content.find((s) => s.testId === res.data.id);
-          if (matchingSession) {
-            setCompletedSessionId(matchingSession.sessionId);
-          }
+          const attemptsRes = await api.get<MyTestSessionDto[]>(
+            `/api/tests/${res.data.id}/sessions/my`,
+          );
+          setPastAttempts(attemptsRes.data);
         } catch (err) {
-          console.error('Failed to load completed test sessions', err);
+          console.error('[LessonPage] Failed to load test attempts', err);
         }
+
+        try {
+          const activeRes = await api.get<TestSessionDto>(
+            `/api/tests/${res.data.id}/sessions/active`,
+          );
+          setActiveSession(activeRes.data);
+        } catch (err) {
+          console.log('Failed to load active test session', err);
+          setActiveSession(null);
+        }
+      }
+
+      // Fetch all modules of this course to determine next/prev lessons
+      const modulesRes = await api.get<ModuleDto[]>(`/api/courses/${courseId}/modules`);
+      const sortedModules = modulesRes.data.sort((a, b) => a.order - b.order);
+      sortedModules.forEach((m) => m.lessons.sort((a, b) => a.order - b.order));
+      const allLessons = sortedModules.flatMap((m) => m.lessons);
+      const currentIndex = allLessons.findIndex((l) => l.id === lessonId);
+
+      if (currentIndex !== -1) {
+        setPrevLesson(currentIndex > 0 ? allLessons[currentIndex - 1] : null);
+        setNextLesson(currentIndex < allLessons.length - 1 ? allLessons[currentIndex + 1] : null);
+      } else {
+        setPrevLesson(null);
+        setNextLesson(null);
       }
     } catch (err) {
       console.error('Failed to load lesson details', err);
@@ -257,32 +307,143 @@ export function LessonPage() {
                   <p className="text-muted-foreground">{lesson.test.statement}</p>
                 )}
                 {lesson.test?.timeLimit && (
-                  <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground mt-4">
-                    <Clock className="w-4 h-4" />
-                    <span>Thời gian làm bài: {Math.floor(lesson.test.timeLimit / 60)} phút</span>
+                  <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-sm text-muted-foreground mt-4">
+                    <div className="flex items-center gap-2">
+                      <Clock className="w-4 h-4" />
+                      <span>Thời gian làm bài: {Math.floor(lesson.test.timeLimit / 60)} phút</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <PlayCircle className="w-4 h-4" />
+                      <span>
+                        Lượt làm bài:{' '}
+                        {maxAttempts === 0
+                          ? 'Không giới hạn'
+                          : `${pastAttempts.length} / ${maxAttempts}`}
+                      </span>
+                    </div>
                   </div>
                 )}
               </div>
-              {completedSessionId ? (
-                <Button size="lg" asChild className="gap-2 mt-4" variant="outline">
-                  <Link to={ROUTES.TEST_RESULT(completedSessionId)}>
-                    <CheckCircle2 className="w-5 h-5 text-emerald-500" />
-                    Xem kết quả bài làm
-                  </Link>
-                </Button>
-              ) : lesson.test ? (
-                <Button size="lg" asChild className="gap-2 mt-4">
-                  <Link to={ROUTES.TEST_TAKE(lesson.id)}>
-                    <PlayCircle className="w-5 h-5" />
-                    Bắt đầu làm bài
-                  </Link>
-                </Button>
-              ) : (
-                <Button size="lg" disabled className="gap-2 mt-4">
-                  <PlayCircle className="w-5 h-5" />
-                  Bắt đầu làm bài (Chưa cấu hình)
-                </Button>
-              )}
+
+              <div className="w-full max-w-lg space-y-6">
+                {/* Active Session Display */}
+                {activeSession && (
+                  <div className="bg-amber-500/10 border border-amber-500/30 rounded-lg p-5 text-left space-y-4 shadow-sm">
+                    <div className="flex items-start gap-3">
+                      <Clock className="w-5 h-5 text-amber-600 dark:text-amber-500 shrink-0 mt-0.5" />
+                      <div className="space-y-1">
+                        <h4 className="font-semibold text-amber-900 dark:text-amber-400 text-sm">
+                          Bạn đang có một phiên làm bài chưa hoàn thành
+                        </h4>
+                        <p className="text-xs text-amber-700 dark:text-amber-500">
+                          Bắt đầu lúc:{' '}
+                          {new Date(activeSession.startedAt).toLocaleDateString('vi-VN', {
+                            day: '2-digit',
+                            month: '2-digit',
+                            year: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit',
+                          })}
+                        </p>
+                      </div>
+                    </div>
+                    <Button
+                      size="sm"
+                      className="w-full bg-amber-600 hover:bg-amber-700 dark:bg-amber-500 dark:hover:bg-amber-600 text-white gap-2 font-medium"
+                      asChild
+                    >
+                      <Link to={ROUTES.TEST_TAKE(lesson.id)}>
+                        <PlayCircle className="w-4 h-4" />
+                        Tiếp tục làm bài
+                      </Link>
+                    </Button>
+                  </div>
+                )}
+
+                {/* Show start/retry button or limit message if there is no active session */}
+                {!activeSession && (
+                  <>
+                    {hasReachedLimit ? (
+                      <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-lg p-4 flex items-center gap-3 justify-center">
+                        <CheckCircle2 className="w-5 h-5 text-emerald-500 shrink-0" />
+                        <span className="text-emerald-700 dark:text-emerald-400 font-medium text-sm">
+                          Bạn đã sử dụng hết số lượt làm bài cho phép ({pastAttempts.length}/
+                          {maxAttempts} lượt)
+                        </span>
+                      </div>
+                    ) : lesson.test ? (
+                      <Button size="lg" asChild className="gap-2 mt-4">
+                        <Link to={ROUTES.TEST_TAKE(lesson.id)}>
+                          <PlayCircle className="w-5 h-5" />
+                          {pastAttempts.length > 0 ? 'Làm bài lại' : 'Bắt đầu làm bài'}
+                        </Link>
+                      </Button>
+                    ) : (
+                      <Button size="lg" disabled className="gap-2 mt-4">
+                        <PlayCircle className="w-5 h-5" />
+                        Bắt đầu làm bài (Chưa cấu hình)
+                      </Button>
+                    )}
+                  </>
+                )}
+
+                {/* Past Attempts History */}
+                {pastAttempts.length > 0 && (
+                  <div className="text-left space-y-2">
+                    <p className="text-sm font-medium text-muted-foreground uppercase tracking-wider">
+                      Lịch sử làm bài ({pastAttempts.length} lần)
+                    </p>
+                    <div className="space-y-2">
+                      {pastAttempts.map((attempt, idx) => {
+                        const pct = Math.round(attempt.score);
+                        const scoreColor =
+                          pct >= 80
+                            ? 'text-emerald-600 dark:text-emerald-400'
+                            : pct >= 50
+                              ? 'text-yellow-600 dark:text-yellow-400'
+                              : 'text-destructive';
+                        const submittedDate = new Date(attempt.submittedAt).toLocaleDateString(
+                          'vi-VN',
+                          {
+                            day: '2-digit',
+                            month: '2-digit',
+                            year: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit',
+                          },
+                        );
+                        return (
+                          <div
+                            key={attempt.sessionId}
+                            className="flex items-center justify-between p-3 rounded-lg border bg-background hover:bg-muted/30 transition-colors"
+                          >
+                            <div className="flex items-center gap-3">
+                              <span className="text-xs text-muted-foreground w-6 text-center font-mono">
+                                #{idx + 1}
+                              </span>
+                              <div className="text-left">
+                                <div className={`font-semibold text-sm ${scoreColor}`}>
+                                  {attempt.correctCount}/{attempt.totalQuestions} câu đúng
+                                  <span className="ml-1 font-normal text-xs">({pct}%)</span>
+                                </div>
+                                <div className="text-xs text-muted-foreground mt-0.5">
+                                  {submittedDate}
+                                </div>
+                              </div>
+                            </div>
+                            <Button size="sm" variant="ghost" asChild className="gap-1.5 text-xs">
+                              <Link to={ROUTES.TEST_RESULT(attempt.sessionId)}>
+                                <ExternalLink className="w-3.5 h-3.5" />
+                                Xem kết quả
+                              </Link>
+                            </Button>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
           ) : (
             <div className="p-8 text-center text-muted-foreground bg-muted/20 rounded-lg">
@@ -292,6 +453,49 @@ export function LessonPage() {
         </div>
 
         {lesson.resources && <LessonResourceList resources={lesson.resources} />}
+
+        {/* Navigation Buttons */}
+        {(prevLesson || nextLesson) && (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-6 border-t border-border mt-8">
+            {prevLesson ? (
+              <Button
+                variant="outline"
+                asChild
+                className="h-auto p-4 flex flex-col items-start gap-1.5 text-left rounded-xl transition-all hover:bg-muted/50 hover:border-primary/50 group w-full"
+              >
+                <Link to={ROUTES.LESSON(courseId!, prevLesson.id)}>
+                  <span className="text-xs text-muted-foreground flex items-center gap-1 group-hover:text-primary transition-colors">
+                    <ArrowLeft className="w-3.5 h-3.5" />
+                    Bài trước
+                  </span>
+                  <span className="font-semibold text-sm line-clamp-1 text-foreground">
+                    {prevLesson.title}
+                  </span>
+                </Link>
+              </Button>
+            ) : (
+              <div className="hidden sm:block" />
+            )}
+
+            {nextLesson && (
+              <Button
+                variant="outline"
+                asChild
+                className="h-auto p-4 flex flex-col items-end gap-1.5 text-right rounded-xl transition-all hover:bg-muted/50 hover:border-primary/50 group w-full sm:col-start-2"
+              >
+                <Link to={ROUTES.LESSON(courseId!, nextLesson.id)}>
+                  <span className="text-xs text-muted-foreground flex items-center gap-1 group-hover:text-primary transition-colors">
+                    Bài tiếp theo
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </span>
+                  <span className="font-semibold text-sm line-clamp-1 text-foreground">
+                    {nextLesson.title}
+                  </span>
+                </Link>
+              </Button>
+            )}
+          </div>
+        )}
 
         {/* Comments Section */}
         <div className="bg-card rounded-xl border p-6 shadow-sm mt-8">
