@@ -322,6 +322,7 @@ export function TestBuilderPage() {
                   <TableRow>
                     <TableHead>Học viên</TableHead>
                     <TableHead>Trạng thái</TableHead>
+                    <TableHead>Điểm số</TableHead>
                     <TableHead>Bắt đầu lúc</TableHead>
                     <TableHead>Nộp bài lúc</TableHead>
                     <TableHead className="text-right">Thao tác</TableHead>
@@ -338,6 +339,19 @@ export function TestBuilderPage() {
                           </Badge>
                         ) : (
                           <Badge variant="secondary">Đang làm</Badge>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        {session.isDone &&
+                        typeof session.score === 'number' &&
+                        typeof session.correctCount === 'number' &&
+                        typeof session.totalQuestions === 'number' ? (
+                          <span className="font-semibold text-emerald-600 dark:text-emerald-400">
+                            {session.correctCount}/{session.totalQuestions} (
+                            {Math.round(session.score)}%)
+                          </span>
+                        ) : (
+                          <span className="text-muted-foreground">-</span>
                         )}
                       </TableCell>
                       <TableCell>{new Date(session.startedAt).toLocaleString('vi-VN')}</TableCell>
