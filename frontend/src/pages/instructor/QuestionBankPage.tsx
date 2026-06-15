@@ -49,16 +49,8 @@ export function QuestionBankPage() {
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [editingQuestion, setEditingQuestion] = useState<QuestionDto | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
-  const [isDesktop, setIsDesktop] = useState(window.innerWidth >= 1024);
 
   const requestRef = useRef(0);
-
-  // ── Handle screen resize cho Responsive Dialog ───────────────
-  useEffect(() => {
-    const handleResize = () => setIsDesktop(window.innerWidth >= 1024);
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
 
   // ── Debounce search + reset page ─────────────────────────────
   useEffect(() => {
@@ -144,44 +136,9 @@ export function QuestionBankPage() {
         }
       />
 
-      <div className="mt-6 grid gap-6 lg:grid-cols-3">
-        {/* ── Panel tạo / sửa câu hỏi ───────────────────────────── */}
-        {(showCreateForm || (editingQuestion && isDesktop)) && (
-          <div className="lg:col-span-1">
-            <Card className="border-primary/20 shadow-sm sticky top-6">
-              <CardHeader className="bg-primary/5 border-b pb-4">
-                <CardTitle className="text-base flex items-center justify-between">
-                  <span>{editingQuestion ? 'Sửa câu hỏi' : 'Tạo câu hỏi mới'}</span>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-7 w-7"
-                    onClick={() => {
-                      setShowCreateForm(false);
-                      setEditingQuestion(null);
-                    }}
-                  >
-                    <XCircle className="w-4 h-4 text-muted-foreground" />
-                  </Button>
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="pt-5">
-                <QuestionForm
-                  key={editingQuestion?.id ?? 'new'}
-                  initialData={editingQuestion ?? undefined}
-                  onSaved={handleSaved}
-                />
-              </CardContent>
-            </Card>
-          </div>
-        )}
-
+      <div className="mt-6">
         {/* ── Danh sách câu hỏi ──────────────────────────────────── */}
-        <div
-          className={
-            showCreateForm || (editingQuestion && isDesktop) ? 'lg:col-span-2' : 'lg:col-span-3'
-          }
-        >
+        <div>
           {/* Search bar */}
           <div className="relative mb-4">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -281,23 +238,25 @@ export function QuestionBankPage() {
         </div>
       </div>
 
-      {/* Edit modal (khi màn nhỏ, hiển thị dialog thay vì panel bên cạnh) */}
+      {/* Create / Edit Modal */}
       <Dialog
-        open={!!editingQuestion && !isDesktop}
-        onOpenChange={(open) => !open && setEditingQuestion(null)}
+        open={showCreateForm || !!editingQuestion}
+        onOpenChange={(open) => {
+          if (!open) {
+            setShowCreateForm(false);
+            setEditingQuestion(null);
+          }
+        }}
       >
-        <DialogContent className="sm:max-w-lg">
+        <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Sửa câu hỏi</DialogTitle>
+            <DialogTitle>{editingQuestion ? 'Sửa câu hỏi' : 'Tạo câu hỏi mới'}</DialogTitle>
           </DialogHeader>
-          {editingQuestion && (
+          {(showCreateForm || editingQuestion) && (
             <QuestionForm
-              key={`modal-${editingQuestion.id}`}
-              initialData={editingQuestion}
-              onSaved={(saved) => {
-                setQuestions((prev) => prev.map((q) => (q.id === saved.id ? saved : q)));
-                setEditingQuestion(null);
-              }}
+              key={editingQuestion ? `modal-${editingQuestion.id}` : 'new'}
+              initialData={editingQuestion ?? undefined}
+              onSaved={handleSaved}
             />
           )}
         </DialogContent>
