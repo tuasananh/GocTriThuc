@@ -309,7 +309,7 @@ export function CommentThread({
   const [submitting, setSubmitting] = useState(false);
   const isAdmin = useIsAdmin();
   const auth = useAuth();
-  const currentUser = auth?.user;
+  const currentUser = auth?.isAuthenticated ? auth.user : null;
 
   const handleSubmit = async () => {
     if (!newComment.trim()) return;
