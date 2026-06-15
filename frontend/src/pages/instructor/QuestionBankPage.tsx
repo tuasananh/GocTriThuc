@@ -12,6 +12,7 @@ import {
   ChevronRight,
 } from 'lucide-react';
 import { api } from '@/lib/api';
+import { cn } from '@/lib/utils';
 import type { QuestionDto, PageResponse } from '@/types';
 import { PageShell } from '@/components/PageShell';
 import { SectionHeader } from '@/components/SectionHeader';
@@ -373,7 +374,9 @@ function QuestionCard({
                 ) : (
                   <div className="w-3.5 h-3.5 rounded-full border border-muted-foreground/30 shrink-0" />
                 )}
-                <span className={isCorrect ? 'font-medium' : ''}>{choice}</span>
+                <div className={cn("flex-1 min-w-0", isCorrect && "font-medium")}>
+                  <RichTextViewer htmlContent={choice} />
+                </div>
               </div>
             );
           })}

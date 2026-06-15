@@ -179,14 +179,15 @@ export function TestResultPage() {
                             choiceClass,
                           )}
                         >
-                          <span
+                          <div
                             className={cn(
-                              'text-sm md:text-base font-medium',
+                              'text-sm md:text-base font-medium flex items-start gap-2',
                               isStudentChoice && 'font-semibold',
                             )}
                           >
-                            {String.fromCharCode(65 + choiceIdx)}. {choice}
-                          </span>
+                            <span className="shrink-0 mt-0.5">{String.fromCharCode(65 + choiceIdx)}.</span>
+                            <RichTextViewer htmlContent={choice} className="flex-1 min-w-0" />
+                          </div>
                           {icon && <div>{icon}</div>}
                         </div>
                       );

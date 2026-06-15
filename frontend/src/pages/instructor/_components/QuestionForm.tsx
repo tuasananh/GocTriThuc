@@ -21,6 +21,9 @@ export function QuestionForm({ onSaved, initialData }: QuestionFormProps) {
 
   const [statement, setStatement] = useState(initialData?.statement ?? '');
   const [choices, setChoices] = useState<string[]>(initialData?.choices ?? ['', '']);
+  const [choiceIds, setChoiceIds] = useState<string[]>(() => 
+    (initialData?.choices ?? ['', '']).map(() => Math.random().toString(36).substring(2, 9))
+  );
   const [correctChoices, setCorrectChoices] = useState<number[]>(initialData?.correctChoices ?? []);
   const [isSingleChoice, setIsSingleChoice] = useState(initialData?.isSingleChoice ?? true);
   const [saving, setSaving] = useState(false);
@@ -48,23 +51,31 @@ export function QuestionForm({ onSaved, initialData }: QuestionFormProps) {
   const addChoice = () => {
     if (choices.length < 6) {
       setChoices((prev) => [...prev, '']);
+      setChoiceIds((prev) => [...prev, Math.random().toString(36).substring(2, 9)]);
     }
   };
 
   // ── Xóa đáp án ──────────────────────────────────────────────
   const removeChoice = (idx: number) => {
     setChoices((prev) => prev.filter((_, i) => i !== idx));
+    setChoiceIds((prev) => prev.filter((_, i) => i !== idx));
     // Cập nhật correctChoices: bỏ idx, giảm index > idx xuống 1
     setCorrectChoices((prev) => prev.filter((i) => i !== idx).map((i) => (i > idx ? i - 1 : i)));
+  };
+
+  // ── Helper kiểm tra HTML rỗng ────────────────────────────────
+  const isEmptyHtml = (html: string) => {
+    const trimmed = html.trim();
+    return !trimmed || trimmed === '<p></p>' || trimmed === '<p><br></p>';
   };
 
   // ── Validate trước khi submit ────────────────────────────────
   const validate = (): Record<string, string> => {
     const errs: Record<string, string> = {};
-    if (!statement.trim()) {
+    if (isEmptyHtml(statement)) {
       errs.statement = 'Vui lòng nhập nội dung câu hỏi.';
     }
-    const filledChoices = choices.map((c) => c.trim()).filter((c) => c !== '');
+    const filledChoices = choices.filter((c) => !isEmptyHtml(c));
     if (filledChoices.length < 2) {
       errs.choices = 'Phải có ít nhất 2 đáp án không rỗng.';
     } else {
@@ -97,7 +108,7 @@ export function QuestionForm({ onSaved, initialData }: QuestionFormProps) {
     // Fix: Loại bỏ các đáp án rỗng và ánh xạ lại index của correctChoices
     const validChoicesWithOldIndex = choices
       .map((c, i) => ({ text: c.trim(), oldIndex: i }))
-      .filter((c) => c.text !== '');
+      .filter((c) => !isEmptyHtml(c.text));
 
     const finalChoices = validChoicesWithOldIndex.map((c) => c.text);
     const finalCorrectChoices = correctChoices
@@ -130,6 +141,7 @@ export function QuestionForm({ onSaved, initialData }: QuestionFormProps) {
         // Reset form sau khi tạo mới thành công
         setStatement('');
         setChoices(['', '']);
+        setChoiceIds([Math.random().toString(36).substring(2, 9), Math.random().toString(36).substring(2, 9)]);
         setCorrectChoices([]);
         setIsSingleChoice(true);
         setEditorKey((k) => k + 1);
@@ -158,8 +170,8 @@ export function QuestionForm({ onSaved, initialData }: QuestionFormProps) {
   const canSubmit =
     !saving &&
     correctChoices.length > 0 &&
-    statement.trim() !== '' &&
-    choices.filter((c) => c.trim()).length >= 2;
+    !isEmptyHtml(statement) &&
+    choices.filter((c) => !isEmptyHtml(c)).length >= 2;
 
   return (
     <div className="space-y-6">
@@ -225,7 +237,7 @@ export function QuestionForm({ onSaved, initialData }: QuestionFormProps) {
             return (
               <div
                 key={i}
-                className={`flex items-center gap-3 p-3 rounded-lg border transition-all duration-200 ${
+                className={`flex items-start gap-3 p-3 rounded-lg border transition-all duration-200 ${
                   isCorrect
                     ? 'border-green-500/40 bg-green-50/60 dark:bg-green-900/10'
                     : 'border-border/60 bg-background hover:bg-muted/20'
@@ -235,7 +247,7 @@ export function QuestionForm({ onSaved, initialData }: QuestionFormProps) {
                 <button
                   type="button"
                   onClick={() => toggleCorrect(i)}
-                  className={`shrink-0 w-5 h-5 rounded-${isSingleChoice ? 'full' : 'sm'} border-2 transition-all duration-150 flex items-center justify-center ${
+                  className={`mt-2 shrink-0 w-5 h-5 rounded-${isSingleChoice ? 'full' : 'sm'} border-2 transition-all duration-150 flex items-center justify-center ${
                     isCorrect
                       ? 'border-green-500 bg-green-500 text-white'
                       : 'border-muted-foreground/40 bg-background hover:border-primary/60'
@@ -260,19 +272,20 @@ export function QuestionForm({ onSaved, initialData }: QuestionFormProps) {
                 </button>
 
                 {/* Input đáp án */}
-                <Input
-                  value={choice}
-                  onChange={(e) => {
-                    const next = [...choices];
-                    next[i] = e.target.value;
-                    setChoices(next);
-                    if (errors.choices) setErrors((p) => ({ ...p, choices: '' }));
-                  }}
-                  placeholder={`Đáp án ${i + 1}`}
-                  className={`flex-1 border-0 bg-transparent shadow-none focus-visible:ring-0 p-0 h-auto text-sm ${
-                    isCorrect ? 'text-green-800 dark:text-green-200 font-medium' : ''
-                  }`}
-                />
+                <div className="flex-1 min-w-0">
+                  <RichTextEditor
+                    className="min-h-[120px] !bg-transparent !border-0 !shadow-none"
+                    key={choiceIds[i] || `choice-${i}-${editorKey}`}
+                    initialHtml={choice}
+                    onChange={async (editor) => {
+                      const html = await editor.blocksToHTMLLossy(editor.document);
+                      const next = [...choices];
+                      next[i] = html;
+                      setChoices(next);
+                      if (errors.choices) setErrors((p) => ({ ...p, choices: '' }));
+                    }}
+                  />
+                </div>
 
                 {/* Nút xóa (chỉ hiển thị khi có > 2 đáp án) */}
                 {choices.length > 2 && (

@@ -82,9 +82,10 @@ interface RichTextEditorProps {
   storageKey?: string;
   initialHtml?: string;
   onChange?: (editor: typeof schema.BlockNoteEditor) => void;
+  className?: string;
 }
 
-export function RichTextEditor({ storageKey, initialHtml, onChange }: RichTextEditorProps) {
+export function RichTextEditor({ storageKey, initialHtml, onChange, className }: RichTextEditorProps) {
   const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastSaveTimeRef = useRef<number>(0);
 
@@ -114,14 +115,18 @@ export function RichTextEditor({ storageKey, initialHtml, onChange }: RichTextEd
     initialContent,
   });
 
+  const isHtmlLoaded = useRef(false);
+
   useEffect(() => {
     let cancelled = false;
     async function loadHtml() {
+      if (isHtmlLoaded.current) return;
       if (initialHtml && (!storageKey || !localStorage.getItem(storageKey))) {
         try {
           const blocks = await editor.tryParseHTMLToBlocks(initialHtml);
           if (!cancelled) {
             editor.replaceBlocks(editor.document, blocks);
+            isHtmlLoaded.current = true;
           }
         } catch (e) {
           console.error('Failed to parse initialHtml', e);
@@ -163,7 +168,7 @@ export function RichTextEditor({ storageKey, initialHtml, onChange }: RichTextEd
   }, [storageKey, saveToStorage, onChange, editor]);
 
   return (
-    <div className="w-full h-full min-h-[500px] border border-border rounded-xl shadow-sm bg-background flex flex-col overflow-hidden">
+    <div className={`w-full h-full border border-border rounded-xl shadow-sm bg-background flex flex-col ${className || 'min-h-[500px]'}`}>
       <style>{`
         @media not (pointer: coarse) {
           math-field::part(virtual-keyboard-toggle) {
@@ -173,8 +178,15 @@ export function RichTextEditor({ storageKey, initialHtml, onChange }: RichTextEd
             display: none;
           }
         }
+        .transparent-bg .bn-container,
+        .transparent-bg .bn-editor,
+        .transparent-bg .ProseMirror {
+          background-color: transparent !important;
+          background: transparent !important;
+          --bn-colors-editor-background: transparent !important;
+        }
       `}</style>
-      <div className="p-4 flex-1">
+      <div className="p-4 flex-1 transparent-bg">
         <BlockNoteView
           editor={editor}
           slashMenu={false}

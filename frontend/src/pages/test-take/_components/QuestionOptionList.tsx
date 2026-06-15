@@ -1,4 +1,5 @@
 import { Label } from '@/components/ui/label';
+import { RichTextViewer } from '@/components/rich-text-editor/RichTextViewer';
 
 interface QuestionOptionListProps {
   questionId: string;
@@ -54,7 +55,9 @@ export function QuestionOptionList({
                 onChange={(e) => handleChange(index, e.target.checked)}
               />
             </div>
-            <div className="leading-none flex-1 mt-0.5">{choice}</div>
+            <div className="flex-1 min-w-0">
+              <RichTextViewer htmlContent={choice} />
+            </div>
           </Label>
         );
       })}
