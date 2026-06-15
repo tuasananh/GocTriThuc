@@ -2,11 +2,11 @@ import { useEffect, useState, useCallback } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { api } from '@/lib/api';
 import { ROUTES } from '@/lib/routes';
-import type { LessonDetailDto, CommentDto, PageResponse, MyTestSessionDto } from '@/types';
+import type { LessonDetailDto, LessonDto, ModuleDto, CommentDto, PageResponse, MyTestSessionDto } from '@/types';
 import { PageShell } from '@/components/PageShell';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { ArrowLeft, CheckCircle2, Clock, PlayCircle, Loader2 } from 'lucide-react';
+import { ArrowLeft, ArrowRight, CheckCircle2, Clock, PlayCircle, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { ErrorState } from '@/components/ErrorState';
 import { VideoLessonViewer } from './_components/VideoLessonViewer';
@@ -19,6 +19,8 @@ export function LessonPage() {
   const { courseId, lessonId } = useParams<{ courseId: string; lessonId: string }>();
 
   const [lesson, setLesson] = useState<LessonDetailDto | null>(null);
+  const [prevLesson, setPrevLesson] = useState<LessonDto | null>(null);
+  const [nextLesson, setNextLesson] = useState<LessonDto | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<{ type: 'not_found' | 'network'; message: string } | null>(
     null,
@@ -51,6 +53,21 @@ export function LessonPage() {
         } catch (err) {
           console.error('Failed to load completed test sessions', err);
         }
+      }
+
+      // Fetch all modules of this course to determine next/prev lessons
+      const modulesRes = await api.get<ModuleDto[]>(`/api/courses/${courseId}/modules`);
+      const sortedModules = modulesRes.data.sort((a, b) => a.order - b.order);
+      sortedModules.forEach((m) => m.lessons.sort((a, b) => a.order - b.order));
+      const allLessons = sortedModules.flatMap((m) => m.lessons);
+      const currentIndex = allLessons.findIndex((l) => l.id === lessonId);
+
+      if (currentIndex !== -1) {
+        setPrevLesson(currentIndex > 0 ? allLessons[currentIndex - 1] : null);
+        setNextLesson(currentIndex < allLessons.length - 1 ? allLessons[currentIndex + 1] : null);
+      } else {
+        setPrevLesson(null);
+        setNextLesson(null);
       }
     } catch (err) {
       console.error('Failed to load lesson details', err);
@@ -292,6 +309,49 @@ export function LessonPage() {
         </div>
 
         {lesson.resources && <LessonResourceList resources={lesson.resources} />}
+
+        {/* Navigation Buttons */}
+        {(prevLesson || nextLesson) && (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-6 border-t border-border mt-8">
+            {prevLesson ? (
+              <Button
+                variant="outline"
+                asChild
+                className="h-auto p-4 flex flex-col items-start gap-1.5 text-left rounded-xl transition-all hover:bg-muted/50 hover:border-primary/50 group w-full"
+              >
+                <Link to={ROUTES.LESSON(courseId!, prevLesson.id)}>
+                  <span className="text-xs text-muted-foreground flex items-center gap-1 group-hover:text-primary transition-colors">
+                    <ArrowLeft className="w-3.5 h-3.5" />
+                    Bài trước
+                  </span>
+                  <span className="font-semibold text-sm line-clamp-1 text-foreground">
+                    {prevLesson.title}
+                  </span>
+                </Link>
+              </Button>
+            ) : (
+              <div className="hidden sm:block" />
+            )}
+
+            {nextLesson && (
+              <Button
+                variant="outline"
+                asChild
+                className="h-auto p-4 flex flex-col items-end gap-1.5 text-right rounded-xl transition-all hover:bg-muted/50 hover:border-primary/50 group w-full sm:col-start-2"
+              >
+                <Link to={ROUTES.LESSON(courseId!, nextLesson.id)}>
+                  <span className="text-xs text-muted-foreground flex items-center gap-1 group-hover:text-primary transition-colors">
+                    Bài tiếp theo
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </span>
+                  <span className="font-semibold text-sm line-clamp-1 text-foreground">
+                    {nextLesson.title}
+                  </span>
+                </Link>
+              </Button>
+            )}
+          </div>
+        )}
 
         {/* Comments Section */}
         <div className="bg-card rounded-xl border p-6 shadow-sm mt-8">
