@@ -83,6 +83,7 @@ export function LessonPage() {
           );
           setActiveSession(activeRes.data);
         } catch (err) {
+          console.log('Failed to load active test session', err);
           setActiveSession(null);
         }
       }

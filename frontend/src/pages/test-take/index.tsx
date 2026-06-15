@@ -13,9 +13,10 @@ import { Loader2, ArrowRight, ArrowLeft } from 'lucide-react';
 import { TestCountdown } from './_components/TestCountdown';
 import { QuestionOptionList } from './_components/QuestionOptionList';
 import { RichTextViewer } from '@/components/rich-text-editor/RichTextViewer';
+import type { AxiosResponse } from 'axios';
 
 // Coalesce concurrent start session requests to prevent race conditions (e.g. from React Strict Mode)
-const activeSessionRequests: Record<string, Promise<any>> = {};
+const activeSessionRequests: Record<string, Promise<AxiosResponse<TestSessionDto>>> = {};
 
 export function TestTakePage() {
   const { testId } = useParams<{ testId: string }>();
