@@ -53,7 +53,7 @@ function CommentItem({
   const [submitting, setSubmitting] = useState(false);
 
   // Depth check for Reddit-style redirection
-  const isDeep = depth >= 5;
+  const isDeep = depth >= 4;
 
   const [isEditable, setIsEditable] = useState(() => {
     if (comment.author.id === currentUserId) {
@@ -133,6 +133,14 @@ function CommentItem({
                   className="min-h-[60px] text-sm resize-none"
                   value={editContent}
                   onChange={(e) => setEditContent(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                      e.preventDefault();
+                      if (editContent.trim() && !submitting) {
+                        handleEditSubmit();
+                      }
+                    }
+                  }}
                   autoFocus
                 />
                 <div className="flex gap-2 justify-end">
@@ -226,6 +234,14 @@ function CommentItem({
                 placeholder="Viết phản hồi..."
                 value={replyContent}
                 onChange={(e) => setReplyContent(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    if (replyContent.trim() && !submitting) {
+                      handleReplySubmit();
+                    }
+                  }
+                }}
               />
               <Button
                 size="sm"
@@ -315,6 +331,14 @@ export function CommentThread({
             placeholder="Tham gia thảo luận..."
             value={newComment}
             onChange={(e) => setNewComment(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                if (newComment.trim() && !submitting) {
+                  handleSubmit();
+                }
+              }
+            }}
           />
           <div className="flex justify-end">
             <Button onClick={handleSubmit} disabled={!newComment.trim() || submitting}>
