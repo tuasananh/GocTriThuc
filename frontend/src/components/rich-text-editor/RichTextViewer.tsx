@@ -106,6 +106,15 @@ export function RichTextViewer({ htmlContent, className, emptyMessage }: RichTex
           background: transparent !important;
           --bn-colors-editor-background: transparent !important;
         }
+        /* Ẩn các công cụ tương tác của math-field trong viewer */
+        .rich-text-viewer-wrapper math-field::part(virtual-keyboard-toggle),
+        .rich-text-viewer-wrapper math-field::part(menu-toggle) {
+          display: none !important;
+        }
+        /* Ngăn click vào công thức toán học khi đang ở chế độ xem */
+        .rich-text-viewer-wrapper math-field {
+          pointer-events: none;
+        }
       `}</style>
       <BlockNoteView editor={editor} editable={false} theme={theme} />
     </div>
