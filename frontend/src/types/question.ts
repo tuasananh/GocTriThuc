@@ -104,4 +104,7 @@ export interface TestSessionSummaryDto {
   startedAt: string;
   submittedAt: string | null;
   isDone: boolean;
+  score?: number | null;
+  correctCount?: number | null;
+  totalQuestions?: number | null;
 }

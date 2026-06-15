@@ -804,14 +804,46 @@ public class TestSessionControllerIntegrationTest extends BaseIntegrationTest {
                 .with(csrf()))
         .andExpect(status().isCreated());
 
+    // Enroll studentUser2 so they can take the test
+    enrollmentRepository.save(new EnrollmentEntity(studentUser2, course));
+
+    mockMvc
+        .perform(
+            post("/api/tests/" + testEntity.getId() + "/sessions")
+                .with(
+                    oauth2Login().attributes(attrs -> attrs.put("email", studentUser2.getEmail())))
+                .with(csrf()))
+        .andExpect(status().isCreated());
+
+    // Submit session for studentUser2
+    TestSessionEntity session2 =
+        testSessionRepository
+            .findByUserIdAndTestIdAndIsDoneFalse(studentUser2.getId(), testEntity.getId())
+            .orElseThrow();
+    session2.setDone(true);
+    session2.setSubmittedAt(ZonedDateTime.now());
+    testSessionRepository.saveAndFlush(session2);
+
     // Instructor A gets list -> 200
     mockMvc
         .perform(
             get("/api/tests/" + testEntity.getId() + "/sessions")
                 .with(oauth2Login().attributes(attrs -> attrs.put("email", teacherA.getEmail()))))
         .andExpect(status().isOk())
-        .andExpect(jsonPath("$.length()").value(1))
-        .andExpect(jsonPath("$[0].displayName").value("Student"))
+        .andExpect(jsonPath("$.length()").value(2))
+        // Since ORDER BY ts.createdAt DESC is used, the most recently created (student2) is first
+        // ($[0])
+        .andExpect(jsonPath("$[0].displayName").value("Student 2"))
+        .andExpect(jsonPath("$[0].isDone").value(true))
+        .andExpect(jsonPath("$[0].score").value(0.0))
+        .andExpect(jsonPath("$[0].correctCount").value(0))
+        .andExpect(jsonPath("$[0].totalQuestions").value(2))
+        // The first created (studentUser) is second ($[1])
+        .andExpect(jsonPath("$[1].displayName").value("Student"))
+        .andExpect(jsonPath("$[1].isDone").value(false))
+        .andExpect(jsonPath("$[1].score").value(org.hamcrest.Matchers.nullValue()))
+        .andExpect(jsonPath("$[1].correctCount").value(org.hamcrest.Matchers.nullValue()))
+        .andExpect(jsonPath("$[1].totalQuestions").value(org.hamcrest.Matchers.nullValue()))
         .andDo(print());
 
     // studentUser gets list -> 403

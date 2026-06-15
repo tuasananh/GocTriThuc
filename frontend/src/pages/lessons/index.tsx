@@ -11,7 +11,6 @@ import type {
   MyTestSessionDto,
   TestSessionDto,
   TestSessionSummaryDto,
-  TestResultDto,
   CourseDto,
 } from '@/types';
 import { PageShell } from '@/components/PageShell';
@@ -70,9 +69,6 @@ export function LessonPage() {
   const [course, setCourse] = useState<CourseDto | null>(null);
   const [sessions, setSessions] = useState<TestSessionSummaryDto[]>([]);
   const [loadingSessions, setLoadingSessions] = useState(false);
-  const [sessionScores, setSessionScores] = useState<
-    Record<string, { score: number; correctCount: number; totalQuestions: number }>
-  >({});
 
   const isAuthor = Boolean(
     currentUserId && course?.author?.id && currentUserId === course.author.id,
@@ -168,41 +164,6 @@ export function LessonPage() {
     try {
       const res = await api.get<TestSessionSummaryDto[]>(`/api/tests/${lessonId}/sessions`);
       setSessions(res.data);
-
-      // Fetch scores for completed sessions in parallel
-      const doneSessions = res.data.filter((s) => s.isDone);
-      const scorePromises = doneSessions.map(async (session) => {
-        try {
-          const detailRes = await api.get<TestResultDto>(
-            `/api/sessions/${session.sessionId}/result`,
-          );
-          return {
-            sessionId: session.sessionId,
-            score: detailRes.data.score,
-            correctCount: detailRes.data.correctCount,
-            totalQuestions: detailRes.data.totalQuestions,
-          };
-        } catch (err) {
-          console.error(`Failed to fetch score for session ${session.sessionId}`, err);
-          return null;
-        }
-      });
-
-      const results = await Promise.all(scorePromises);
-      const scoresMap: Record<
-        string,
-        { score: number; correctCount: number; totalQuestions: number }
-      > = {};
-      results.forEach((r) => {
-        if (r) {
-          scoresMap[r.sessionId] = {
-            score: r.score,
-            correctCount: r.correctCount,
-            totalQuestions: r.totalQuestions,
-          };
-        }
-      });
-      setSessionScores(scoresMap);
     } catch {
       toast.error('Không thể tải danh sách kết quả học sinh');
     } finally {
@@ -454,18 +415,14 @@ export function LessonPage() {
                                 )}
                               </TableCell>
                               <TableCell>
-                                {session.isDone ? (
-                                  sessionScores[session.sessionId] ? (
-                                    <span className="font-semibold text-emerald-600 dark:text-emerald-400">
-                                      {sessionScores[session.sessionId].correctCount}/
-                                      {sessionScores[session.sessionId].totalQuestions} (
-                                      {Math.round(sessionScores[session.sessionId].score)}%)
-                                    </span>
-                                  ) : (
-                                    <span className="text-muted-foreground animate-pulse">
-                                      Đang tải...
-                                    </span>
-                                  )
+                                {session.isDone &&
+                                typeof session.score === 'number' &&
+                                typeof session.correctCount === 'number' &&
+                                typeof session.totalQuestions === 'number' ? (
+                                  <span className="font-semibold text-emerald-600 dark:text-emerald-400">
+                                    {session.correctCount}/{session.totalQuestions} (
+                                    {Math.round(session.score)}%)
+                                  </span>
                                 ) : (
                                   <span className="text-muted-foreground">-</span>
                                 )}

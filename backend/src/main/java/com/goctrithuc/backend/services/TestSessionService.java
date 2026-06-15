@@ -269,7 +269,21 @@ public class TestSessionService {
     }
 
     List<TestSessionEntity> sessions = testSessionRepo.findWithUserByTestId(testId);
-    return sessions.stream().map(TestSessionSummaryResponse::from).toList();
+    List<TestSessionEntity> doneSessions =
+        sessions.stream().filter(TestSessionEntity::isDone).toList();
+    Map<Long, TestResultResponse> results = quizScoringService.calculateResults(doneSessions);
+
+    return sessions.stream()
+        .map(
+            session -> {
+              if (session.isDone()) {
+                TestResultResponse result = results.get(session.getId());
+                return TestSessionSummaryResponse.from(session, result);
+              } else {
+                return TestSessionSummaryResponse.from(session);
+              }
+            })
+        .toList();
   }
 
   @Transactional(readOnly = true)
