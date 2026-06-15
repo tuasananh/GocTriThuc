@@ -68,11 +68,11 @@ public class LessonService {
     }
 
     int nextOrder = lessonRepo.findNextOrderByModuleId(moduleId);
-    LessonEntity lesson = new LessonEntity(module, req.title(), req.lessonType(), nextOrder);
+    LessonEntity lesson = new LessonEntity(module, req.title(), req.type(), nextOrder);
     LessonEntity saved = lessonRepo.save(lesson);
 
     // Đồng bộ hóa việc tạo Subtype Row tương ứng theo Table-Per-Type (SRS F3.2)
-    switch (req.lessonType()) {
+    switch (req.type()) {
       case VIDEO -> {
         LessonVideoEntity video = new LessonVideoEntity(saved, VideoProvider.YOUTUBE, "");
         videoRepo.save(video);
@@ -125,7 +125,8 @@ public class LessonService {
       throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Access denied");
     }
 
-    // Hard-delete bài giảng khỏi Database, tự động Cascade tới các subtype tables thông qua DB FK
+    // Hard-delete bài giảng khỏi Database, tự động Cascade tới các subtype tables
+    // thông qua DB FK
     // constraints (SRS F3.2)
     lessonRepo.delete(lesson);
 
