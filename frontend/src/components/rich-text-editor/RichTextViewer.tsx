@@ -98,6 +98,14 @@ export function RichTextViewer({ htmlContent, className, emptyMessage }: RichTex
           margin-top: 0;
           margin-bottom: 0;
         }
+        /* Make background completely transparent to blend with parent */
+        .rich-text-viewer-wrapper .bn-container,
+        .rich-text-viewer-wrapper .bn-editor,
+        .rich-text-viewer-wrapper .ProseMirror {
+          background-color: transparent !important;
+          background: transparent !important;
+          --bn-colors-editor-background: transparent !important;
+        }
       `}</style>
       <BlockNoteView editor={editor} editable={false} theme={theme} />
     </div>
