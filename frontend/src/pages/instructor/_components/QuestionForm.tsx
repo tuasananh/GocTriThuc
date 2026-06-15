@@ -64,9 +64,14 @@ export function QuestionForm({ onSaved, initialData }: QuestionFormProps) {
     if (!statement.trim()) {
       errs.statement = 'Vui lòng nhập nội dung câu hỏi.';
     }
-    const filledChoices = choices.filter((c) => c.trim() !== '');
+    const filledChoices = choices.map((c) => c.trim()).filter((c) => c !== '');
     if (filledChoices.length < 2) {
       errs.choices = 'Phải có ít nhất 2 đáp án không rỗng.';
+    } else {
+      const uniqueChoices = new Set(filledChoices);
+      if (uniqueChoices.size < filledChoices.length) {
+        errs.choices = 'Các đáp án không được trùng lặp.';
+      }
     }
     if (correctChoices.length === 0) {
       errs.correctChoices = 'Vui lòng chọn ít nhất 1 đáp án đúng.';
@@ -134,8 +139,11 @@ export function QuestionForm({ onSaved, initialData }: QuestionFormProps) {
       if (err && typeof err === 'object' && 'response' in err) {
         const axiosErr = err as { response?: { data?: ApiError } };
         const apiErrors = axiosErr.response?.data?.errors ?? {};
+        const apiMessage = axiosErr.response?.data?.message;
         if (Object.keys(apiErrors).length > 0) {
           setErrors(apiErrors);
+        } else if (apiMessage) {
+          toast.error(apiMessage);
         } else {
           toast.error('Không thể lưu câu hỏi. Vui lòng thử lại.');
         }
