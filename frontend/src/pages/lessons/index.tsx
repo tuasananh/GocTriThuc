@@ -2,11 +2,27 @@ import { useEffect, useState, useCallback } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { api } from '@/lib/api';
 import { ROUTES } from '@/lib/routes';
-import type { LessonDetailDto, LessonDto, ModuleDto, CommentDto, PageResponse, MyTestSessionDto, TestSessionDto } from '@/types';
+import type {
+  LessonDetailDto,
+  LessonDto,
+  ModuleDto,
+  CommentDto,
+  PageResponse,
+  MyTestSessionDto,
+  TestSessionDto,
+} from '@/types';
 import { PageShell } from '@/components/PageShell';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { ArrowLeft, ArrowRight, CheckCircle2, Clock, PlayCircle, Loader2, ExternalLink } from 'lucide-react';
+import {
+  ArrowLeft,
+  ArrowRight,
+  CheckCircle2,
+  Clock,
+  PlayCircle,
+  Loader2,
+  ExternalLink,
+} from 'lucide-react';
 import { toast } from 'sonner';
 import { ErrorState } from '@/components/ErrorState';
 import { VideoLessonViewer } from './_components/VideoLessonViewer';
@@ -302,7 +318,8 @@ export function LessonPage() {
                             Bạn đang có một phiên làm bài chưa hoàn thành
                           </h4>
                           <p className="text-xs text-amber-700 dark:text-amber-500">
-                            Bắt đầu lúc: {new Date(activeSession.startedAt).toLocaleDateString('vi-VN', {
+                            Bắt đầu lúc:{' '}
+                            {new Date(activeSession.startedAt).toLocaleDateString('vi-VN', {
                               day: '2-digit',
                               month: '2-digit',
                               year: 'numeric',
@@ -312,7 +329,11 @@ export function LessonPage() {
                           </p>
                         </div>
                       </div>
-                      <Button size="sm" className="w-full bg-amber-600 hover:bg-amber-700 dark:bg-amber-500 dark:hover:bg-amber-600 text-white gap-2 font-medium" asChild>
+                      <Button
+                        size="sm"
+                        className="w-full bg-amber-600 hover:bg-amber-700 dark:bg-amber-500 dark:hover:bg-amber-600 text-white gap-2 font-medium"
+                        asChild
+                      >
                         <Link to={ROUTES.TEST_TAKE(lesson.id)}>
                           <PlayCircle className="w-4 h-4" />
                           Tiếp tục làm bài
@@ -348,7 +369,13 @@ export function LessonPage() {
                                 : 'text-destructive';
                           const submittedDate = new Date(attempt.submittedAt).toLocaleDateString(
                             'vi-VN',
-                            { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' },
+                            {
+                              day: '2-digit',
+                              month: '2-digit',
+                              year: 'numeric',
+                              hour: '2-digit',
+                              minute: '2-digit',
+                            },
                           );
                           return (
                             <div
