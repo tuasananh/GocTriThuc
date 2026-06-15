@@ -117,4 +117,14 @@ public class TestSessionController {
     Page<MyTestSessionResponse> res = testSessionService.getMyTestSessions(userId, pageable);
     return ResponseEntity.ok(res);
   }
+
+  @GetMapping("/tests/{testId}/sessions/my")
+  @PreAuthorize(
+      "@permissionService.hasPermission(#principal, T(com.goctrithuc.backend.common.PermissionConstants).ACCESS_TESTS)")
+  public ResponseEntity<List<MyTestSessionResponse>> getMySessionsForTest(
+      @PathVariable Long testId, @AuthenticationPrincipal OAuth2User principal) {
+    Long userId = AuthUtils.getCurrentUserId(principal, userRepository);
+    List<MyTestSessionResponse> res = testSessionService.getMySessionsForTest(testId, userId);
+    return ResponseEntity.ok(res);
+  }
 }

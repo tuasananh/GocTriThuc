@@ -6,7 +6,7 @@ import type { LessonDetailDto, LessonDto, ModuleDto, CommentDto, PageResponse, M
 import { PageShell } from '@/components/PageShell';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { ArrowLeft, ArrowRight, CheckCircle2, Clock, PlayCircle, Loader2 } from 'lucide-react';
+import { ArrowLeft, ArrowRight, CheckCircle2, Clock, PlayCircle, Loader2, ExternalLink } from 'lucide-react';
 import { toast } from 'sonner';
 import { ErrorState } from '@/components/ErrorState';
 import { VideoLessonViewer } from './_components/VideoLessonViewer';
@@ -26,7 +26,7 @@ export function LessonPage() {
     null,
   );
   const [completing, setCompleting] = useState(false);
-  const [completedSessionId, setCompletedSessionId] = useState<string | null>(null);
+  const [pastAttempts, setPastAttempts] = useState<MyTestSessionDto[]>([]);
 
   const [comments, setComments] = useState<CommentDto[]>([]);
   const [loadingComments, setLoadingComments] = useState(false);
@@ -37,21 +37,19 @@ export function LessonPage() {
     if (!courseId || !lessonId) return;
     setLoading(true);
     setError(null);
-    setCompletedSessionId(null);
+    setPastAttempts([]);
     try {
       const res = await api.get<LessonDetailDto>(`/api/lessons/${lessonId}`);
       setLesson(res.data);
 
-      if (res.data.type === 'test' && res.data.completed) {
+      if (res.data.type === 'test' && res.data.test?.testId) {
         try {
-          const sessionsRes =
-            await api.get<PageResponse<MyTestSessionDto>>('/api/tests/sessions/my');
-          const matchingSession = sessionsRes.data.content.find((s) => s.testId === res.data.id);
-          if (matchingSession) {
-            setCompletedSessionId(matchingSession.sessionId);
-          }
+          const attemptsRes = await api.get<MyTestSessionDto[]>(
+            `/api/tests/${res.data.test.testId}/sessions/my`,
+          );
+          setPastAttempts(attemptsRes.data);
         } catch (err) {
-          console.error('Failed to load completed test sessions', err);
+          console.error('Failed to load test attempts', err);
         }
       }
 
@@ -280,13 +278,65 @@ export function LessonPage() {
                   </div>
                 )}
               </div>
-              {completedSessionId ? (
-                <Button size="lg" asChild className="gap-2 mt-4" variant="outline">
-                  <Link to={ROUTES.TEST_RESULT(completedSessionId)}>
-                    <CheckCircle2 className="w-5 h-5 text-emerald-500" />
-                    Xem kết quả bài làm
-                  </Link>
-                </Button>
+
+              {pastAttempts.length > 0 ? (
+                <div className="w-full max-w-lg space-y-4">
+                  {/* Past Attempts History */}
+                  <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-lg p-4 flex items-center gap-3">
+                    <CheckCircle2 className="w-5 h-5 text-emerald-500 shrink-0" />
+                    <span className="text-emerald-700 dark:text-emerald-400 font-medium text-sm">
+                      Bạn đã hoàn thành bài kiểm tra này
+                    </span>
+                  </div>
+
+                  <div className="text-left space-y-2">
+                    <p className="text-sm font-medium text-muted-foreground uppercase tracking-wider">
+                      Lịch sử làm bài ({pastAttempts.length} lần)
+                    </p>
+                    <div className="space-y-2">
+                      {pastAttempts.map((attempt, idx) => {
+                        const pct = Math.round(attempt.score);
+                        const scoreColor =
+                          pct >= 80
+                            ? 'text-emerald-600 dark:text-emerald-400'
+                            : pct >= 50
+                              ? 'text-yellow-600 dark:text-yellow-400'
+                              : 'text-destructive';
+                        const submittedDate = new Date(attempt.submittedAt).toLocaleDateString(
+                          'vi-VN',
+                          { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' },
+                        );
+                        return (
+                          <div
+                            key={attempt.sessionId}
+                            className="flex items-center justify-between p-3 rounded-lg border bg-background hover:bg-muted/30 transition-colors"
+                          >
+                            <div className="flex items-center gap-3">
+                              <span className="text-xs text-muted-foreground w-6 text-center font-mono">
+                                #{idx + 1}
+                              </span>
+                              <div className="text-left">
+                                <div className={`font-semibold text-sm ${scoreColor}`}>
+                                  {attempt.correctCount}/{attempt.totalQuestions} câu đúng
+                                  <span className="ml-1 font-normal text-xs">({pct}%)</span>
+                                </div>
+                                <div className="text-xs text-muted-foreground mt-0.5">
+                                  {submittedDate}
+                                </div>
+                              </div>
+                            </div>
+                            <Button size="sm" variant="ghost" asChild className="gap-1.5 text-xs">
+                              <Link to={ROUTES.TEST_RESULT(attempt.sessionId)}>
+                                <ExternalLink className="w-3.5 h-3.5" />
+                                Xem kết quả
+                              </Link>
+                            </Button>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
               ) : lesson.test ? (
                 <Button size="lg" asChild className="gap-2 mt-4">
                   <Link to={ROUTES.TEST_TAKE(lesson.id)}>

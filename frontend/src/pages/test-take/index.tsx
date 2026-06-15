@@ -14,6 +14,9 @@ import { TestCountdown } from './_components/TestCountdown';
 import { QuestionOptionList } from './_components/QuestionOptionList';
 import { RichTextViewer } from '@/components/rich-text-editor/RichTextViewer';
 
+// Coalesce concurrent start session requests to prevent race conditions (e.g. from React Strict Mode)
+const activeSessionRequests: Record<string, Promise<any>> = {};
+
 export function TestTakePage() {
   const { testId } = useParams<{ testId: string }>();
   const navigate = useNavigate();
@@ -36,10 +39,20 @@ export function TestTakePage() {
     setLoading(true);
     setError(null);
     try {
+      // Coalesce the session creation request to avoid race condition/conflict in React Strict Mode double-render
+      let sessionPromise = activeSessionRequests[testId];
+      if (!sessionPromise) {
+        sessionPromise = api.post<TestSessionDto>(`/api/tests/${testId}/sessions`);
+        activeSessionRequests[testId] = sessionPromise;
+        sessionPromise.finally(() => {
+          delete activeSessionRequests[testId];
+        });
+      }
+
       // Gọi 3 API đồng thời như trong tài liệu thiết kế Day 9
       const [lessonRes, sessionRes, qRes] = await Promise.all([
         api.get<LessonDetailDto>(`/api/lessons/${testId}`),
-        api.post<TestSessionDto>(`/api/tests/${testId}/sessions`),
+        sessionPromise,
         api.get<QuestionStudentDto[]>(`/api/tests/${testId}/questions`),
       ]);
 

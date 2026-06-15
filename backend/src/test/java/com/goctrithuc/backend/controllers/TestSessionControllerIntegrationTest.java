@@ -1129,4 +1129,47 @@ public class TestSessionControllerIntegrationTest extends BaseIntegrationTest {
                 .with(oauth2Login().attributes(attrs -> attrs.put("email", guest.getEmail()))))
         .andExpect(status().isForbidden());
   }
+
+  @Test
+  void getMySessionsForTest_returnsSessionsList() throws Exception {
+    mockMvc
+        .perform(
+            post("/api/tests/" + testEntity.getId() + "/sessions")
+                .with(oauth2Login().attributes(attrs -> attrs.put("email", studentUser.getEmail())))
+                .with(csrf()))
+        .andExpect(status().isCreated());
+
+    TestSessionEntity session =
+        testSessionRepository
+            .findByUserIdAndTestIdAndIsDoneFalse(studentUser.getId(), testEntity.getId())
+            .orElseThrow();
+
+    mockMvc
+        .perform(
+            post("/api/sessions/" + session.getId() + "/submit")
+                .with(oauth2Login().attributes(attrs -> attrs.put("email", studentUser.getEmail())))
+                .with(csrf()))
+        .andExpect(status().isOk());
+
+    mockMvc
+        .perform(
+            get("/api/tests/" + testEntity.getId() + "/sessions/my")
+                .with(
+                    oauth2Login().attributes(attrs -> attrs.put("email", studentUser.getEmail()))))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.length()").value(1))
+        .andExpect(jsonPath("$[0].sessionId").value(session.getId()))
+        .andExpect(jsonPath("$[0].testTitle").value("Lesson Test 1"))
+        .andExpect(jsonPath("$[0].courseTitle").value("Java Core"));
+  }
+
+  @Test
+  void getMySessionsForTest_notEnrolled_returns403() throws Exception {
+    mockMvc
+        .perform(
+            get("/api/tests/" + testEntity.getId() + "/sessions/my")
+                .with(
+                    oauth2Login().attributes(attrs -> attrs.put("email", studentUser2.getEmail()))))
+        .andExpect(status().isForbidden());
+  }
 }

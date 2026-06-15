@@ -42,4 +42,11 @@ public interface TestSessionRepository extends JpaRepository<TestSessionEntity, 
               + "WHERE ts.user.id = :userId AND ts.isDone = true")
   Page<TestSessionEntity> findCompletedWithTestAndCourseByUserId(
       @Param("userId") Long userId, Pageable pageable);
+
+  @Query(
+      "SELECT ts FROM TestSessionEntity ts "
+          + "WHERE ts.user.id = :userId AND ts.test.id = :testId AND ts.isDone = true "
+          + "ORDER BY ts.submittedAt DESC")
+  List<TestSessionEntity> findCompletedByUserIdAndTestId(
+      @Param("userId") Long userId, @Param("testId") Long testId);
 }

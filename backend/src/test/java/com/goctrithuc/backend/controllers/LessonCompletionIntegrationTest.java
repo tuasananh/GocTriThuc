@@ -12,6 +12,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.goctrithuc.backend.BaseIntegrationTest;
 import com.goctrithuc.backend.entities.*;
 import com.goctrithuc.backend.repositories.*;
+import com.goctrithuc.backend.services.LessonCompletionService;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -31,6 +32,7 @@ public class LessonCompletionIntegrationTest extends BaseIntegrationTest {
   private final LessonRepository lessonRepository;
   private final EnrollmentRepository enrollmentRepository;
   private final LessonCompletionRepository lessonCompletionRepository;
+  private final LessonCompletionService lessonCompletionService;
 
   private User adminUser;
   private User teacherA;
@@ -46,7 +48,8 @@ public class LessonCompletionIntegrationTest extends BaseIntegrationTest {
       ModuleRepository moduleRepository,
       LessonRepository lessonRepository,
       EnrollmentRepository enrollmentRepository,
-      LessonCompletionRepository lessonCompletionRepository) {
+      LessonCompletionRepository lessonCompletionRepository,
+      LessonCompletionService lessonCompletionService) {
     this.mockMvc = mockMvc;
     this.userRepository = userRepository;
     this.userRoleRepository = userRoleRepository;
@@ -56,6 +59,7 @@ public class LessonCompletionIntegrationTest extends BaseIntegrationTest {
     this.lessonRepository = lessonRepository;
     this.enrollmentRepository = enrollmentRepository;
     this.lessonCompletionRepository = lessonCompletionRepository;
+    this.lessonCompletionService = lessonCompletionService;
   }
 
   @BeforeEach
@@ -270,5 +274,39 @@ public class LessonCompletionIntegrationTest extends BaseIntegrationTest {
                     oauth2Login().attributes(attrs -> attrs.put("email", studentUser.getEmail()))))
         .andExpect(status().isForbidden())
         .andDo(print());
+  }
+
+  @Test
+  void shouldIdempotentlyMarkLessonAsCompleted() {
+    Course publicCourse =
+        courseRepository.save(
+            new Course(
+                "Public Active Course",
+                "Desc",
+                null,
+                true,
+                CourseVisibility.PUBLIC,
+                teacherA,
+                null));
+
+    ModuleEntity module = moduleRepository.save(new ModuleEntity(publicCourse, "Module 1", 0));
+    LessonEntity lesson =
+        lessonRepository.save(new LessonEntity(module, "Lesson 1", LessonType.VIDEO, 0));
+
+    // Call markComplete
+    lessonCompletionService.markComplete(studentUser.getId(), lesson.getId());
+
+    assertThat(
+            lessonCompletionRepository.existsById(
+                new LessonCompletionId(studentUser.getId(), lesson.getId())))
+        .isTrue();
+
+    // Call markComplete again (should be idempotent no-op)
+    lessonCompletionService.markComplete(studentUser.getId(), lesson.getId());
+
+    assertThat(
+            lessonCompletionRepository.existsById(
+                new LessonCompletionId(studentUser.getId(), lesson.getId())))
+        .isTrue();
   }
 }
