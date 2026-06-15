@@ -9,7 +9,16 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { BookOpen, UserPlus, LogIn, Lock, PlayCircle, Loader2, Settings } from 'lucide-react';
+import {
+  BookOpen,
+  UserPlus,
+  LogIn,
+  Lock,
+  PlayCircle,
+  Loader2,
+  Settings,
+  Clock,
+} from 'lucide-react';
 import { toast } from 'sonner';
 import { ErrorState } from '@/components/ErrorState';
 import { useIsAdmin } from '@/lib/permissions';
@@ -218,7 +227,12 @@ export function CourseDetailPage() {
             </div>
 
             <div className="flex flex-wrap gap-4">
-              {!isAuthenticated ? (
+              {!course.isPublished && !isAdmin && !isAuthor ? (
+                <Button size="lg" variant="secondary" className="rounded-xl px-8" disabled>
+                  <Clock className="mr-2 h-5 w-5" />
+                  Khóa học sắp ra mắt
+                </Button>
+              ) : !isAuthenticated ? (
                 <Button size="lg" className="rounded-xl px-8" onClick={handleEnrollAction}>
                   <LogIn className="mr-2 h-5 w-5" />
                   Đăng nhập để học
