@@ -96,3 +96,12 @@ export interface MyTestSessionDto {
   totalQuestions: number;
   submittedAt: string;
 }
+
+export interface TestSessionSummaryDto {
+  sessionId: string;
+  userId: string;
+  displayName: string;
+  startedAt: string;
+  submittedAt: string | null;
+  isDone: boolean;
+}
