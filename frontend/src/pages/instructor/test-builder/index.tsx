@@ -90,6 +90,7 @@ export function TestBuilderPage() {
 
   useEffect(() => {
     if (testId) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       fetchSessions();
     }
   }, [testId, fetchSessions]);
