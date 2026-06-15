@@ -26,9 +26,11 @@ export function CourseEditorPage() {
   const [isAddModuleOpen, setIsAddModuleOpen] = useState(false);
   const [isEditCourseOpen, setIsEditCourseOpen] = useState(false);
 
-  const fetchData = useCallback(async () => {
+  const fetchData = useCallback(async (isInitial = false) => {
     if (!id) return;
-    setLoading(true);
+    if (isInitial) {
+      setLoading(true);
+    }
     setError(null);
     try {
       const [courseRes, modulesRes] = await Promise.all([
@@ -51,7 +53,7 @@ export function CourseEditorPage() {
 
   useEffect(() => {
     const t = setTimeout(() => {
-      fetchData();
+      fetchData(true);
     }, 0);
     return () => clearTimeout(t);
   }, [fetchData]);
