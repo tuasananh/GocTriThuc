@@ -174,9 +174,11 @@ export function QuestionPickerModal({
                     </div>
                     <div className="text-xs text-muted-foreground space-y-1">
                       {q.choices.slice(0, 2).map((choice, i) => (
-                        <div key={i} className="flex items-center gap-1.5 truncate">
-                          <div className="w-1 h-1 rounded-full bg-muted-foreground/50" />
-                          {choice}
+                        <div key={i} className="flex items-start gap-1.5 truncate">
+                          <div className="w-1 h-1 mt-1.5 shrink-0 rounded-full bg-muted-foreground/50" />
+                          <div className="truncate min-w-0">
+                            <RichTextViewer htmlContent={choice} />
+                          </div>
                         </div>
                       ))}
                       {q.choices.length > 2 && (

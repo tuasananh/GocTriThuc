@@ -9,6 +9,7 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import {
   Select,
   SelectContent,
@@ -69,10 +70,8 @@ export function CreateLessonDialog({
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4 pt-4">
-          <div className="space-y-2">
-            <label htmlFor="title" className="text-sm font-medium">
-              Tên bài học
-            </label>
+          <div className="space-y-1.5">
+            <Label htmlFor="title">Tên bài học</Label>
             <Input
               id="title"
               placeholder="VD: Components và Props..."
@@ -83,8 +82,8 @@ export function CreateLessonDialog({
             />
           </div>
 
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Loại bài học</label>
+          <div className="space-y-1.5">
+            <Label>Loại bài học</Label>
             <Select
               value={lessonType}
               onValueChange={(val) => setLessonType(val as LessonType)}

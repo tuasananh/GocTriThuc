@@ -171,7 +171,9 @@ export function TestQuestionItem({
                     <div className="w-4 h-4 rounded-full border-2 border-muted-foreground/30" />
                   )}
                 </div>
-                <span>{choice}</span>
+                <div className="flex-1 min-w-0">
+                  <RichTextViewer htmlContent={choice} />
+                </div>
               </div>
             );
           })}

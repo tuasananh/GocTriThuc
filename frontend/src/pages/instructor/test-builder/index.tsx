@@ -26,10 +26,7 @@ import { TestQuestionItem } from './_components/TestQuestionItem';
 import { QuestionPickerModal } from './_components/QuestionPickerModal';
 import { TestSettingsForm } from './_components/TestSettingsForm';
 
-export function TestBuilderPage() {
-  const { lessonId } = useParams<{ lessonId: string }>();
-  const navigate = useNavigate();
-
+export function TestBuilder({ lessonId }: { lessonId: string }) {
   const [testId, setTestId] = useState<string | null>(null);
   const [questions, setQuestions] = useState<TestQuestionDto[]>([]);
   const [showPicker, setShowPicker] = useState(false);
@@ -148,7 +145,6 @@ export function TestBuilderPage() {
   const moveQuestion = async (questionId: string, direction: 'up' | 'down') => {
     if (!testId) return;
 
-    // Cập nhật giao diện trước (Optimistic UI) bằng functional update để tránh stale closure
     setQuestions((prev) => {
       const idx = prev.findIndex((q) => q.id === questionId);
       if (idx === -1) return prev;
@@ -163,10 +159,8 @@ export function TestBuilderPage() {
 
     try {
       await api.patch(`/api/tests/${testId}/questions/${questionId}/order`, { direction });
-      // Không cần hiện toast vì có thể làm rối người dùng khi họ bấm nhiều lần liên tiếp
     } catch {
       toast.error('Không thể cập nhật thứ tự');
-      // Nếu lỗi thì revert lại swap cũ để UI phản hồi ngay lập tức
       setQuestions((prev) => {
         const idx = prev.findIndex((q) => q.id === questionId);
         if (idx === -1) return prev;
@@ -180,7 +174,6 @@ export function TestBuilderPage() {
         return newQuestions;
       });
 
-      // Lấy lại dữ liệu ngầm (Silently Refetch) để đảm bảo đồng bộ tuyệt đối với Server
       try {
         const res = await api.get<TestQuestionDto[]>(`/api/tests/${testId}/questions`);
         setQuestions(res.data);
@@ -192,15 +185,7 @@ export function TestBuilderPage() {
 
   if (loading) {
     return (
-      <PageShell>
-        <div className="mb-6">
-          <Button variant="ghost" disabled className="mb-4 -ml-4">
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Quay lại
-          </Button>
-          <div className="h-8 w-64 bg-muted animate-pulse rounded mb-2"></div>
-          <div className="h-4 w-96 bg-muted animate-pulse rounded"></div>
-        </div>
+      <div className="space-y-6 mt-6">
         <div className="grid gap-6 lg:grid-cols-3">
           <div className="lg:col-span-2 space-y-4">
             {Array.from({ length: 3 }).map((_, i) => (
@@ -211,28 +196,16 @@ export function TestBuilderPage() {
             <SkeletonCard />
           </div>
         </div>
-      </PageShell>
+      </div>
     );
   }
 
   if (error) {
-    return (
-      <PageShell>
-        <ErrorState message={error} onRetry={fetchData} />
-      </PageShell>
-    );
+    return <ErrorState message={error} onRetry={fetchData} />;
   }
 
   return (
-    <PageShell>
-      <div className="mb-6">
-        <Button variant="ghost" onClick={() => navigate(-1)} className="mb-4 -ml-4">
-          <ArrowLeft className="w-4 h-4 mr-2" />
-          Quay lại
-        </Button>
-        <SectionHeader title="Thiết lập bài kiểm tra" />
-      </div>
-
+    <div className="mt-6">
       <Tabs defaultValue="builder" className="w-full">
         <TabsList className="mb-6">
           <TabsTrigger value="builder">Soạn đề & Cài đặt</TabsTrigger>
@@ -397,6 +370,26 @@ export function TestBuilderPage() {
           }}
         />
       )}
+    </div>
+  );
+}
+
+export function TestBuilderPage() {
+  const { lessonId } = useParams<{ lessonId: string }>();
+  const navigate = useNavigate();
+
+  if (!lessonId) return null;
+
+  return (
+    <PageShell>
+      <div className="mb-6">
+        <Button variant="ghost" onClick={() => navigate(-1)} className="mb-4 -ml-4">
+          <ArrowLeft className="w-4 h-4 mr-2" />
+          Quay lại
+        </Button>
+        <SectionHeader title="Thiết lập bài kiểm tra" />
+      </div>
+      <TestBuilder lessonId={lessonId} />
     </PageShell>
   );
 }

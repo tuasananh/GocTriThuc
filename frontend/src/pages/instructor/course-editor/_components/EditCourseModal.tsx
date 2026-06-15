@@ -91,7 +91,7 @@ export function EditCourseModal({
           <DialogTitle>Cài đặt khóa học</DialogTitle>
         </DialogHeader>
         <div className="space-y-4 py-2">
-          <div>
+          <div className="space-y-1.5">
             <Label htmlFor="edit-course-title">Tên khóa học *</Label>
             <Input
               id="edit-course-title"
@@ -100,13 +100,13 @@ export function EditCourseModal({
             />
             {errors.title && <p className="mt-1 text-xs text-destructive">{errors.title}</p>}
           </div>
-          <div>
+          <div className="space-y-1.5">
             <Label>Ảnh bìa (Thumbnail)</Label>
             <div className="mt-1">
               <ThumbnailUpload value={thumbnailUrl} onChange={setThumbnailUrl} />
             </div>
           </div>
-          <div>
+          <div className="space-y-1.5">
             <Label htmlFor="edit-course-desc">Mô tả *</Label>
             <Textarea
               id="edit-course-desc"
@@ -118,7 +118,7 @@ export function EditCourseModal({
               <p className="mt-1 text-xs text-destructive">{errors.description}</p>
             )}
           </div>
-          <div>
+          <div className="space-y-1.5">
             <Label htmlFor="edit-course-visibility">Quyền truy cập</Label>
             <Select
               value={visibility}

@@ -55,10 +55,7 @@ export const UserRoleTable = () => {
       setUsers((prev) =>
         prev.map((u) => {
           if (u.id === userId) {
-            const newRoles = ['student'];
-            if (newRole === 'teacher' || newRole === 'admin') newRoles.push('teacher');
-            if (newRole === 'admin') newRoles.push('admin');
-            return { ...u, roles: newRoles };
+            return { ...u, roles: [newRole] };
           }
           return u;
         }),
