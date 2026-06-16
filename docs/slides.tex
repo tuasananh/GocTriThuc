@@ -1,0 +1,442 @@
+
+\documentclass[10pt]{beamer}
+\usepackage[utf8]{inputenc}
+\usepackage[T5]{fontenc}
+\usepackage[vietnamese]{babel}
+\usepackage{lmodern}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{xcolor}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,positioning,fit,shapes.geometric,shapes.multipart,calc}
+\usepackage{hyperref}
+\AtBeginDocument{%
+  \DeclareFontShape{T5}{lmss}{m}{it}{%
+    <-8.5> t5-lmsso8
+    <8.5-9.5> t5-lmsso9
+    <9.5-11> t5-lmsso10
+    <11-15.5> t5-lmsso12
+    <15.5-> t5-lmsso17
+  }{}
+}
+
+% Chọn theme
+\usetheme{Madrid}
+\usecolortheme{default}
+\setbeamertemplate{navigation symbols}{}
+\setbeamertemplate{footline}[frame number]
+
+\definecolor{prismblue}{RGB}{42,91,155}
+\definecolor{prismgreen}{RGB}{50,130,90}
+\definecolor{prismorange}{RGB}{200,120,30}
+
+\newcommand{\projectname}{GocTriThuc}
+\newcommand{\maybeimage}[2]{%
+  \IfFileExists{#1}{\includegraphics[width=#2\textwidth]{#1}}{%
+  \begin{tikzpicture}[scale=#2]
+    \draw[rounded corners=5pt,thick,fill=gray!8] (0,0) rectangle (12,6.2);
+    \draw[fill=prismblue!15,draw=prismblue] (0.35,5.55) rectangle (11.65,5.95);
+    \draw[fill=white,draw=gray!50] (0.65,0.55) rectangle (11.35,5.25);
+    \node[align=center,text width=8cm] at (6,3) {Ảnh minh họa\\\texttt{#1}};
+  \end{tikzpicture}}
+}
+
+% Thông tin trang bìa
+\title[Nền tảng GocTriThuc]{\texorpdfstring{BÁO CÁO BÀI TẬP LỚN \\ NHẬP MÔN CÔNG NGHỆ PHẦN MỀM}{BÁO CÁO BÀI TẬP LỚN - NHẬP MÔN CÔNG NGHỆ PHẦN MỀM}}
+\subtitle{Đề tài: Nền tảng học tập trực tuyến GocTriThuc}
+\author[Nhóm GocTriThuc]{\texorpdfstring{%
+  \textbf{Giảng viên hướng dẫn:} TS. Nguyễn Quốc Tuấn \\ \vspace{0.25cm}
+  \textbf{Nhóm thực hiện:} \\
+  Trần Tuấn Anh (202416124) \and Nguyễn Công Vinh (202400083) \\
+  Phạm Văn Sâm (202400114) \and Vũ Hoàng Tuấn (202400080) \\
+  Lê Thành Trung (202400076)
+}{Nhóm GocTriThuc}}
+\institute[HUST]{\texorpdfstring{Đại học Bách Khoa Hà Nội \\ Trường CNTT \& TT}{Đại học Bách Khoa Hà Nội - Trường CNTT & TT}}
+\date{Ngày 16 tháng 6 năm 2026}
+
+\begin{document}
+
+% Slide 1: Bìa
+\begin{frame}
+    \titlepage
+\end{frame}
+
+% Slide 2: Mục lục
+\begin{frame}{Nội dung trình bày}
+    \tableofcontents
+\end{frame}
+
+% --- PHẦN 1: TỔNG QUAN ---
+\section{Tổng quan dự án}
+
+\begin{frame}{Lý do chọn đề tài \& Mục tiêu}
+    \begin{block}{Lý do chọn đề tài}
+        \begin{itemize}
+            \item Các nền tảng hiện tại như Moodle, Canvas cấu hình phức tạp, khó tùy biến cho nhóm nhỏ.
+            \item Cần một hệ thống e-learning tinh gọn, dễ sử dụng, có kiến trúc rõ ràng và kiểm soát dữ liệu nội bộ.
+        \end{itemize}
+    \end{block}
+    \begin{block}{Mục tiêu dự án}
+        \begin{itemize}
+            \item \textbf{Giao diện:} thân thiện, responsive, xây dựng bằng React/Vite.
+            \item \textbf{API:} backend RESTful chuẩn hóa bằng Spring Boot.
+            \item \textbf{Dữ liệu \& bảo mật:} PostgreSQL, OAuth2/JWT, phân quyền theo role/permission.
+            \item \textbf{Quy trình:} phát triển Agile/Scrum, đóng gói Docker.
+        \end{itemize}
+    \end{block}
+\end{frame}
+
+\begin{frame}{Phân tích hiện trạng \& Giải pháp tương tự}
+    \begin{table}[]
+        \centering
+        \resizebox{\textwidth}{!}{%
+        \begin{tabular}{@{}p{3cm}p{4.5cm}p{4.5cm}@{}}
+            \toprule
+            \textbf{Nền tảng} & \textbf{Ưu điểm} & \textbf{Nhược điểm / Hạn chế} \\ \midrule
+            \textbf{Google Classroom} & Dễ sử dụng, ít chi phí. & Khó tùy biến workflow, báo cáo học tập còn hạn chế. \\ \midrule
+            \textbf{Moodle / Canvas} & Đầy đủ tính năng, hệ sinh thái lớn. & Cấu hình nặng, giao diện phức tạp, chi phí triển khai và vận hành cao. \\ \midrule
+            \textbf{GocTriThuc} \newline (Dự án) & \textbf{Kiến trúc hiện đại, tinh gọn, tùy biến cao cho các nhóm/lớp học nhỏ.} & Đang trong giai đoạn phát triển, chưa có app Mobile native. \\ \bottomrule
+        \end{tabular}%
+        }
+    \end{table}
+    \vspace{0.3cm}
+    $\Rightarrow$ \textit{Dự án hướng tới sự cân bằng: \textbf{Dễ dùng như Google Classroom nhưng có hệ thống khóa học/bài test chuyên sâu như Moodle}.}
+\end{frame}
+
+\begin{frame}{Phương pháp luận phát triển}
+    \begin{block}{Áp dụng mô hình Agile/Scrum}
+        \begin{itemize}
+            \item \textbf{Lý do:} Phù hợp với hệ thống E-learning cần thay đổi linh hoạt theo phản hồi của người dùng. Giảm rủi ro so với mô hình Waterfall.
+            \item \textbf{Tổ chức công việc:} Phân chia thành các Sprint ngắn (1-2 tuần).
+            \item \textbf{Quy trình mỗi Sprint:}
+            \begin{itemize}
+                \item Lập kế hoạch (Sprint Planning) \& Phân rã User Story.
+                \item Lập trình Frontend/Backend song song (thiết kế API Contract).
+                \item Review mã nguồn, kiểm thử tích hợp.
+                \item Bàn giao chức năng chạy được (Definition of Done).
+            \end{itemize}
+        \end{itemize}
+    \end{block}
+\end{frame}
+
+% --- PHẦN 2: PHÂN TÍCH YÊU CẦU ---
+\section{Đặc tả yêu cầu hệ thống}
+
+\begin{frame}{Đối tượng người dùng (Actors)}
+    Hệ thống phục vụ 4 nhóm người dùng chính:
+    \vspace{0.2cm}
+    \begin{itemize}
+        \item \textbf{Khách vãng lai:} xem thông tin, khóa học công khai, đăng nhập Google OAuth.
+        \item \textbf{Học viên:} ghi danh, học Video/Blog, làm Test, xem tiến độ, bình luận.
+        \item \textbf{Giảng viên:} tạo/quản lý khóa học, module, bài học, ngân hàng câu hỏi, duyệt yêu cầu.
+        \item \textbf{Quản trị viên:} quản lý người dùng, phân quyền, giám sát hệ thống.
+    \end{itemize}
+\end{frame}
+
+\begin{frame}{Yêu cầu chức năng cốt lõi}
+    \begin{itemize}
+        \item \textbf{Xác thực \& hồ sơ:} đăng nhập Google OAuth, quản lý profile.
+        \item \textbf{Quản lý khóa học:} tạo/xuất bản khóa học, module, bài học Video/Blog/Test.
+        \item \textbf{Tương tác học tập:} ghi danh Public/Restricted, theo dõi tiến độ.
+        \item \textbf{Kiểm tra đánh giá:} ngân hàng câu hỏi, tạo bài test, lưu phiên làm bài.
+        \item \textbf{Trao đổi:} đăng thông báo, bình luận phân cấp.
+        \item \textbf{Dashboard:} phân hệ quản lý riêng cho Giảng viên và Admin.
+    \end{itemize}
+\end{frame}
+
+\begin{frame}{Use Case Diagram tổng thể}
+\centering
+\resizebox{!}{0.78\textheight}{%
+\begin{tikzpicture}[
+    actor/.style={
+        draw,
+        ellipse,
+        fill=orange!10,
+        minimum width=2.4cm,
+        align=center,
+        font=\small
+    }, 
+    uc/.style={
+        draw,
+        ellipse,
+        fill=blue!6,
+        minimum width=3.8cm,
+        minimum height=0.8cm,
+        align=center,
+        font=\small
+    }, 
+    every node/.style={font=\small}
+]
+
+\node[actor] (guest) at (-2.5, 4.85) {Khách};
+\node[actor] (student) at (-2.5, 1.0) {Học viên};
+\node[actor] (admin) at (-2.5, -5.5) {Admin};
+\node[actor] (teacher) at (10.5, -4.25) {Giảng viên};
+
+\node[draw, thick, rounded corners, minimum width=9cm, minimum height=16cm, label={[anchor=south, font=\large]north:Hệ Thống}] (boundary) at (4, -1.65) {};
+
+\node[uc] (login) at (5, 5.5) {Đăng nhập OAuth};
+\node[uc] (catalog) at (5, 4.2) {Xem danh mục};
+\node[uc] (enroll) at (5, 2.9) {Ghi danh khóa học};
+\node[uc] (learn) at (5, 1.6) {Học lesson};
+\node[uc] (test) at (5, 0.3) {Làm bài test};
+\node[uc] (comment) at (5, -1.0) {Bình luận};
+\node[uc] (profile) at (5, -2.3) {Cập nhật hồ sơ};
+\node[uc] (course) at (5, -3.6) {Quản lý khóa học};
+\node[uc] (lesson) at (5, -4.9) {Quản lý module/lesson};
+\node[uc] (question) at (5, -6.2) {Ngân hàng câu hỏi};
+\node[uc] (announce) at (5, -7.5) {Đăng thông báo};
+\node[uc] (useradmin) at (5, -8.8) {Quản trị người dùng};
+
+\foreach \a/\b in {guest/login, guest/catalog, student/catalog, student/enroll, student/learn, student/test, admin/useradmin, teacher/course, teacher/lesson, teacher/question}{
+    \draw (\a) -- (\b);
+}
+
+\draw (student) to[bend right=15] (comment.west);
+\draw (student) to[bend right=25] (profile.west);
+\draw (admin) to[bend left=25] (profile.west);
+\draw (teacher) to[bend right=30] (comment.east);
+\draw (teacher) to[bend left=30] (announce.east);
+
+\draw[dashed, -{Latex}] (test) -- node[pos=0.5, right, font=\scriptsize] {<<extend>>} (learn);
+\draw[dashed, -{Latex}] (course) -- node[pos=0.5, right, font=\scriptsize] {<<include>>} (lesson);
+\draw[dashed, -{Latex}] (course.west) .. controls ++(-2,0) and ++(-2,0) .. node[left, font=\scriptsize] {<<include>>} (question.west);
+\draw[dashed, -{Latex}] (course.west) .. controls ++(-2.5,0) and ++(-2.5,0) .. node[left, font=\scriptsize] {<<include>>} (announce.west);
+\end{tikzpicture}}
+\end{frame}
+
+% --- PHẦN 3: THIẾT KẾ HỆ THỐNG ---
+\section{Thiết kế hệ thống}
+
+\begin{frame}{Kiến trúc tổng thể}
+    \begin{center}
+    \resizebox{0.96\textwidth}{!}{%
+    \begin{tikzpicture}[
+        node distance=1.5cm, 
+        box/.style={draw,rounded corners,align=center,minimum width=3.2cm,minimum height=1cm,fill=blue!6}, 
+        db/.style={draw,cylinder,shape border rotate=90,aspect=0.25,align=center,minimum height=1.3cm,fill=green!8}
+    ]
+
+    \node[box] (browser) {Trình duyệt\\React + Vite};
+    \node[box, right=3.2cm of browser] (api) {REST API\\Spring Boot Controllers};
+    \node[box, right=1cm of api] (service) {Service Layer\\Business Rules};
+    \node[db, right=2.5cm of service] (db) {PostgreSQL};
+
+    \node[box, below=1.5cm of api] (oauth) {Google OAuth2\\Identity Provider};
+    \node[box, below=1.5cm of service] (file) {File Storage\\Avatar/Resources};
+
+    \draw[-{Latex}] (browser) -- node[above=1mm] {HTTPS/JSON} (api);
+    \draw[-{Latex}] (api) -- (service);
+    \draw[-{Latex}] (service) -- node[above=1mm] {JPA/SQL} (db);
+    \draw[-{Latex}] (api) -- (oauth);
+    \draw[-{Latex}] (service) -- (file);
+    \end{tikzpicture}}
+    \end{center}
+    \begin{itemize}
+        \item \textbf{Frontend:} React + Vite, giao tiếp qua HTTPS/JSON.
+        \item \textbf{Backend:} Spring Boot, REST API, Service Layer.
+        \item \textbf{Database:} PostgreSQL, Flyway migrations, JPA/SQL.
+    \end{itemize}
+\end{frame}
+
+\begin{frame}{Công nghệ sử dụng \& Triển khai}
+    \begin{columns}[T]
+        \begin{column}{0.5\textwidth}
+            \begin{block}{Frontend}
+                \begin{itemize}
+                    \item \textbf{Framework:} ReactJS (Vite)
+                    \item \textbf{Ngôn ngữ:} TypeScript
+                    \item \textbf{Styling:} Tailwind CSS / UI Components
+                \end{itemize}
+            \end{block}
+            \begin{block}{Backend}
+                \begin{itemize}
+                    \item \textbf{Framework:} Spring Boot 3.x
+                    \item \textbf{Ngôn ngữ:} Java
+                    \item \textbf{Bảo mật:} Spring Security, OAuth2, JWT
+                \end{itemize}
+            \end{block}
+        \end{column}
+        
+        \begin{column}{0.5\textwidth}
+            \begin{block}{Cơ sở dữ liệu \& Lưu trữ}
+                \begin{itemize}
+                    \item \textbf{Database:} PostgreSQL
+                    \item \textbf{Migration:} Flyway
+                    \item \textbf{File Storage:} Tích hợp Cloud / Local
+                \end{itemize}
+            \end{block}
+            \begin{block}{Môi trường \& Quy trình}
+                \begin{itemize}
+                    \item \textbf{Đóng gói:} Docker, Docker Compose
+                    \item \textbf{Tài liệu API:} Swagger / OpenAPI
+                    \item \textbf{Quản lý mã nguồn:} Git / GitHub
+                \end{itemize}
+            \end{block}
+        \end{column}
+    \end{columns}
+\end{frame}
+
+\begin{frame}{Thiết kế Cơ sở dữ liệu}
+\centering
+\resizebox{0.98\textwidth}{!}{%
+\begin{tikzpicture}[entity/.style={draw,rounded corners,fill=green!7,minimum width=2.8cm,minimum height=0.8cm,align=center}, node distance=1.2cm and 1.6cm, every node/.style={font=\small}]
+\node[entity] (users) {users};
+\node[entity,right=of users] (courses) {courses};
+\node[entity,right=of courses] (modules) {modules};
+\node[entity,right=of modules] (lessons) {lessons};
+\node[entity,below=of users] (roles) {roles / permissions};
+\node[entity,below=of courses] (enroll) {enrollments};
+\node[entity,below=of modules] (ann) {announcements};
+\node[entity,below=of lessons] (comments) {comments};
+\node[entity,above=of lessons] (tests) {lesson\_tests};
+\node[entity,above=of modules] (questions) {questions};
+\node[entity,above=of courses] (sessions) {test\_sessions};
+\draw[-{Latex}] (courses) -- node[above]{1-n} (modules);
+\draw[-{Latex}] (modules) -- node[above]{1-n} (lessons);
+\draw[-{Latex}] (users) -- node[above]{owner} (courses);
+\draw[-{Latex}] (users) -- (roles);
+\draw[-{Latex}] (users) -- (enroll);
+\draw[-{Latex}] (courses) -- (enroll);
+\draw[-{Latex}] (courses) -- (ann);
+\draw[-{Latex}] (lessons) -- (comments);
+\draw[{Latex}-{Latex}] (lessons) -- (tests);
+\draw[-{Latex}] (users) -- (sessions);
+\draw[-{Latex}] (tests.north) -- ++(0,0.8) -| (sessions.north);
+\draw[-{Latex}] (tests) -- (questions);
+\end{tikzpicture}}
+\vspace{1mm}
+\begin{itemize}\scriptsize
+    \item Sơ đồ ERD rút gọn sử dụng trực tiếp cấu trúc từ báo cáo chính.
+    \item Trung tâm gồm \texttt{users}, \texttt{courses}, \texttt{modules}, \texttt{lessons}, \texttt{lesson\_tests} và \texttt{test\_sessions}.
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Class Diagram rút gọn}
+\centering
+\resizebox{0.98\textwidth}{!}{%
+\begin{tikzpicture}[class/.style={draw,rectangle split,rectangle split parts=3,minimum width=3.6cm,align=left,fill=gray!5}, node distance=1.2cm and 1.5cm, every node/.style={font=\scriptsize}]
+\node[class] (user) {\textbf{User}\nodepart{second}id: Long\\email: String\\displayName: String\\avatarUrl: String\nodepart{third}+getRoles()\\+updateProfile()};
+\node[class,right=of user] (course) {\textbf{Course}\nodepart{second}id: Long\\title: String\\visibility: Enum\\ownerId: Long\nodepart{third}+publish()\\+updateInfo()};
+\node[class,right=of course] (module) {\textbf{Module}\nodepart{second}id: Long\\courseId: Long\\title: String\\order: int\nodepart{third}+reorder()};
+\node[class,below=of module] (lesson) {\textbf{Lesson}\nodepart{second}id: Long\\moduleId: Long\\type: LessonType\\order: int\nodepart{third}+markComplete()};
+\node[class,below=of course] (test) {\textbf{LessonTest}\nodepart{second}id: Long\\statement: String\\timeLimit: int\\settings: JSON\nodepart{third}+startSession()\\+grade()};
+\node[class,below=of user] (question) {\textbf{Question}\nodepart{second}id: Long\\content: String\\type: Enum\nodepart{third}+validateAnswer()};
+\node[class,below=of lesson] (comment) {\textbf{Comment}\nodepart{second}id: Long\\content: String\\parentId: Long\nodepart{third}+reply()\\+edit()};
+\draw[-{Latex}] (course) -- node[above]{owner} (user);
+\draw[-{Latex}] (module) -- node[above]{belongs to} (course);
+\draw[-{Latex}] (lesson) -- node[right]{belongs to} (module);
+\draw[-{Latex}] (test) -- node[above]{extends} (lesson);
+\draw[-{Latex}] (test) -- node[above]{uses} (question);
+\draw[-{Latex}] (comment) -- node[right]{on} (lesson);
+\end{tikzpicture}}
+\end{frame}
+
+\begin{frame}{Sơ đồ tuần tự: Học viên làm bài kiểm tra}
+\centering
+\resizebox{0.98\textwidth}{!}{%
+\begin{tikzpicture}[lifeline/.style={draw,minimum width=2.5cm,minimum height=0.8cm,fill=blue!6}, msg/.style={-{Latex}}, every node/.style={font=\small}]
+\node[lifeline] (stu) at (0,0) {Học viên};
+\node[lifeline] (fe) at (3.5,0) {React UI};
+\node[lifeline] (ctrl) at (7,0) {TestSessionController};
+\node[lifeline] (svc) at (10.8,0) {TestService};
+\node[lifeline] (db) at (14.2,0) {PostgreSQL};
+\foreach \x in {0,3.5,7,10.8,14.2}{\draw[dashed] (\x,-0.5) -- (\x,-7.2);} 
+\draw[msg] (0,-1) -- node[above]{Bấm bắt đầu} (3.5,-1);
+\draw[msg] (3.5,-1.6) -- node[above]{POST /test-sessions} (7,-1.6);
+\draw[msg] (7,-2.2) -- node[above]{startSession()} (10.8,-2.2);
+\draw[msg] (10.8,-2.8) -- node[above]{insert session} (14.2,-2.8);
+\draw[msg] (14.2,-3.4) -- node[above]{sessionId} (10.8,-3.4);
+\draw[msg] (10.8,-4.0) -- node[above]{TestSessionResponse} (7,-4.0);
+\draw[msg] (7,-4.6) -- node[above]{JSON} (3.5,-4.6);
+\draw[msg] (0,-5.2) -- node[above]{Chọn đáp án} (3.5,-5.2);
+\draw[msg] (3.5,-5.8) -- node[above]{PUT /answers} (7,-5.8);
+\draw[msg] (7,-6.4) -- node[above]{saveAnswer()} (10.8,-6.4);
+\draw[msg] (10.8,-7.0) -- node[above]{upsert answer} (14.2,-7.0);
+\end{tikzpicture}}
+\end{frame}
+
+% --- PHẦN 4: GIAO DIỆN & KIỂM THỬ ---
+\section{Giao diện \& Kiểm thử}
+
+
+\begin{frame}{Giao diện: Đăng nhập}
+\centering
+\maybeimage{screen1.png}{0.66}\\[1mm]
+\scriptsize Đăng nhập / trang vào hệ thống
+\end{frame}
+
+\begin{frame}{Giao diện: Danh sách khóa học}
+\centering
+\maybeimage{screen2.png}{0.66}\\[1mm]
+\scriptsize Danh sách hoặc trang khám phá khóa học
+\end{frame}
+
+\begin{frame}{Giao diện: Chi tiết khóa học}
+\centering
+\maybeimage{screen3.png}{0.66}\\[1mm]
+\scriptsize Chi tiết khóa học / classroom
+\end{frame}
+
+\begin{frame}{Giao diện: Xem bài học}
+\centering
+\maybeimage{screen4.png}{0.66}\\[1mm]
+\scriptsize Xem bài học, tài nguyên và bình luận
+\end{frame}
+
+\begin{frame}{Giao diện: Dashboard giảng viên}
+\centering
+\maybeimage{screen5.png}{0.66}\\[1mm]
+\scriptsize Dashboard giảng viên / công cụ quản lý nội dung
+\end{frame}
+
+\begin{frame}{Giao diện: Dashboard quản trị viên}
+\centering
+\maybeimage{screen6.png}{0.66}\\[1mm]
+\scriptsize Dashboard quản trị viên / kiểm tra và quản trị
+\end{frame}
+
+\begin{frame}{Chiến lược Kiểm thử}
+    \centering
+    \resizebox{\textwidth}{!}{%
+    \begin{tabular}{@{}lll@{}}
+        \toprule
+        \textbf{Mức kiểm thử} & \textbf{Phạm vi} & \textbf{Kỹ thuật \& Tiêu chí} \\ \midrule
+        \textbf{Unit} & Service, Util, Mapper & Mock repo, test nhánh nghiệp vụ. \\ 
+        \textbf{Integration} & Controller, Repository, DB & Gọi API, kiểm tra HTTP status, JSON. \\ 
+        \textbf{E2E} & Luồng nghiệp vụ chính & Khách $\rightarrow$ Ghi danh $\rightarrow$ Học $\rightarrow$ Test. \\ 
+        \textbf{Security} & Endpoint phân quyền & Test token sai/thiếu, check lỗi 401/403. \\ 
+        \textbf{Hiệu năng} & Tải danh sách, submit test & Phản hồi trong ngưỡng cho phép. \\ \bottomrule
+    \end{tabular}}
+\end{frame}
+
+% --- PHẦN 5: TỔNG KẾT ---
+\section{Kết luận \& Hướng phát triển}
+
+\begin{frame}{Kết luận \& Hướng phát triển}
+    \begin{block}{Kết quả đạt được}
+        \begin{itemize}
+            \item Hoàn thiện đặc tả và thiết kế hệ thống e-learning với các tính năng cốt lõi.
+            \item Xây dựng kiến trúc hiện đại: React, Spring Boot, PostgreSQL, Docker/CI-CD.
+            \item Thiết kế database bám sát Flyway migrations và mô hình phân quyền rõ ràng.
+        \end{itemize}
+    \end{block}
+    \begin{block}{Hướng phát triển tương lai}
+        \begin{itemize}
+            \item Chứng chỉ, huy hiệu học tập và gamification.
+            \item AI chấm tự luận, gợi ý lộ trình học tập, analytics nâng cao.
+            \item Ứng dụng di động hoặc PWA, audit log và bảo mật production.
+        \end{itemize}
+    \end{block}
+\end{frame}
+
+\begin{frame}
+    \begin{center}
+        \Huge \textbf{CẢM ƠN THẦY VÀ CÁC \\BẠN ĐÃ LẮNG NGHE!} \\
+        \vspace{1cm}
+        \large Q\&A
+    \end{center}
+\end{frame}
+
+\end{document}

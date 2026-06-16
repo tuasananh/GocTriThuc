@@ -1,0 +1,1183 @@
+\documentclass[12pt,a4paper]{report}
+
+% =========================
+% Preamble
+% =========================
+\usepackage[utf8]{inputenc}
+\usepackage[T5]{fontenc}
+\usepackage[vietnamese]{babel}
+\usepackage{lmodern}
+\usepackage{geometry}
+\geometry{left=3cm,right=2.2cm,top=2.5cm,bottom=2.5cm}
+\usepackage{amsmath,amssymb}
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{multirow}
+\usepackage{tabularx}
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage{xcolor}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,positioning,fit,shapes.geometric,shapes.multipart,calc}
+\usepackage{listings}
+\usepackage{enumitem}
+\usepackage{hyperref}
+\hypersetup{colorlinks=true,linkcolor=blue!60!black,urlcolor=blue!60!black,citecolor=blue!60!black}
+\urlstyle{same}
+
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{0.65\baselineskip}
+\setlength{\tabcolsep}{2pt}
+\renewcommand{\arraystretch}{1.25}
+\setlist[itemize]{topsep=2pt,itemsep=2pt}
+\setlist[enumerate]{topsep=2pt,itemsep=2pt}
+\emergencystretch=3em
+\hfuzz=120pt
+\sloppy
+
+\definecolor{codebg}{RGB}{248,248,248}
+\definecolor{codeframe}{RGB}{210,210,210}
+\definecolor{prismblue}{RGB}{42,91,155}
+\definecolor{prismgreen}{RGB}{50,130,90}
+\definecolor{prismorange}{RGB}{200,120,30}
+
+\lstdefinestyle{prismcode}{
+  backgroundcolor=\color{codebg},
+  frame=single,
+  rulecolor=\color{codeframe},
+  basicstyle=\ttfamily\small,
+  keywordstyle=\color{blue!60!black}\bfseries,
+  commentstyle=\color{green!40!black},
+  stringstyle=\color{orange!70!black},
+  breaklines=true,
+  columns=fullflexible,
+  showstringspaces=false,
+  tabsize=2
+}
+\lstset{style=prismcode}
+
+\newcolumntype{L}[1]{>{\raggedright\arraybackslash}p{#1}}
+\newcolumntype{Y}{>{\raggedright\arraybackslash}X}
+
+\newcommand{\projectname}{GocTriThuc}
+\newcommand{\topic}{Nền tảng học tập trực tuyến GocTriThuc}
+\newcommand{\placeholderimage}[2]{%
+\begin{figure}[htbp]
+  \centering
+  \IfFileExists{#1}{\includegraphics[width=0.85\textwidth]{#1}}{%
+  \begin{tikzpicture}
+    \draw[rounded corners=6pt,thick,fill=gray!8] (0,0) rectangle (13,7);
+    \draw[fill=prismblue!15,draw=prismblue] (0.4,6.2) rectangle (12.6,6.7);
+    \draw[fill=white,draw=gray!50] (0.7,0.6) rectangle (12.3,5.9);
+    \node[align=center,text width=10cm] at (6.5,3.4) {\Large Khung chèn ảnh giao diện\\[4pt]\texttt{#1}\\[4pt]\normalsize Có thể thay bằng screenshot thật khi hoàn thiện sản phẩm};
+  \end{tikzpicture}}
+  \caption{#2}
+\end{figure}}
+
+\begin{document}
+
+\begin{titlepage}
+\centering
+{\Large ĐẠI HỌC BÁCH KHOA HÀ NỘI\\[4pt] TRƯỜNG CÔNG NGHỆ THÔNG TIN VÀ TRUYỀN THÔNG}\par
+\vspace{2.5cm}
+{\Huge\bfseries BÁO CÁO BÀI TẬP LỚN\\[8pt] NHẬP MÔN CÔNG NGHỆ PHẦN MỀM}\par
+\vspace{1.2cm}
+{\LARGE\bfseries\selectfont Đề tài: \topic\par}
+\vspace{2cm}
+\begin{tabular}{lll}
+Giảng viên hướng dẫn: & TS. Nguyễn Quốc Tuấn &  \\
+Nhóm thực hiện: & Nhóm phát triển \projectname & \\
+Thành viên: & Trần Tuấn Anh & 202416124 \\
+& Nguyễn Công Vinh & 202400083 \\ 
+& Phạm Văn Sâm & 202400114 \\
+& Vũ Hoàng Tuấn &  202400080 \\
+& Lê Thành Trung & 202400076 \\
+Lớp học phần: & IT3180 & \\
+\end{tabular}
+\vfill
+{\large Hà Nội, \today}
+\end{titlepage}
+
+\tableofcontents
+\listoftables
+\listoffigures
+\clearpage
+
+\chapter*{Lời nói đầu}
+\addcontentsline{toc}{chapter}{Lời nói đầu}
+Báo cáo này trình bày đầy đủ quá trình khảo sát, phân tích, đặc tả, thiết kế, kiểm thử và định hướng phát triển cho đề tài \textbf{\topic}. Nội dung được xây dựng dựa trên mã nguồn và tài liệu hiện có của thư mục \texttt{GocTriThuc-main}, trong đó hệ thống sử dụng kiến trúc web hiện đại gồm frontend React/Vite/TypeScript, backend Spring Boot, cơ sở dữ liệu PostgreSQL, xác thực OAuth2/JWT, tài liệu API OpenAPI/Swagger và quy trình đóng gói bằng Docker.
+
+Mục tiêu của báo cáo không chỉ là mô tả sản phẩm cuối cùng mà còn thể hiện tư duy kỹ nghệ phần mềm: xác định nhu cầu người dùng, mô hình hóa tác nhân, đặc tả yêu cầu chức năng và phi chức năng, thiết kế ca sử dụng, kiến trúc, cơ sở dữ liệu, giao diện, kế hoạch kiểm thử và hướng mở rộng. Các bảng đặc tả được trình bày chi tiết nhằm phục vụ triển khai, kiểm thử, nghiệm thu và bảo trì lâu dài.
+
+\chapter{Tổng quan dự án}
+
+\section{Lý do chọn đề tài}
+Trong bối cảnh chuyển đổi số giáo dục, các trường đại học, trung tâm đào tạo và nhóm nghiên cứu cần một nền tảng học tập trực tuyến có khả năng tổ chức khóa học, quản lý học liệu, theo dõi tiến độ, tạo bài kiểm tra, hỗ trợ thảo luận và phân quyền theo vai trò. Các công cụ phổ biến như Google Classroom, Moodle, Canvas hay Microsoft Teams đều giải quyết một phần bài toán, nhưng khi áp dụng vào môi trường lớp học nhỏ hoặc nhóm nghiên cứu tại Việt Nam, chúng thường gặp các hạn chế: cấu hình phức tạp, khó tùy biến nghiệp vụ, thiếu khả năng tích hợp sâu với quy trình nội bộ, hoặc không tối ưu cho việc phát triển thử nghiệm trong môn học kỹ nghệ phần mềm.
+
+Đề tài \projectname{} được lựa chọn vì có tính thực tiễn cao, phạm vi nghiệp vụ đủ rộng để minh họa nhiều hoạt động cốt lõi của công nghệ phần mềm, đồng thời có kiến trúc kỹ thuật rõ ràng. Hệ thống hướng tới việc hỗ trợ ba nhóm người dùng chính: học viên, giảng viên và quản trị viên. Học viên có thể khám phá khóa học, đăng ký tham gia, học các bài video/blog/bài kiểm tra, tải tài nguyên, bình luận và theo dõi tiến độ. Giảng viên có thể tạo khóa học, quản lý module, soạn bài học, đăng thông báo, xây dựng ngân hàng câu hỏi và xem hoạt động học tập. Quản trị viên có thể quản lý người dùng, vai trò, quyền và giám sát vận hành.
+
+\section{Mục tiêu dự án}
+\begin{itemize}
+  \item Xây dựng nền tảng e-learning có giao diện thân thiện, dễ sử dụng, chạy trên trình duyệt và tương thích nhiều kích thước màn hình.
+  \item Cung cấp backend REST API có phân lớp rõ ràng gồm controller, service, repository, DTO và entity.
+  \item Thiết kế cơ sở dữ liệu quan hệ đủ chuẩn hóa để quản lý người dùng, khóa học, bài học, tài nguyên, bài kiểm tra, phiên làm bài và bình luận phân cấp.
+  \item Áp dụng cơ chế bảo mật dựa trên OAuth2, JWT, vai trò và quyền chi tiết nhằm bảo vệ các chức năng quan trọng.
+  \item Tạo quy trình phát triển có thể kiểm thử, triển khai bằng Docker và tích hợp CI/CD.
+\end{itemize}
+
+\section{Đối tượng nghiên cứu và phạm vi}
+Đối tượng nghiên cứu của báo cáo là quy trình xây dựng một hệ thống phần mềm web phục vụ đào tạo trực tuyến. Phạm vi phiên bản hiện tại tập trung vào các nghiệp vụ: xác thực Google OAuth, quản lý hồ sơ, quản lý khóa học, module, bài học dạng video/blog/test, upload file, thông báo, bình luận, ngân hàng câu hỏi, phiên kiểm tra, theo dõi tiến độ, dashboard giảng viên/học viên và quản trị người dùng. Các chức năng nâng cao như thanh toán, lớp học livestream, chấm tự luận bằng AI, khuyến nghị lộ trình cá nhân hóa và ứng dụng di động native được xem là hướng phát triển.
+
+\section{Phân tích hiện trạng và giải pháp tương tự}
+\begin{longtable}{L{3cm} L{4.2cm} L{4.2cm} L{3.2cm}}
+\caption{So sánh các nền tảng học tập trực tuyến}\label{tab:market}\\
+\toprule
+Giải pháp & Ưu điểm & Nhược điểm & Bài học áp dụng cho \projectname \\
+\midrule
+\endfirsthead
+\toprule
+Giải pháp & Ưu điểm & Nhược điểm & Bài học áp dụng cho \projectname \\
+\midrule
+\endhead
+Google Classroom & Dễ sử dụng, tích hợp Google Drive, phù hợp lớp học phổ thông, ít chi phí triển khai. & Khó tùy biến workflow, hạn chế báo cáo học tập chuyên sâu, không phù hợp khi cần kiểm soát dữ liệu nội bộ. & Cần giao diện đơn giản, đăng nhập OAuth nhanh, thao tác tạo lớp/khóa học ít bước. \\
+Moodle & Mã nguồn mở, nhiều plugin, quản lý khóa học và quiz mạnh, cộng đồng lớn. & Giao diện đôi khi phức tạp, cấu hình nặng, chi phí vận hành cao nếu tùy biến sâu. & Cần giữ mô hình \path{module/lesson/test} nhưng giảm độ phức tạp cho người dùng mới. \\
+Canvas LMS & Kiến trúc tốt, hỗ trợ rubrics, lịch học, báo cáo và tích hợp LTI. & Triển khai bản đầy đủ phức tạp, nhiều chức năng vượt nhu cầu nhóm nhỏ. & Tách rõ phân hệ course, assessment, dashboard để mở rộng dần. \\
+Microsoft Teams & Mạnh về họp trực tuyến và cộng tác, tích hợp Office 365. & Không chuyên sâu về thiết kế bài học dạng module, phụ thuộc hệ sinh thái Microsoft. & Cần thảo luận theo bài học/thông báo, nhưng không nhất thiết tích hợp họp ở phiên bản đầu. \\
+\projectname & Kiến trúc hiện đại, dễ tùy biến theo môn học, hỗ trợ vai trò học viên/giảng viên/admin, có ngân hàng câu hỏi và tiến độ học. & Phiên bản đầu còn thiếu mobile app, analytics nâng cao và hệ thống chứng chỉ. & Phát triển theo hướng tinh gọn, kiểm soát mã nguồn và mở rộng nghiệp vụ theo sprint. \\
+\bottomrule
+\end{longtable}
+
+\section{Phương pháp luận phát triển: Agile/Scrum}
+Dự án phù hợp với Agile/Scrum vì yêu cầu có thể thay đổi theo phản hồi của người học và giảng viên. Nhóm phát triển chia công việc thành các sprint ngắn, mỗi sprint tạo ra một phần mềm chạy được. Product Backlog bao gồm các epics như xác thực, khóa học, bài học, bài kiểm tra, bình luận, file, dashboard và admin. Sprint Backlog được chọn theo giá trị nghiệp vụ và phụ thuộc kỹ thuật. Ví dụ, sprint đầu ưu tiên thiết lập repository, Docker Compose, PostgreSQL, Spring Boot, Vite React; sprint tiếp theo triển khai xác thực; các sprint sau xây dựng course, module, lesson, question bank, test session và giao diện.
+
+Trong mỗi sprint, nhóm thực hiện các hoạt động: họp lập kế hoạch, phân rã user story thành task, thiết kế API contract, lập trình frontend/backend song song, review mã nguồn, kiểm thử tích hợp và demo. Definition of Done của một chức năng gồm: API có DTO rõ ràng, xử lý lỗi, phân quyền, migration dữ liệu, giao diện gọi API thành công, có trạng thái loading/error, tài liệu hoặc mô tả kiểm thử, và không phá vỡ chức năng liên quan. Cách làm này giúp giảm rủi ro so với Waterfall, vì hệ thống e-learning có nhiều luồng nghiệp vụ cần kiểm chứng sớm với người dùng.
+
+\chapter{Đặc tả yêu cầu phần mềm}
+
+\section{Tổng quan SRS}
+Tài liệu đặc tả yêu cầu phần mềm của \projectname{} tuân theo tinh thần SRS: mô tả mục đích, phạm vi, tác nhân, chức năng, yêu cầu phi chức năng, mô hình quyền, mô hình dữ liệu, API surface và triển khai. Sản phẩm là một nền tảng học tập trực tuyến phục vụ học viên, giảng viên và quản trị viên với kiến trúc client--server. Frontend React đảm nhiệm trải nghiệm người dùng; backend Spring Boot cung cấp REST API; PostgreSQL lưu trữ dữ liệu; Docker hỗ trợ triển khai nhất quán.
+
+\section{Danh sách tác nhân}
+\begin{table}[H]
+\centering
+\caption{Danh sách tác nhân của hệ thống}
+\begin{tabularx}{\textwidth}{L{3cm} Y Y}
+\toprule
+Tác nhân & Mô tả & Quyền lợi chính \\
+\midrule
+Khách vãng lai & Người chưa đăng nhập, truy cập trang chủ, giới thiệu và danh mục công khai. & Xem thông tin nền tảng, xem khóa học công khai, đăng nhập bằng OAuth. \\
+Học viên & Người dùng đã đăng nhập với vai trò học tập. & Đăng ký khóa học, học bài, làm bài kiểm tra, bình luận, theo dõi tiến độ. \\
+Giảng viên & Người tạo và quản lý nội dung đào tạo. & Tạo khóa học, module, lesson, thông báo, câu hỏi, bài test, duyệt yêu cầu truy cập. \\
+Quản trị viên & Người vận hành hệ thống. & Quản lý người dùng, vai trò, quyền, giám sát dữ liệu và cấu hình hệ thống. \\
+Dịch vụ OAuth & Nhà cung cấp danh tính bên ngoài như Google. & Xác minh danh tính và trả thông tin hồ sơ cơ bản. \\
+Hệ thống lưu trữ file & Thành phần lưu avatar, tài nguyên khóa học, tài nguyên bài học. & Nhận upload, cung cấp URL tải/xem file, kiểm soát metadata. \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\section{Yêu cầu chức năng theo phân hệ}
+\begin{longtable}{L{1.4cm} L{3cm} L{9cm}}
+\caption{Danh sách yêu cầu chức năng}\label{tab:functional}\\
+\toprule
+Mã & Phân hệ & Mô tả yêu cầu \\
+\midrule
+\endfirsthead
+\toprule
+Mã & Phân hệ & Mô tả yêu cầu \\
+\midrule
+\endhead
+FR-01 & Xác thực & Hệ thống cho phép người dùng đăng nhập bằng Google OAuth, tạo phiên đăng nhập JWT và lấy thông tin người dùng hiện tại qua API. \\
+FR-02 & Hồ sơ & Người dùng cập nhật họ tên hiển thị, ảnh đại diện, thông tin cá nhân cơ bản và xem vai trò hiện tại. \\
+FR-03 & Khóa học & Giảng viên tạo, cập nhật, xóa mềm, xuất bản hoặc ẩn khóa học; khai báo tiêu đề, mô tả, thumbnail, trạng thái và visibility. \\
+FR-04 & Ghi danh & Học viên ghi danh khóa học công khai; với khóa học hạn chế, học viên gửi yêu cầu truy cập và chờ giảng viên duyệt. \\
+FR-05 & Module & Giảng viên tạo module trong khóa học, chỉnh sửa tiêu đề, sắp xếp thứ tự và xóa module khi không còn cần thiết. \\
+FR-06 & Bài học & Giảng viên tạo bài học thuộc module với ba loại: video, blog và test; có thể cập nhật nội dung chi tiết theo từng subtype. \\
+FR-07 & Video lesson & Hệ thống lưu nhà cung cấp video và giá trị provider để frontend render nhúng video phù hợp. \\
+FR-08 & Blog lesson & Hệ thống lưu nội dung HTML đã được làm sạch nhằm ngăn XSS, phục vụ bài viết dài hoặc tài liệu hướng dẫn. \\
+FR-09 & Bài kiểm tra & Giảng viên tạo lesson test, thiết lập thời gian, statement, danh sách câu hỏi, điểm đạt và cấu hình mở rộng. \\
+FR-10 & Ngân hàng câu hỏi & Giảng viên tạo câu hỏi trắc nghiệm một lựa chọn hoặc nhiều lựa chọn, quản lý đáp án và tái sử dụng trong nhiều bài test. \\
+FR-11 & Làm bài test & Học viên bắt đầu phiên làm bài, lưu câu trả lời từng câu, nộp bài, nhận điểm và xem kết quả. \\
+FR-12 & Tiến độ học & Học viên đánh dấu hoàn thành bài học; hệ thống tính tỷ lệ hoàn thành khóa học dựa trên số lesson đã học. \\
+FR-13 & Thông báo & Giảng viên đăng thông báo trong khóa học; học viên đã ghi danh xem feed thông báo. \\
+FR-14 & Bình luận & Người dùng bình luận theo luồng phân cấp trên bài học hoặc thông báo, hỗ trợ trả lời, chỉnh sửa và xóa theo quyền. \\
+FR-15 & File & Người dùng có quyền upload file, gắn file vào khóa học/bài học, tải tài nguyên và cập nhật avatar. \\
+FR-16 & Dashboard học viên & Học viên xem khóa học đang tham gia, tiến độ, bài học gần đây và kết quả kiểm tra. \\
+FR-17 & Dashboard giảng viên & Giảng viên xem khóa học đang quản lý, số học viên, yêu cầu truy cập, tài nguyên và bài kiểm tra. \\
+FR-18 & Quản trị & Admin xem danh sách người dùng, gán vai trò, thu hồi quyền và theo dõi trạng thái tài khoản. \\
+\bottomrule
+\end{longtable}
+
+\section{Danh sách Use Case}
+\begin{longtable}{L{1.6cm} L{4.2cm} L{3cm} L{5.2cm}}
+\caption{Danh sách Use Case tổng quát}\label{tab:usecases}\\
+\toprule
+Mã UC & Tên Use Case & Actor chính & Mô tả ngắn \\
+\midrule
+\endfirsthead
+\toprule
+Mã UC & Tên Use Case & Actor chính & Mô tả ngắn \\
+\midrule
+\endhead
+UC-01 & Đăng nhập OAuth & Khách vãng lai & Người dùng xác thực qua Google và nhận phiên đăng nhập. \\
+UC-02 & Cập nhật hồ sơ & Học viên/Giảng viên & Người dùng thay đổi thông tin cá nhân và ảnh đại diện. \\
+UC-03 & Tạo khóa học & Giảng viên & Giảng viên khai báo thông tin khóa học và lưu bản nháp. \\
+UC-04 & Xuất bản khóa học & Giảng viên & Khóa học được chuyển sang trạng thái hiển thị cho học viên. \\
+UC-05 & Ghi danh khóa học & Học viên & Học viên tham gia khóa học public hoặc gửi yêu cầu access restricted. \\
+UC-06 & Duyệt yêu cầu truy cập & Giảng viên & Giảng viên chấp nhận hoặc từ chối yêu cầu vào khóa học. \\
+UC-07 & Quản lý module & Giảng viên & Giảng viên thêm/sửa/xóa/sắp xếp module trong khóa học. \\
+UC-08 & Soạn bài học blog & Giảng viên & Giảng viên viết nội dung HTML/BlockNote cho bài học. \\
+UC-09 & Soạn bài học video & Giảng viên & Giảng viên gắn video YouTube/Vimeo vào bài học. \\
+UC-10 & Xây dựng bài test & Giảng viên & Giảng viên chọn câu hỏi từ ngân hàng và cấu hình test. \\
+UC-11 & Làm bài kiểm tra & Học viên & Học viên bắt đầu phiên, trả lời, nộp bài và xem điểm. \\
+UC-12 & Đánh dấu hoàn thành & Học viên & Học viên đánh dấu lesson đã hoàn thành để cập nhật progress. \\
+UC-13 & Bình luận bài học & Học viên/Giảng viên & Người dùng trao đổi theo luồng bình luận phân cấp. \\
+UC-14 & Đăng thông báo & Giảng viên & Giảng viên gửi thông báo tới học viên trong khóa học. \\
+UC-15 & Quản trị người dùng & Admin & Admin thay đổi vai trò, xem danh sách và khóa/mở quyền nếu cần. \\
+\bottomrule
+\end{longtable}
+
+\section{Yêu cầu phi chức năng}
+\subsection{Hiệu năng}
+Hệ thống cần phản hồi nhanh với các thao tác thường xuyên như xem danh mục khóa học, mở trang chi tiết khóa học, tải danh sách module/lesson và lưu câu trả lời test. Với môi trường lớp học quy mô vừa, API đọc dữ liệu phổ biến nên phản hồi dưới vài giây. Cơ sở dữ liệu cần có khóa chính, khóa ngoại và chỉ mục phù hợp cho các bảng liên kết nhiều-nhiều như enrollments, \path{lesson_completions}, test\_questions và test\_session\_answers. Frontend cần sử dụng trạng thái loading, skeleton và phân trang hoặc lazy loading khi danh sách lớn.
+
+\subsection{Bảo mật}
+Bảo mật là yêu cầu trọng yếu vì hệ thống lưu thông tin người dùng, kết quả học tập, tài nguyên khóa học và quyền quản trị. Backend phải kiểm tra xác thực tại SecurityConfig, xác định current user qua AuthUtils, áp dụng role/permission cho các endpoint nhạy cảm, không tin tưởng dữ liệu từ frontend, làm sạch HTML bài blog bằng HtmlSanitizer, kiểm soát file upload và vô hiệu hóa Swagger UI ở production. JWT phải có thời hạn hợp lý; refresh hoặc đăng nhập lại cần được thiết kế để tránh chiếm quyền phiên.
+
+\subsection{Tính khả dụng và trải nghiệm}
+Giao diện phải dễ học đối với người dùng không chuyên kỹ thuật. Các trang chính như Home, Login, Courses, Course Detail, Classroom, Lesson, Test Take, Test Result, Dashboard, Instructor và Admin cần có điều hướng nhất quán. Thông báo lỗi phải cụ thể, ví dụ: không đủ quyền, khóa học không tồn tại, test đã hết thời gian, file không hợp lệ. Giao diện cần responsive để dùng được trên laptop, tablet và điện thoại.
+
+\subsection{Môi trường triển khai}
+Dự án hỗ trợ phát triển local với Docker Compose cho PostgreSQL, backend Spring Boot chạy qua Maven Wrapper và frontend Vite chạy qua pnpm. Môi trường production đóng gói qua Docker image full-stack và triển khai bằng Docker Compose production. Biến môi trường quản lý cấu hình database, OAuth, JWT secret, CORS và profile runtime.
+
+\chapter{Kịch bản Use Case chi tiết}
+
+\section{UC-01: Đăng nhập OAuth}
+\begin{longtable}{L{4cm} L{10.5cm}}
+\caption{Đặc tả Use Case UC-01 -- Đăng nhập OAuth}\label{tab:uc-login}\\
+\toprule
+Thuộc tính & Nội dung \\
+\midrule
+\endfirsthead
+\toprule
+Thuộc tính & Nội dung \\
+\midrule
+\endhead
+Tên Use Case & Đăng nhập OAuth bằng Google \\
+Actor chính & Khách vãng lai, Học viên, Giảng viên, Admin \\
+Mục tiêu & Cho phép người dùng xác thực danh tính an toàn mà không cần tự quản lý mật khẩu trong hệ thống. \\
+Tiền điều kiện & Người dùng có tài khoản Google hợp lệ; backend đã cấu hình OAuth client; frontend có đường dẫn callback hợp lệ. \\
+Hậu điều kiện thành công & Hệ thống tạo hoặc cập nhật bản ghi người dùng, sinh JWT/session, frontend lưu trạng thái đăng nhập và chuyển người dùng tới dashboard phù hợp. \\
+Hậu điều kiện thất bại & Không tạo phiên đăng nhập; người dùng vẫn ở màn hình login và nhận thông báo lỗi. \\
+Luồng chính & \begin{enumerate}[leftmargin=*]
+\item Người dùng mở trang \texttt{/login}.
+\item Frontend hiển thị nút đăng nhập Google thông qua component OAuthLogin.
+\item Người dùng bấm nút đăng nhập, trình duyệt chuyển hướng tới Google OAuth consent screen.
+\item Người dùng chọn tài khoản và đồng ý chia sẻ thông tin cần thiết.
+\item Google chuyển hướng về backend hoặc frontend callback kèm authorization code/token theo cấu hình.
+\item Backend xác minh token với Google, trích xuất email, tên hiển thị, avatar và subject id.
+\item Backend tìm người dùng theo provider id hoặc email; nếu chưa có thì tạo mới với vai trò mặc định học viên.
+\item Backend sinh JWT, trả thông tin current user và quyền tương ứng cho frontend.
+\item Frontend cập nhật AuthContext, điều hướng tới Dashboard hoặc trang trước đó.
+\end{enumerate} \\
+Luồng ngoại lệ A1 & Người dùng hủy đăng nhập tại Google: Google trả lỗi cancel/access\_denied; frontend hiển thị thông báo ``Đăng nhập bị hủy'' và cho phép thử lại. \\
+Luồng ngoại lệ A2 & Email chưa được xác minh: backend từ chối tạo tài khoản, ghi log bảo mật và trả lỗi 401/403. \\
+Luồng ngoại lệ A3 & Token OAuth không hợp lệ hoặc hết hạn: backend không tạo JWT, frontend xóa trạng thái tạm và yêu cầu đăng nhập lại. \\
+Luồng ngoại lệ A4 & Tài khoản bị thu hồi quyền: backend nhận diện user nhưng không cấp quyền truy cập, trả thông báo liên hệ quản trị viên. \\
+Dữ liệu vào & OAuth authorization code hoặc token, thông tin profile từ Google. \\
+Dữ liệu ra & JWT/session token, \path{CurrentUserResponse} gồm id, email, displayName, avatarUrl, roles, permissions. \\
+Quy tắc nghiệp vụ & Một email chỉ ánh xạ tới một user; vai trò mặc định là Student; quyền Admin chỉ được gán bởi quản trị viên. \\
+\bottomrule
+\end{longtable}
+
+\section{UC-05: Ghi danh khóa học}
+\begin{longtable}{L{4cm} L{10.5cm}}
+\caption{Đặc tả Use Case UC-05 -- Ghi danh khóa học}\label{tab:uc-enroll}\\
+\toprule
+Thuộc tính & Nội dung \\
+\midrule
+\endfirsthead
+\toprule
+Thuộc tính & Nội dung \\
+\midrule
+\endhead
+Tên Use Case & Ghi danh hoặc gửi yêu cầu truy cập khóa học \\
+Actor chính & Học viên \\
+Actor phụ & Giảng viên, hệ thống thông báo \\
+Tiền điều kiện & Học viên đã đăng nhập; khóa học tồn tại và đang ở trạng thái có thể truy cập; học viên chưa bị cấm truy cập khóa học. \\
+Hậu điều kiện thành công & Với khóa học public, bản ghi enrollments được tạo; với khóa học restricted, bản ghi \path{course_access_requests} được tạo và chờ duyệt. \\
+Luồng chính & \begin{enumerate}[leftmargin=*]
+\item Học viên mở trang danh sách khóa học hoặc trang chi tiết khóa học.
+\item Frontend gọi API lấy CourseResponse và AccessStatusResponse.
+\item Hệ thống hiển thị nút ``Tham gia khóa học'' nếu học viên chưa ghi danh.
+\item Học viên bấm nút tham gia.
+\item Backend kiểm tra course visibility, trạng thái publish, quyền truy cập và bản ghi ghi danh hiện có.
+\item Nếu khóa học public, backend tạo bản ghi enrollments với khóa chính gồm user\_id và course\_id.
+\item Backend trả EnrollmentResponse; frontend cập nhật trạng thái thành ``Đã tham gia''.
+\item Học viên được phép mở danh sách module, lesson, tài nguyên và thông báo của khóa học.
+\end{enumerate} \\
+Luồng thay thế B1 & Khóa học restricted: backend không tạo enrollment trực tiếp mà tạo \path{course_access_requests}; frontend hiển thị trạng thái ``Đang chờ duyệt''. \\
+Luồng thay thế B2 & Học viên đã ghi danh: backend trả trạng thái idempotent, không tạo bản ghi trùng; frontend chuyển tới lớp học. \\
+Luồng ngoại lệ E1 & Khóa học không tồn tại hoặc đã bị xóa: backend trả 404; frontend điều hướng về danh sách khóa học. \\
+Luồng ngoại lệ E2 & Khóa học chưa xuất bản: backend trả 403 nếu actor không phải instructor/admin. \\
+Luồng ngoại lệ E3 & Lỗi ràng buộc dữ liệu do request đồng thời: backend xử lý unique constraint và trả trạng thái đã ghi danh hoặc đã gửi yêu cầu. \\
+Dữ liệu vào & courseId, thông tin current user từ JWT. \\
+Dữ liệu ra & EnrollmentResponse hoặc AccessRequestResponse. \\
+Quy tắc nghiệp vụ & Một học viên chỉ có một trạng thái truy cập cho một khóa học; instructor sở hữu khóa học luôn có quyền xem nội dung. \\
+\bottomrule
+\end{longtable}
+
+\section{UC-07/08/09: Quản lý module và bài học}
+\begin{longtable}{L{4cm} L{10.5cm}}
+\caption{Đặc tả Use Case -- Quản lý module và bài học}\label{tab:uc-lesson}\\
+\toprule
+Thuộc tính & Nội dung \\
+\midrule
+\endfirsthead
+\toprule
+Thuộc tính & Nội dung \\
+\midrule
+\endhead
+Tên Use Case & Tạo module và bài học video/blog/test \\
+Actor chính & Giảng viên \\
+Tiền điều kiện & Giảng viên đã đăng nhập, có quyền quản lý khóa học, khóa học tồn tại. \\
+Hậu điều kiện & Module/lesson mới được lưu; thứ tự hiển thị được cập nhật; học viên có quyền sẽ thấy nội dung sau khi khóa học xuất bản. \\
+Luồng chính & \begin{enumerate}[leftmargin=*]
+\item Giảng viên mở trang Instructor Course Editor.
+\item Frontend tải danh sách module hiện có qua ModuleController và LessonController.
+\item Giảng viên nhập tên module, bấm tạo module.
+\item Backend kiểm tra quyền sở hữu khóa học, xác định order kế tiếp và lưu bản ghi modules.
+\item Giảng viên chọn module, bấm thêm lesson và chọn loại video/blog/test.
+\item Frontend gửi CreateLessonRequest gồm moduleId, title, lessonType và order.
+\item Backend tạo bản ghi lessons, đồng thời tạo bản ghi subtype tương ứng trong lesson\_videos, lesson\_blogs hoặc lesson\_tests.
+\item Giảng viên cập nhật nội dung chi tiết: URL video, HTML blog đã sanitize hoặc cấu hình test.
+\item Hệ thống trả LessonDetailResponse; frontend cập nhật sidebar và màn hình editor.
+\end{enumerate} \\
+Luồng thay thế C1 & Sắp xếp lại thứ tự: giảng viên kéo-thả hoặc gửi ReorderRequest; backend cập nhật order trong transaction để tránh trùng unique course/module order. \\
+Luồng thay thế C2 & Chuyển nội dung blog: frontend gửi UpdateLessonBlogRequest; backend dùng HtmlSanitizer để loại bỏ script và thuộc tính nguy hiểm. \\
+Luồng thay thế C3 & Bài học video: backend lưu provider và provider\_value; frontend quyết định cách nhúng video. \\
+Luồng ngoại lệ E1 & Giảng viên không sở hữu khóa học: backend trả 403 và frontend hiển thị cảnh báo không đủ quyền. \\
+Luồng ngoại lệ E2 & Order bị trùng: backend rollback transaction, trả lỗi validation và yêu cầu tải lại danh sách. \\
+Luồng ngoại lệ E3 & Nội dung blog rỗng hoặc video URL sai định dạng: backend trả lỗi 400; frontend đánh dấu trường nhập liệu. \\
+Quy tắc nghiệp vụ & Lesson thuộc đúng một module; module thuộc đúng một course; lesson\_type quyết định bảng subtype; xóa module cần xử lý lesson con theo chính sách dữ liệu. \\
+\bottomrule
+\end{longtable}
+
+\section{UC-10/11: Tạo và làm bài kiểm tra}
+\begin{longtable}{L{4cm} L{10.5cm}}
+\caption{Đặc tả Use Case -- Bài kiểm tra và phiên làm bài}\label{tab:uc-test}\\
+\toprule
+Thuộc tính & Nội dung \\
+\midrule
+\endfirsthead
+\toprule
+Thuộc tính & Nội dung \\
+\midrule
+\endhead
+Tên Use Case & Xây dựng bài test và học viên làm bài \\
+Actor chính & Giảng viên, Học viên \\
+Tiền điều kiện & Giảng viên có câu hỏi trong ngân hàng; học viên đã ghi danh và có quyền truy cập lesson test. \\
+Hậu điều kiện & Test có danh sách câu hỏi; phiên làm bài lưu câu trả lời, thời gian nộp, điểm và kết quả chi tiết. \\
+Luồng chính phía giảng viên & \begin{enumerate}[leftmargin=*]
+\item Giảng viên mở Question Bank Page và tạo câu hỏi.
+\item Hệ thống lưu questions và bảng subtype phù hợp với đáp án.
+\item Giảng viên mở Test Builder cho lesson test.
+\item Frontend hiển thị danh sách câu hỏi có thể chọn.
+\item Giảng viên thêm câu hỏi vào test, xác định điểm hoặc thứ tự.
+\item Backend lưu test\_questions, đảm bảo không thêm trùng câu hỏi vào cùng test.
+\end{enumerate} \\
+Luồng chính phía học viên & \begin{enumerate}[leftmargin=*]
+\item Học viên mở lesson test và bấm ``Bắt đầu làm bài''.
+\item Backend tạo TestSession với started\_at, expires\_at và trạng thái in\_progress.
+\item Frontend hiển thị TestCountdown và danh sách câu hỏi.
+\item Học viên chọn đáp án; mỗi lần chọn, frontend gửi SaveAnswerRequest.
+\item Backend lưu hoặc cập nhật test\_session\_answers.
+\item Học viên bấm nộp bài hoặc hệ thống tự nộp khi hết giờ.
+\item Backend chấm điểm dựa trên đáp án đúng, cập nhật submitted\_at và score.
+\item Frontend chuyển sang trang Test Result để xem điểm và từng câu đúng/sai.
+\end{enumerate} \\
+Luồng ngoại lệ E1 & Hết thời gian: backend từ chối lưu đáp án mới sau expires\_at, tự kết thúc phiên và trả kết quả hiện có. \\
+Luồng ngoại lệ E2 & Refresh trình duyệt: frontend gọi API lấy phiên đang làm và khôi phục đáp án đã lưu. \\
+Luồng ngoại lệ E3 & Câu hỏi bị xóa khỏi test trong lúc làm: hệ thống dùng snapshot hoặc khóa chỉnh sửa test đang có phiên hoạt động để đảm bảo công bằng. \\
+Luồng ngoại lệ E4 & Học viên không có quyền truy cập: backend trả 403, frontend điều hướng về trang chi tiết khóa học. \\
+Quy tắc nghiệp vụ & Một phiên test phải có trạng thái rõ ràng; điểm chỉ tính sau khi nộp; câu hỏi nhiều lựa chọn cần so sánh tập đáp án thay vì một giá trị đơn. \\
+\bottomrule
+\end{longtable}
+
+\section{UC-13/14: Thông báo và bình luận}
+\begin{longtable}{L{4cm} L{10.5cm}}
+\caption{Đặc tả Use Case -- Thông báo và bình luận phân cấp}\label{tab:uc-comment}\\
+\toprule
+Thuộc tính & Nội dung \\
+\midrule
+\endfirsthead
+\toprule
+Thuộc tính & Nội dung \\
+\midrule
+\endhead
+Tên Use Case & Đăng thông báo, đọc và bình luận \\
+Actor chính & Giảng viên, Học viên \\
+Tiền điều kiện & Người dùng đã đăng nhập; có quyền truy cập khóa học hoặc bài học liên quan. \\
+Hậu điều kiện & Thông báo/bình luận được lưu; cây bình luận hiển thị theo quan hệ parent\_id; thời gian tạo/cập nhật được ghi nhận. \\
+Luồng chính & \begin{enumerate}[leftmargin=*]
+\item Giảng viên mở Course Detail và chọn tab Announcements.
+\item Giảng viên nhập tiêu đề, nội dung thông báo và gửi AnnouncementRequest.
+\item Backend kiểm tra quyền instructor, lưu announcements với author\_id.
+\item Học viên mở khóa học, frontend tải feed thông báo.
+\item Học viên chọn một thông báo hoặc bài học và nhập bình luận.
+\item Backend lưu announcement\_comments hoặc lesson\_comments, kèm parent\_id nếu là phản hồi.
+\item Frontend render cây bình luận bằng CommentThreadSinglePage hoặc component liên quan.
+\item Người dùng có quyền chỉnh sửa bình luận của mình; admin/instructor có thể xóa bình luận vi phạm.
+\end{enumerate} \\
+Luồng ngoại lệ E1 & Nội dung bình luận rỗng: backend trả 400, frontend giữ nội dung nhập và nhắc người dùng bổ sung. \\
+Luồng ngoại lệ E2 & parent\_id không thuộc cùng thông báo/bài học: backend từ chối để tránh phá vỡ cây bình luận. \\
+Luồng ngoại lệ E3 & Người dùng không còn trong khóa học: backend trả 403 và frontend ẩn khung nhập bình luận. \\
+Quy tắc nghiệp vụ & Cây bình luận có thể lồng nhiều cấp; xóa bình luận cha có thể xóa cascade hoặc đánh dấu đã xóa tùy chính sách; nội dung hiển thị cần chống XSS. \\
+\bottomrule
+\end{longtable}
+
+\chapter{Thiết kế kiến trúc và hệ thống}
+
+\section{Kiến trúc tổng thể}
+\begin{figure}[H]
+\centering
+\resizebox{\textwidth}{!}{%
+\begin{tikzpicture}[
+    node distance=1.5cm, 
+    box/.style={draw,rounded corners,align=center,minimum width=3.2cm,minimum height=1cm,fill=blue!6}, 
+    db/.style={draw,cylinder,shape border rotate=90,aspect=0.25,align=center,minimum height=1.3cm,fill=green!8}
+]
+
+% Khai báo các node (hộp và khối)
+\node[box] (browser) {Trình duyệt\\React + Vite};
+\node[box, right=3.2cm of browser] (api) {REST API\\Spring Boot Controllers};
+\node[box, right=1cm of api] (service) {Service Layer\\Business Rules};
+\node[db, right=2.5cm of service] (db) {PostgreSQL};
+
+\node[box, below=1.5cm of api] (oauth) {Google OAuth2\\Identity Provider};
+\node[box, below=1.5cm of service] (file) {File Storage\\Avatar/Resources};
+
+% Vẽ mũi tên và dán nhãn
+\draw[-{Latex}] (browser) -- node[above=1mm] {HTTPS/JSON} (api);
+\draw[-{Latex}] (api) -- (service);
+\draw[-{Latex}] (service) -- node[above=1mm] {JPA/SQL} (db);
+\draw[-{Latex}] (api) -- (oauth);
+\draw[-{Latex}] (service) -- (file);
+
+\end{tikzpicture}}
+\caption{Kiến trúc tổng thể của hệ thống \projectname}
+\end{figure}
+
+Backend được tổ chức theo các package: \texttt{controllers} nhận request và trả response; \texttt{dtos} định nghĩa cấu trúc dữ liệu trao đổi; \texttt{entities} ánh xạ bảng dữ liệu; \texttt{repositories} truy vấn PostgreSQL; \texttt{services} chứa nghiệp vụ; \texttt{config} cấu hình bảo mật, Jackson, MVC và converter; \texttt{common} chứa hằng số quyền, vai trò và tiện ích. Frontend được tổ chức theo \texttt{pages}, \texttt{components}, \texttt{contexts}, \texttt{providers}, \texttt{lib}, \texttt{types} và \texttt{mocks}, giúp tách trang nghiệp vụ khỏi component UI tái sử dụng.
+
+\section{Sơ đồ Use Case tổng thể}
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[
+    actor/.style={
+        draw,
+        ellipse,
+        fill=orange!10,
+        minimum width=2.4cm,
+        align=center,
+        font=\small
+    }, 
+    uc/.style={
+        draw,
+        ellipse,
+        fill=blue!6,
+        minimum width=3.8cm,
+        minimum height=0.8cm,
+        align=center,
+        font=\small
+    }, 
+    every node/.style={font=\small}
+]
+
+% Các Actor (Đã lùi ra xa hơn nữa: x=-2.5 và x=12.5)
+\node[actor] (guest) at (-2.5, 4.85) {Khách};
+\node[actor] (student) at (-2.5, 1.0) {Học viên};
+\node[actor] (admin) at (-2.5, -5.5) {Admin};
+\node[actor] (teacher) at (10.5, -4.25) {Giảng viên};
+
+% Khung Boundary (Tăng minimum width lên 10cm)
+\node[draw, thick, rounded corners, minimum width=9cm, minimum height=16cm, label={[anchor=south, font=\large]north:Hệ Thống}] (boundary) at (4, -1.65) {};
+
+% Các Use Case trong khung
+\node[uc] (login) at (5, 5.5) {Đăng nhập OAuth};
+\node[uc] (catalog) at (5, 4.2) {Xem danh mục};
+\node[uc] (enroll) at (5, 2.9) {Ghi danh khóa học};
+\node[uc] (learn) at (5, 1.6) {Học lesson};
+\node[uc] (test) at (5, 0.3) {Làm bài test};
+\node[uc] (comment) at (5, -1.0) {Bình luận};
+\node[uc] (profile) at (5, -2.3) {Cập nhật hồ sơ};
+\node[uc] (course) at (5, -3.6) {Quản lý khóa học};
+\node[uc] (lesson) at (5, -4.9) {Quản lý module/lesson};
+\node[uc] (question) at (5, -6.2) {Ngân hàng câu hỏi};
+\node[uc] (announce) at (5, -7.5) {Đăng thông báo};
+\node[uc] (useradmin) at (5, -8.8) {Quản trị người dùng};
+
+% --- NỐI ACTOR ĐẾN USE CASE ---
+% Các đường thẳng an toàn (không đè lên Use Case nào)
+\foreach \a/\b in {guest/login, guest/catalog, student/catalog, student/enroll, student/learn, student/test, admin/useradmin, teacher/course, teacher/lesson, teacher/question}{
+    \draw (\a) -- (\b);
+}
+
+% Các đường cong dành riêng cho những liên kết trước đây bị cắt chéo qua Use Case khác
+\draw (student) to[bend right=15] (comment.west);
+\draw (student) to[bend right=25] (profile.west);
+\draw (admin) to[bend left=25] (profile.west);
+\draw (teacher) to[bend right=30] (comment.east);
+\draw (teacher) to[bend left=30] (announce.east);
+
+% --- MŨI TÊN EXTEND VÀ INCLUDE ---
+% Các đường nối trực tiếp khoảng cách ngắn
+\draw[dashed, -{Latex}] (test) -- node[pos=0.5, right, font=\scriptsize] {<<extend>>} (learn);
+\draw[dashed, -{Latex}] (course) -- node[pos=0.5, right, font=\scriptsize] {<<include>>} (lesson);
+
+% Các đường Include uốn cong ra mép trái (sử dụng Bezier controls để căn chỉnh chính xác)
+\draw[dashed, -{Latex}] (course.west) .. controls ++(-2,0) and ++(-2,0) .. node[left, font=\scriptsize] {<<include>>} (question.west);
+\draw[dashed, -{Latex}] (course.west) .. controls ++(-2.5,0) and ++(-2.5,0) .. node[left, font=\scriptsize] {<<include>>} (announce.west);
+
+\end{tikzpicture}
+\caption{Sơ đồ Use Case tổng thể}
+\end{figure}
+\section{Sơ đồ lớp mức phân tích}
+\begin{figure}[H]
+\centering
+\resizebox{\textwidth}{!}{%
+\begin{tikzpicture}[class/.style={draw,rectangle split,rectangle split parts=3,minimum width=3.6cm,align=left,fill=gray!5}, node distance=1.2cm and 1.5cm, every node/.style={font=\scriptsize}]
+\node[class] (user) {\textbf{User}\nodepart{second}id: Long\\email: String\\displayName: String\\avatarUrl: String\nodepart{third}+getRoles()\\+updateProfile()};
+\node[class,right=of user] (course) {\textbf{Course}\nodepart{second}id: Long\\title: String\\visibility: Enum\\ownerId: Long\nodepart{third}+publish()\\+updateInfo()};
+\node[class,right=of course] (module) {\textbf{Module}\nodepart{second}id: Long\\courseId: Long\\title: String\\order: int\nodepart{third}+reorder()};
+\node[class,below=of module] (lesson) {\textbf{Lesson}\nodepart{second}id: Long\\moduleId: Long\\type: LessonType\\order: int\nodepart{third}+markComplete()};
+\node[class,below=of course] (test) {\textbf{LessonTest}\nodepart{second}id: Long\\statement: String\\timeLimit: int\\settings: JSON\nodepart{third}+startSession()\\+grade()};
+\node[class,below=of user] (question) {\textbf{Question}\nodepart{second}id: Long\\content: String\\type: Enum\nodepart{third}+validateAnswer()};
+\node[class,below=of lesson] (comment) {\textbf{Comment}\nodepart{second}id: Long\\content: String\\parentId: Long\nodepart{third}+reply()\\+edit()};
+\draw[-{Latex}] (course) -- node[above]{owner} (user);
+\draw[-{Latex}] (module) -- node[above]{belongs to} (course);
+\draw[-{Latex}] (lesson) -- node[right]{belongs to} (module);
+\draw[-{Latex}] (test) -- node[above]{extends} (lesson);
+\draw[-{Latex}] (test) -- node[above]{uses} (question);
+\draw[-{Latex}] (comment) -- node[right]{on} (lesson);
+\end{tikzpicture}}
+\caption{Sơ đồ lớp phân tích rút gọn}
+\end{figure}
+
+\section{Sơ đồ tuần tự: Học viên làm bài kiểm tra}
+\begin{figure}[H]
+\centering
+\resizebox{\textwidth}{!}{%
+\begin{tikzpicture}[lifeline/.style={draw,minimum width=2.5cm,minimum height=0.8cm,fill=blue!6}, msg/.style={-{Latex}}, every node/.style={font=\small}]
+\node[lifeline] (stu) at (0,0) {Học viên};
+\node[lifeline] (fe) at (3.5,0) {React UI};
+\node[lifeline] (ctrl) at (7,0) {TestSessionController};
+\node[lifeline] (svc) at (10.8,0) {TestService};
+\node[lifeline] (db) at (14.2,0) {PostgreSQL};
+\foreach \x in {0,3.5,7,10.8,14.2}{\draw[dashed] (\x,-0.5) -- (\x,-7.2);} 
+\draw[msg] (0,-1) -- node[above]{Bấm bắt đầu} (3.5,-1);
+\draw[msg] (3.5,-1.6) -- node[above]{POST /test-sessions} (7,-1.6);
+\draw[msg] (7,-2.2) -- node[above]{startSession()} (10.8,-2.2);
+\draw[msg] (10.8,-2.8) -- node[above]{insert session} (14.2,-2.8);
+\draw[msg] (14.2,-3.4) -- node[above]{sessionId} (10.8,-3.4);
+\draw[msg] (10.8,-4.0) -- node[above]{TestSessionResponse} (7,-4.0);
+\draw[msg] (7,-4.6) -- node[above]{JSON} (3.5,-4.6);
+\draw[msg] (0,-5.2) -- node[above]{Chọn đáp án} (3.5,-5.2);
+\draw[msg] (3.5,-5.8) -- node[above]{PUT /answers} (7,-5.8);
+\draw[msg] (7,-6.4) -- node[above]{saveAnswer()} (10.8,-6.4);
+\draw[msg] (10.8,-7.0) -- node[above]{upsert answer} (14.2,-7.0);
+\end{tikzpicture}}
+\caption{Sơ đồ tuần tự rút gọn cho phiên làm bài kiểm tra}
+\end{figure}
+
+\chapter{Thiết kế cơ sở dữ liệu chi tiết}
+
+\section{Mô tả ERD}
+Cơ sở dữ liệu của \projectname{} sử dụng PostgreSQL và mô hình quan hệ. Trung tâm của hệ thống là thực thể \texttt{users}, liên kết với \texttt{roles} và \texttt{permissions} để phân quyền. Khóa học \texttt{courses} do một giảng viên sở hữu, có nhiều \texttt{modules}; mỗi module có nhiều \texttt{lessons}. Bài học được tách subtype theo dạng nội dung: \texttt{lesson\_videos}, \texttt{lesson\_blogs}, \texttt{lesson\_tests}. Học viên ghi danh qua \texttt{enrollments}; yêu cầu truy cập khóa học hạn chế nằm ở \path{course_access_requests}. Bình luận được lưu ở \path{lesson_comments} và \path{announcement_comments} với \texttt{parent\_id} để hỗ trợ phân cấp. Hệ thống kiểm tra gồm \texttt{questions}, đáp án, \path{test_questions}, \path{test_sessions} và \path{test_session_answers}.
+
+\section{Sơ đồ ERD rút gọn}
+\begin{figure}[H]
+\centering
+\resizebox{\textwidth}{!}{%
+\begin{tikzpicture}[entity/.style={draw,rounded corners,fill=green!7,minimum width=2.8cm,minimum height=0.8cm,align=center}, node distance=1.2cm and 1.6cm, every node/.style={font=\small}]
+\node[entity] (users) {users};
+\node[entity,right=of users] (courses) {courses};
+\node[entity,right=of courses] (modules) {modules};
+\node[entity,right=of modules] (lessons) {lessons};
+\node[entity,below=of users] (roles) {roles / permissions};
+\node[entity,below=of courses] (enroll) {enrollments};
+\node[entity,below=of modules] (ann) {announcements};
+\node[entity,below=of lessons] (comments) {comments};
+\node[entity,above=of lessons] (tests) {lesson\_tests};
+\node[entity,above=of modules] (questions) {questions};
+\node[entity,above=of courses] (sessions) {test\_sessions};
+
+\draw[-{Latex}] (courses) -- node[above]{1-n} (modules);
+\draw[-{Latex}] (modules) -- node[above]{1-n} (lessons);
+\draw[-{Latex}] (users) -- node[above]{owner} (courses);
+\draw[-{Latex}] (users) -- (roles);
+\draw[-{Latex}] (users) -- (enroll);
+\draw[-{Latex}] (courses) -- (enroll);
+\draw[-{Latex}] (courses) -- (ann);
+\draw[-{Latex}] (lessons) -- (comments);
+\draw[{Latex}-{Latex}] (lessons) -- (tests);
+\draw[-{Latex}] (users) -- (sessions);
+
+% Bẻ đường nối vòng lên trên để kết nối tests và sessions mà không cắt ngang questions
+\draw[-{Latex}] (tests.north) -- ++(0,0.8) -| (sessions.north);
+\draw[-{Latex}] (tests) -- (questions);
+
+\end{tikzpicture}}
+\caption{ERD rút gọn của cơ sở dữ liệu}
+\end{figure}
+
+
+\section{Thiết kế bảng dữ liệu vật lý}
+
+
+\begingroup\tiny
+
+\begin{longtable}{L{2.35cm} L{2.1cm} L{1.15cm} L{3.25cm} L{4.85cm}}
+\caption{Bảng users}\label{tab:db-users}\\
+\toprule
+Trường & Kiểu dữ liệu & Khóa & Ràng buộc & Mô tả \\
+\midrule
+\endfirsthead\toprule Trường & Kiểu dữ liệu & Khóa & Ràng buộc & Mô tả \\\midrule\endhead
+id & BIGINT & PK & DEFAULT \path{generate_snowflake_id()} & Định danh người dùng sinh bởi hàm Snowflake nội bộ. \\
+email & TEXT & UQ & NOT NULL, UNIQUE & Email duy nhất của người dùng. \\
+\path{display_name} & TEXT & & NOT NULL & Tên hiển thị trên giao diện. \\
+username & TEXT & UQ & NOT NULL, UNIQUE & Tên người dùng duy nhất trong hệ thống. \\
+\path{avatar_url} & TEXT & & NULL & URL ảnh đại diện. \\
+\path{created_at} & TIMESTAMPTZ & & DEFAULT NOW() & Thời điểm tạo bản ghi. \\
+\path{updated_at} & TIMESTAMPTZ & & DEFAULT NOW(), trigger update & Tự cập nhật qua \path{tr_users_updated_at}. \\
+
+\bottomrule
+\end{longtable}
+
+\begin{longtable}{L{2.35cm} L{2.1cm} L{1.15cm} L{3.25cm} L{4.85cm}}
+\caption{Bảng user\_providers}\label{tab:db-user-providers}\\
+\toprule
+Trường & Kiểu dữ liệu & Khóa & Ràng buộc & Mô tả \\
+\midrule
+\endfirsthead\toprule Trường & Kiểu dữ liệu & Khóa & Ràng buộc & Mô tả \\\midrule\endhead
+id & BIGINT & PK & DEFAULT \path{generate_snowflake_id()} & Định danh liên kết provider. \\
+\path{user_id} & BIGINT & FK & REFERENCES \path{users(id)} ON DELETE CASCADE & Người dùng nội bộ tương ứng. \\
+\path{provider_name} & TEXT & UQ* & NOT NULL & Tên nhà cung cấp đăng nhập. \\
+\path{provider_user_id} & TEXT & UQ* & NOT NULL & Định danh người dùng do provider cấp. \\
+\path{created_at} & TIMESTAMPTZ & & DEFAULT NOW() & Thời điểm tạo liên kết. \\
+\path{updated_at} & TIMESTAMPTZ & & DEFAULT NOW(), trigger update & Thời điểm cập nhật liên kết. \\
+\multicolumn{5}{L{13.7cm}}{\textit{Ghi chú: UQ* là UNIQUE ghép trên \path{(provider_name, provider_user_id)}.}} \\
+
+\bottomrule
+\end{longtable}
+
+\begin{longtable}{L{2.35cm} L{2.1cm} L{1.15cm} L{3.25cm} L{4.85cm}}
+\caption{Bảng roles}\label{tab:db-roles}\\
+\toprule
+Trường & Kiểu dữ liệu & Khóa & Ràng buộc & Mô tả \\
+\midrule
+\endfirsthead\toprule Trường & Kiểu dữ liệu & Khóa & Ràng buộc & Mô tả \\\midrule\endhead
+name & TEXT & PK & NOT NULL & Tên vai trò: \path{admin}, \path{teacher}, \path{student}. \\
+permissions & BIGINT & & NOT NULL & Bitmask quyền của vai trò. \\
+description & TEXT & & NULL & Mô tả ý nghĩa vai trò. \\
+\path{created_at} & TIMESTAMPTZ & & DEFAULT NOW() & Thời điểm tạo vai trò. \\
+\path{updated_at} & TIMESTAMPTZ & & DEFAULT NOW(), trigger update & Thời điểm cập nhật vai trò. \\
+
+\bottomrule
+\end{longtable}
+
+\begin{longtable}{L{2.35cm} L{2.1cm} L{1.15cm} L{3.25cm} L{4.85cm}}
+\caption{Bảng user\_role}\label{tab:db-user-role}\\
+\toprule
+Trường & Kiểu dữ liệu & Khóa & Ràng buộc & Mô tả \\
+\midrule
+\endfirsthead\toprule Trường & Kiểu dữ liệu & Khóa & Ràng buộc & Mô tả \\\midrule\endhead
+\path{user_id} & BIGINT & PK/FK & REFERENCES \path{users(id)} ON DELETE CASCADE & Người dùng được gán vai trò. \\
+\path{role_name} & TEXT & PK/FK & REFERENCES \path{roles(name)} ON DELETE CASCADE & Vai trò được gán. \\
+\path{created_at} & TIMESTAMPTZ & & DEFAULT NOW() & Thời điểm gán vai trò. \\
+\path{updated_at} & TIMESTAMPTZ & & DEFAULT NOW(), trigger update & Thời điểm cập nhật gán vai trò. \\
+\multicolumn{5}{L{13.7cm}}{\textit{Khóa chính của bảng là \path{(user_id, role_name)}.}} \\
+
+\bottomrule
+\end{longtable}
+
+\begin{longtable}{L{2.35cm} L{2.1cm} L{1.15cm} L{3.25cm} L{4.85cm}}
+\caption{Bảng files}\label{tab:db-files}\\
+\toprule
+Trường & Kiểu dữ liệu & Khóa & Ràng buộc & Mô tả \\
+\midrule
+\endfirsthead\toprule Trường & Kiểu dữ liệu & Khóa & Ràng buộc & Mô tả \\\midrule\endhead
+id & BIGINT & PK & DEFAULT \path{generate_snowflake_id()} & Định danh file. \\
+\path{author_id} & BIGINT & FK & REFERENCES \path{users(id)} ON DELETE CASCADE & Người upload/tạo file. \\
+provider & TEXT & & NOT NULL & Nhà cung cấp lưu trữ hoặc loại storage. \\
+\path{provider_value} & TEXT & & NOT NULL & Giá trị định danh file phía provider. \\
+\path{mime_type} & TEXT & & NULL & Kiểu MIME, được thêm bởi migration alter. \\
+\path{original_name} & TEXT & & NULL & Tên file gốc. \\
+\path{size_bytes} & BIGINT & & NULL & Kích thước file theo byte. \\
+\path{created_at} & TIMESTAMPTZ & & DEFAULT NOW() & Thời điểm tạo. \\
+\path{updated_at} & TIMESTAMPTZ & & DEFAULT NOW(), trigger update & Thời điểm cập nhật metadata. \\
+
+\bottomrule
+\end{longtable}
+
+\begin{longtable}{L{2.35cm} L{2.1cm} L{1.15cm} L{3.25cm} L{4.85cm}}
+\caption{Bảng courses}\label{tab:db-courses}\\
+\toprule
+Trường & Kiểu dữ liệu & Khóa & Ràng buộc & Mô tả \\
+\midrule
+\endfirsthead\toprule Trường & Kiểu dữ liệu & Khóa & Ràng buộc & Mô tả \\\midrule\endhead
+id & BIGINT & PK & DEFAULT \path{generate_snowflake_id()} & Định danh khóa học. \\
+title & TEXT & & NOT NULL & Tên khóa học. \\
+description & TEXT & & NULL & Mô tả khóa học. \\
+\path{thumbnail_url} & TEXT & & NULL & URL ảnh đại diện khóa học. \\
+\path{is_published} & BOOLEAN & & NOT NULL DEFAULT FALSE & Trạng thái xuất bản. \\
+visibility & \path{course_visibility} & & NOT NULL DEFAULT \path{private} & Enum \path{public/restricted/private}. \\
+\path{author_id} & BIGINT & FK & REFERENCES \path{users(id)} ON DELETE RESTRICT & Giảng viên/tác giả tạo khóa học. \\
+settings & JSONB & & NULL & Cấu hình mở rộng của khóa học. \\
+\path{created_at} & TIMESTAMPTZ & & DEFAULT NOW() & Thời điểm tạo. \\
+\path{updated_at} & TIMESTAMPTZ & & DEFAULT NOW(), trigger update & Có index \path{author_id} và \path{(visibility,is_published)}. \\
+
+\bottomrule
+\end{longtable}
+
+\begin{longtable}{L{2.35cm} L{2.1cm} L{1.15cm} L{3.25cm} L{4.85cm}}
+\caption{Bảng enrollments}\label{tab:db-enrollments}\\
+\toprule
+Trường & Kiểu dữ liệu & Khóa & Ràng buộc & Mô tả \\
+\midrule
+\endfirsthead\toprule Trường & Kiểu dữ liệu & Khóa & Ràng buộc & Mô tả \\\midrule\endhead
+\path{user_id} & BIGINT & PK/FK & REFERENCES \path{users(id)} ON DELETE CASCADE & Học viên ghi danh. \\
+\path{course_id} & BIGINT & PK/FK & REFERENCES \path{courses(id)} ON DELETE CASCADE & Khóa học được ghi danh. \\
+\path{created_at} & TIMESTAMPTZ & & DEFAULT NOW() & Thời điểm ghi danh. \\
+\path{updated_at} & TIMESTAMPTZ & & DEFAULT NOW(), trigger update & Thời điểm cập nhật ghi danh. \\
+\multicolumn{5}{L{13.7cm}}{\textit{Khóa chính là \path{(user_id, course_id)}.}} \\
+
+\bottomrule
+\end{longtable}
+
+\begin{longtable}{L{2.35cm} L{2.1cm} L{1.15cm} L{3.25cm} L{4.85cm}}
+\caption{Bảng course\_access\_requests}\label{tab:db-course-access-requests}\\
+\toprule
+Trường & Kiểu dữ liệu & Khóa & Ràng buộc & Mô tả \\
+\midrule
+\endfirsthead\toprule Trường & Kiểu dữ liệu & Khóa & Ràng buộc & Mô tả \\\midrule\endhead
+\path{user_id} & BIGINT & PK/FK & REFERENCES \path{users(id)} ON DELETE CASCADE & Người gửi yêu cầu truy cập. \\
+\path{course_id} & BIGINT & PK/FK & REFERENCES \path{courses(id)} ON DELETE CASCADE & Khóa học được yêu cầu truy cập. \\
+\path{created_at} & TIMESTAMPTZ & & DEFAULT NOW() & Thời điểm gửi yêu cầu. \\
+\multicolumn{5}{L{13.7cm}}{\textit{Migration không khai báo cột \path{updated_at} cho bảng này.}} \\
+
+\bottomrule
+\end{longtable}
+
+\begin{longtable}{L{2.35cm} L{2.1cm} L{1.15cm} L{3.25cm} L{4.85cm}}
+\caption{Bảng modules}\label{tab:db-modules}\\
+\toprule
+Trường & Kiểu dữ liệu & Khóa & Ràng buộc & Mô tả \\
+\midrule
+\endfirsthead\toprule Trường & Kiểu dữ liệu & Khóa & Ràng buộc & Mô tả \\\midrule\endhead
+id & BIGINT & PK & DEFAULT \path{generate_snowflake_id()} & Định danh module. \\
+\path{course_id} & BIGINT & FK & REFERENCES \path{courses(id)} ON DELETE CASCADE & Khóa học chứa module. \\
+title & VARCHAR(255) & & NOT NULL & Tên module. \\
+\path{order} & INT & UQ* & NOT NULL DEFAULT 0 & Thứ tự module trong khóa học. \\
+\path{created_at} & TIMESTAMPTZ & & DEFAULT NOW() & Thời điểm tạo. \\
+\path{updated_at} & TIMESTAMPTZ & & DEFAULT NOW(), trigger update & Thời điểm cập nhật. \\
+\multicolumn{5}{L{13.7cm}}{\textit{UQ* là UNIQUE \path{(course_id, order)} DEFERRABLE INITIALLY DEFERRED.}} \\
+
+\bottomrule
+\end{longtable}
+
+\begin{longtable}{L{2.35cm} L{2.1cm} L{1.15cm} L{3.25cm} L{4.85cm}}
+\caption{Bảng lessons}\label{tab:db-lessons}\\
+\toprule
+Trường & Kiểu dữ liệu & Khóa & Ràng buộc & Mô tả \\
+\midrule
+\endfirsthead\toprule Trường & Kiểu dữ liệu & Khóa & Ràng buộc & Mô tả \\\midrule\endhead
+id & BIGINT & PK & DEFAULT \path{generate_snowflake_id()} & Định danh bài học. \\
+\path{module_id} & BIGINT & FK & REFERENCES \path{modules(id)} ON DELETE CASCADE & Module chứa bài học. \\
+title & VARCHAR(255) & & NOT NULL & Tiêu đề bài học. \\
+\path{lesson_type} & \path{lesson_type} & & NOT NULL & Enum \path{video/blog/test}. \\
+\path{order} & INT & UQ* & NOT NULL DEFAULT 0 & Thứ tự bài học trong module. \\
+\path{created_at} & TIMESTAMPTZ & & DEFAULT NOW() & Thời điểm tạo. \\
+\path{updated_at} & TIMESTAMPTZ & & DEFAULT NOW(), trigger update & Thời điểm cập nhật. \\
+\multicolumn{5}{L{13.7cm}}{\textit{UQ* là UNIQUE \path{(module_id, order)} DEFERRABLE INITIALLY DEFERRED.}} \\
+
+\bottomrule
+\end{longtable}
+
+\begin{longtable}{L{2.35cm} L{2.1cm} L{1.15cm} L{3.25cm} L{4.85cm}}
+\caption{Bảng lesson\_videos}\label{tab:db-lesson-videos}\\
+\toprule
+Trường & Kiểu dữ liệu & Khóa & Ràng buộc & Mô tả \\
+\midrule
+\endfirsthead\toprule Trường & Kiểu dữ liệu & Khóa & Ràng buộc & Mô tả \\\midrule\endhead
+id & BIGINT & PK/FK & REFERENCES \path{lessons(id)} ON DELETE CASCADE & Khóa chính dùng chung với lesson cha. \\
+provider & \path{video_provider} & & NOT NULL & Enum \path{youtube/vimeo}. \\
+\path{provider_value} & TEXT & & NOT NULL & URL hoặc mã video phía provider. \\
+\path{created_at} & TIMESTAMPTZ & & DEFAULT NOW() & Thời điểm tạo. \\
+\path{updated_at} & TIMESTAMPTZ & & DEFAULT NOW(), trigger update & Thời điểm cập nhật. \\
+
+\bottomrule
+\end{longtable}
+
+\begin{longtable}{L{2.35cm} L{2.1cm} L{1.15cm} L{3.25cm} L{4.85cm}}
+\caption{Bảng lesson\_blogs}\label{tab:db-lesson-blogs}\\
+\toprule
+Trường & Kiểu dữ liệu & Khóa & Ràng buộc & Mô tả \\
+\midrule
+\endfirsthead\toprule Trường & Kiểu dữ liệu & Khóa & Ràng buộc & Mô tả \\\midrule\endhead
+id & BIGINT & PK/FK & REFERENCES \path{lessons(id)} ON DELETE CASCADE & Khóa chính dùng chung với lesson cha. \\
+content & TEXT & & NOT NULL & Nội dung blog. \\
+\path{created_at} & TIMESTAMPTZ & & DEFAULT NOW() & Thời điểm tạo. \\
+\path{updated_at} & TIMESTAMPTZ & & DEFAULT NOW(), trigger update & Thời điểm cập nhật. \\
+
+\bottomrule
+\end{longtable}
+
+\begin{longtable}{L{2.35cm} L{2.1cm} L{1.15cm} L{3.25cm} L{4.85cm}}
+\caption{Bảng lesson\_tests}\label{tab:db-lesson-tests}\\
+\toprule
+Trường & Kiểu dữ liệu & Khóa & Ràng buộc & Mô tả \\
+\midrule
+\endfirsthead\toprule Trường & Kiểu dữ liệu & Khóa & Ràng buộc & Mô tả \\\midrule\endhead
+id & BIGINT & PK/FK & REFERENCES \path{lessons(id)} ON DELETE CASCADE & Khóa chính dùng chung với lesson cha. \\
+statement & TEXT & & NOT NULL & Mô tả đề bài kiểm tra. \\
+\path{time_limit} & INT & & NOT NULL & Giới hạn thời gian làm bài. \\
+settings & JSONB & & NULL & Cấu hình mở rộng của test. \\
+\path{created_at} & TIMESTAMPTZ & & DEFAULT NOW() & Thời điểm tạo. \\
+\path{updated_at} & TIMESTAMPTZ & & DEFAULT NOW(), trigger update & Thời điểm cập nhật. \\
+
+\bottomrule
+\end{longtable}
+
+\begin{longtable}{L{2.35cm} L{2.1cm} L{1.15cm} L{3.25cm} L{4.85cm}}
+\caption{Bảng course\_resources}\label{tab:db-course-resources}\\
+\toprule
+Trường & Kiểu dữ liệu & Khóa & Ràng buộc & Mô tả \\
+\midrule
+\endfirsthead\toprule Trường & Kiểu dữ liệu & Khóa & Ràng buộc & Mô tả \\\midrule\endhead
+\path{course_id} & BIGINT & PK/FK & REFERENCES \path{courses(id)} ON DELETE CASCADE & Khóa học được gắn tài nguyên. \\
+\path{file_id} & BIGINT & PK/FK & REFERENCES \path{files(id)} ON DELETE CASCADE & File tài nguyên của khóa học. \\
+\path{created_at} & TIMESTAMPTZ & & DEFAULT NOW() & Thời điểm tạo liên kết. \\
+\path{updated_at} & TIMESTAMPTZ & & DEFAULT NOW(), trigger update & Thời điểm cập nhật liên kết. \\
+
+\bottomrule
+\end{longtable}
+
+\begin{longtable}{L{2.35cm} L{2.1cm} L{1.15cm} L{3.25cm} L{4.85cm}}
+\caption{Bảng lesson\_resources}\label{tab:db-lesson-resources}\\
+\toprule
+Trường & Kiểu dữ liệu & Khóa & Ràng buộc & Mô tả \\
+\midrule
+\endfirsthead\toprule Trường & Kiểu dữ liệu & Khóa & Ràng buộc & Mô tả \\\midrule\endhead
+\path{lesson_id} & BIGINT & PK/FK & REFERENCES \path{lessons(id)} ON DELETE CASCADE & Bài học được gắn tài nguyên. \\
+\path{file_id} & BIGINT & PK/FK & REFERENCES \path{files(id)} ON DELETE CASCADE & File tài nguyên của bài học. \\
+\path{created_at} & TIMESTAMPTZ & & DEFAULT NOW() & Thời điểm tạo liên kết. \\
+\path{updated_at} & TIMESTAMPTZ & & DEFAULT NOW(), trigger update & Thời điểm cập nhật liên kết. \\
+
+\bottomrule
+\end{longtable}
+
+\begin{longtable}{L{2.35cm} L{2.1cm} L{1.15cm} L{3.25cm} L{4.85cm}}
+\caption{Bảng lesson\_completions}\label{tab:db-lesson-completions}\\
+\toprule
+Trường & Kiểu dữ liệu & Khóa & Ràng buộc & Mô tả \\
+\midrule
+\endfirsthead\toprule Trường & Kiểu dữ liệu & Khóa & Ràng buộc & Mô tả \\\midrule\endhead
+\path{lesson_id} & BIGINT & PK/FK & REFERENCES \path{lessons(id)} ON DELETE CASCADE & Bài học đã hoàn thành. \\
+\path{user_id} & BIGINT & PK/FK & REFERENCES \path{users(id)} ON DELETE CASCADE & Học viên hoàn thành bài học. \\
+\path{created_at} & TIMESTAMPTZ & & DEFAULT NOW() & Thời điểm đánh dấu hoàn thành. \\
+
+\bottomrule
+\end{longtable}
+
+\begin{longtable}{L{2.35cm} L{2.1cm} L{1.15cm} L{3.25cm} L{4.85cm}}
+\caption{Bảng questions}\label{tab:db-questions}\\
+\toprule
+Trường & Kiểu dữ liệu & Khóa & Ràng buộc & Mô tả \\
+\midrule
+\endfirsthead\toprule Trường & Kiểu dữ liệu & Khóa & Ràng buộc & Mô tả \\\midrule\endhead
+id & BIGINT & PK & DEFAULT \path{generate_snowflake_id()} & Định danh câu hỏi. \\
+\path{author_id} & BIGINT & FK & REFERENCES \path{users(id)} ON DELETE CASCADE & Người tạo câu hỏi. \\
+statement & TEXT & & NOT NULL & Nội dung phát biểu câu hỏi. \\
+\path{question_type} & \path{question_type} & & NOT NULL & Enum hiện tại chỉ có \path{multiple_choice}. \\
+\path{created_at} & TIMESTAMPTZ & & DEFAULT NOW() & Thời điểm tạo. \\
+\path{updated_at} & TIMESTAMPTZ & & DEFAULT NOW(), trigger update & Có index trên \path{author_id}. \\
+
+\bottomrule
+\end{longtable}
+
+\begin{longtable}{L{2.35cm} L{2.1cm} L{1.15cm} L{3.25cm} L{4.85cm}}
+\caption{Bảng mc\_questions}\label{tab:db-mc-questions}\\
+\toprule
+Trường & Kiểu dữ liệu & Khóa & Ràng buộc & Mô tả \\
+\midrule
+\endfirsthead\toprule Trường & Kiểu dữ liệu & Khóa & Ràng buộc & Mô tả \\\midrule\endhead
+id & BIGINT & PK/FK & REFERENCES \path{questions(id)} ON DELETE CASCADE & Bảng subtype cho câu hỏi trắc nghiệm. \\
+choices & TEXT[] & & NOT NULL & Danh sách lựa chọn. \\
+\path{correct_choices} & INT[] & & NOT NULL & Danh sách chỉ số đáp án đúng. \\
+\path{is_single_choice} & BOOLEAN & & NOT NULL & Cờ phân biệt một đáp án hay nhiều đáp án. \\
+\path{created_at} & TIMESTAMPTZ & & DEFAULT NOW() & Thời điểm tạo. \\
+\path{updated_at} & TIMESTAMPTZ & & DEFAULT NOW(), trigger update & Thời điểm cập nhật. \\
+
+\bottomrule
+\end{longtable}
+
+\begin{longtable}{L{2.35cm} L{2.1cm} L{1.15cm} L{3.25cm} L{4.85cm}}
+\caption{Bảng test\_question}\label{tab:db-test-question}\\
+\toprule
+Trường & Kiểu dữ liệu & Khóa & Ràng buộc & Mô tả \\
+\midrule
+\endfirsthead\toprule Trường & Kiểu dữ liệu & Khóa & Ràng buộc & Mô tả \\\midrule\endhead
+\path{test_id} & BIGINT & PK/FK & REFERENCES \path{lesson_tests(id)} ON DELETE CASCADE & Bài test chứa câu hỏi. \\
+\path{question_id} & BIGINT & PK/FK & REFERENCES \path{questions(id)} ON DELETE CASCADE & Câu hỏi được đưa vào test. \\
+\path{order} & INT & UQ* & NOT NULL & Thứ tự câu hỏi trong test. \\
+point & DOUBLE PRECISION & & NULL & Điểm của câu hỏi trong test. \\
+\path{created_at} & TIMESTAMPTZ & & DEFAULT NOW() & Thời điểm tạo liên kết. \\
+\path{updated_at} & TIMESTAMPTZ & & DEFAULT NOW(), trigger update & Thời điểm cập nhật liên kết. \\
+\multicolumn{5}{L{13.7cm}}{\textit{Khóa chính là \path{(test_id, question_id)}; UQ* là \path{(test_id, order)}.}} \\
+
+\bottomrule
+\end{longtable}
+
+\begin{longtable}{L{2.35cm} L{2.1cm} L{1.15cm} L{3.25cm} L{4.85cm}}
+\caption{Bảng test\_sessions}\label{tab:db-test-sessions}\\
+\toprule
+Trường & Kiểu dữ liệu & Khóa & Ràng buộc & Mô tả \\
+\midrule
+\endfirsthead\toprule Trường & Kiểu dữ liệu & Khóa & Ràng buộc & Mô tả \\\midrule\endhead
+id & BIGINT & PK & DEFAULT \path{generate_snowflake_id()} & Định danh phiên làm bài. \\
+\path{user_id} & BIGINT & FK & REFERENCES \path{users(id)} ON DELETE CASCADE & Học viên làm bài. \\
+\path{test_id} & BIGINT & FK & REFERENCES \path{lesson_tests(id)} ON DELETE CASCADE & Bài test được làm. \\
+\path{started_at} & TIMESTAMPTZ & & NOT NULL DEFAULT NOW() & Thời điểm bắt đầu. \\
+\path{submitted_at} & TIMESTAMPTZ & & NULL & Thời điểm nộp bài. \\
+\path{is_done} & BOOLEAN & & NOT NULL DEFAULT FALSE & Trạng thái hoàn tất. \\
+\path{created_at} & TIMESTAMPTZ & & DEFAULT NOW() & Thời điểm tạo. \\
+\path{updated_at} & TIMESTAMPTZ & & DEFAULT NOW(), trigger update & Có unique active session theo \path{(user_id,test_id)} khi \path{is_done=false}. \\
+
+\bottomrule
+\end{longtable}
+
+\begin{longtable}{L{2.35cm} L{2.1cm} L{1.15cm} L{3.25cm} L{4.85cm}}
+\caption{Bảng test\_session\_answers}\label{tab:db-test-session-answers}\\
+\toprule
+Trường & Kiểu dữ liệu & Khóa & Ràng buộc & Mô tả \\
+\midrule
+\endfirsthead\toprule Trường & Kiểu dữ liệu & Khóa & Ràng buộc & Mô tả \\\midrule\endhead
+id & BIGINT & PK & DEFAULT \path{generate_snowflake_id()} & Định danh câu trả lời trong phiên. \\
+\path{session_id} & BIGINT & FK/UQ* & REFERENCES \path{test_sessions(id)} ON DELETE CASCADE & Phiên làm bài. \\
+\path{question_id} & BIGINT & FK/UQ* & REFERENCES \path{questions(id)} ON DELETE CASCADE & Câu hỏi được trả lời. \\
+\path{question_answer} & JSONB & & NULL & Câu trả lời lưu dạng JSONB. \\
+\path{created_at} & TIMESTAMPTZ & & DEFAULT NOW() & Thời điểm tạo. \\
+\path{updated_at} & TIMESTAMPTZ & & DEFAULT NOW(), trigger update & Thời điểm cập nhật. \\
+\multicolumn{5}{L{13.7cm}}{\textit{UQ* là UNIQUE \path{(session_id, question_id)}.}} \\
+
+\bottomrule
+\end{longtable}
+
+\begin{longtable}{L{2.35cm} L{2.1cm} L{1.15cm} L{3.25cm} L{4.85cm}}
+\caption{Bảng announcements}\label{tab:db-announcements}\\
+\toprule
+Trường & Kiểu dữ liệu & Khóa & Ràng buộc & Mô tả \\
+\midrule
+\endfirsthead\toprule Trường & Kiểu dữ liệu & Khóa & Ràng buộc & Mô tả \\\midrule\endhead
+id & BIGINT & PK & DEFAULT \path{generate_snowflake_id()} & Định danh thông báo. \\
+\path{course_id} & BIGINT & FK & REFERENCES \path{courses(id)} ON DELETE CASCADE & Khóa học chứa thông báo. \\
+\path{author_id} & BIGINT & FK & REFERENCES \path{users(id)} ON DELETE CASCADE & Tác giả thông báo. \\
+title & TEXT & & NOT NULL & Tiêu đề thông báo. \\
+content & TEXT & & NOT NULL & Nội dung thông báo. \\
+\path{created_at} & TIMESTAMPTZ & & DEFAULT NOW() & Thời điểm tạo. \\
+\path{updated_at} & TIMESTAMPTZ & & DEFAULT NOW(), trigger update & Có index trên \path{course_id} và \path{author_id}. \\
+
+\bottomrule
+\end{longtable}
+
+\begin{longtable}{L{2.35cm} L{2.1cm} L{1.15cm} L{3.25cm} L{4.85cm}}
+\caption{Bảng lesson\_comments}\label{tab:db-lesson-comments}\\
+\toprule
+Trường & Kiểu dữ liệu & Khóa & Ràng buộc & Mô tả \\
+\midrule
+\endfirsthead\toprule Trường & Kiểu dữ liệu & Khóa & Ràng buộc & Mô tả \\\midrule\endhead
+id & BIGINT & PK & DEFAULT \path{generate_snowflake_id()} & Định danh bình luận bài học. \\
+\path{lesson_id} & BIGINT & FK & REFERENCES \path{lessons(id)} ON DELETE CASCADE & Bài học được bình luận. \\
+\path{author_id} & BIGINT & FK & REFERENCES \path{users(id)} ON DELETE CASCADE & Người viết bình luận. \\
+\path{parent_id} & BIGINT & FK & REFERENCES chính \path{lesson_comments(id)} ON DELETE CASCADE & Bình luận cha để tạo thread. \\
+content & TEXT & & NOT NULL & Nội dung bình luận. \\
+\path{created_at} & TIMESTAMPTZ & & DEFAULT NOW() & Thời điểm tạo. \\
+\path{updated_at} & TIMESTAMPTZ & & DEFAULT NOW(), trigger update & Thời điểm cập nhật. \\
+\path{edited_at} & TIMESTAMPTZ & & NULL & Thời điểm chỉnh sửa. \\
+
+\bottomrule
+\end{longtable}
+
+\begin{longtable}{L{2.35cm} L{2.1cm} L{1.15cm} L{3.25cm} L{4.85cm}}
+\caption{Bảng announcement\_comments}\label{tab:db-announcement-comments}\\
+\toprule
+Trường & Kiểu dữ liệu & Khóa & Ràng buộc & Mô tả \\
+\midrule
+\endfirsthead\toprule Trường & Kiểu dữ liệu & Khóa & Ràng buộc & Mô tả \\\midrule\endhead
+id & BIGINT & PK & DEFAULT \path{generate_snowflake_id()} & Định danh bình luận thông báo. \\
+\path{announcement_id} & BIGINT & FK & REFERENCES \path{announcements(id)} ON DELETE CASCADE & Thông báo được bình luận. \\
+\path{author_id} & BIGINT & FK & REFERENCES \path{users(id)} ON DELETE CASCADE & Người viết bình luận. \\
+\path{parent_id} & BIGINT & FK & REFERENCES chính \path{announcement_comments(id)} ON DELETE CASCADE & Bình luận cha để tạo thread. \\
+content & TEXT & & NOT NULL & Nội dung bình luận. \\
+\path{created_at} & TIMESTAMPTZ & & DEFAULT NOW() & Thời điểm tạo. \\
+\path{updated_at} & TIMESTAMPTZ & & DEFAULT NOW(), trigger update & Thời điểm cập nhật. \\
+\path{edited_at} & TIMESTAMPTZ & & NULL & Thời điểm chỉnh sửa. \\
+
+\bottomrule
+\end{longtable}
+\endgroup
+
+\chapter{Thiết kế giao diện và showcase sản phẩm}
+
+\section{Nguyên tắc thiết kế giao diện}
+Giao diện \projectname{} ưu tiên tính rõ ràng, nhất quán và giảm số bước thao tác. Các trang dùng bố cục card, sidebar module, bảng dữ liệu, form modal và component UI tái sử dụng. Frontend có các trang chính: \texttt{/login}, \texttt{/courses}, \texttt{/course-detail}, \texttt{/classroom}, \texttt{/lessons}, \texttt{/test-take}, \texttt{/test-result}, \texttt{/dashboard}, \texttt{/instructor}, \texttt{/admin}, \texttt{/profile}.
+
+\section{Giao diện đăng nhập}
+Mục tiêu của giao diện đăng nhập là cung cấp một điểm vào đơn giản, giảm rủi ro quên mật khẩu bằng OAuth và truyền đạt rõ ràng giá trị của nền tảng.
+\placeholderimage{screen1.png}{Giao diện đăng nhập}
+\begin{table}[H]\centering\caption{Thành phần giao diện đăng nhập}\begin{tabularx}{\textwidth}{L{3.5cm} L{4cm} Y}\toprule Thành phần & Loại & Chức năng \\\midrule Logo \projectname & Nhận diện & Hiển thị thương hiệu và tạo niềm tin. \\
+Nút Google OAuth & Button & Bắt đầu luồng đăng nhập qua Google. \\
+Thông báo lỗi & Alert & Hiển thị lỗi xác thực, tài khoản bị chặn hoặc hủy đăng nhập. \\
+Liên kết trợ giúp & Link & Dẫn tới trang help/about nếu người dùng cần hướng dẫn. \\\bottomrule\end{tabularx}\end{table}
+
+\section{Giao diện danh sách khóa học}
+Mục tiêu là giúp học viên khám phá khóa học và giảng viên quan sát nhanh nội dung đã xuất bản. Các CourseCard hiển thị thumbnail, tiêu đề, mô tả ngắn, visibility và nút hành động.
+\placeholderimage{screen2.png}{Danh sách khóa học}
+\begin{table}[H]\centering\caption{Thành phần danh sách khóa học}\begin{tabularx}{\textwidth}{L{3.5cm} L{4cm} Y}\toprule Thành phần & Loại & Chức năng \\\midrule Thanh tìm kiếm & Input & Lọc khóa học theo tên hoặc mô tả. \\
+Bộ lọc visibility & Select & Lọc \path{\path{public/restricted/private}} nếu có quyền. \\
+CourseCard & Card & Hiển thị thông tin khóa học và trạng thái ghi danh. \\
+Nút tạo khóa học & Button & Mở CreateCourseModal cho giảng viên. \\
+Skeleton loading & Feedback & Giữ trải nghiệm mượt khi chờ API. \\\bottomrule\end{tabularx}\end{table}
+
+\section{Giao diện chi tiết khóa học và classroom}
+Mục tiêu là trình bày nội dung học tập theo cấu trúc module--lesson, đồng thời hiển thị thông báo, tài nguyên và tiến độ.
+\placeholderimage{screen3.png}{Chi tiết khóa học}
+\begin{table}[H]\centering\caption{Thành phần trang chi tiết khóa học}\begin{tabularx}{\textwidth}{L{3.5cm} L{4cm} Y}\toprule Thành phần & Loại & Chức năng \\\midrule Header khóa học & Banner & Hiển thị tiêu đề, mô tả, thumbnail, giảng viên. \\
+Restricted Access Banner & Alert/Card & Thông báo trạng thái cần gửi yêu cầu truy cập. \\
+ModuleSidebar & Sidebar & Điều hướng nhanh giữa các module và lesson. \\
+Progress bar & Indicator & Thể hiện tỷ lệ hoàn thành khóa học. \\
+Announcements Feed & Feed & Hiển thị thông báo từ giảng viên. \\\bottomrule\end{tabularx}\end{table}
+
+\section{Giao diện lesson viewer}
+Mục tiêu là hỗ trợ ba loại bài học: video, blog và test. Với video, trang nhúng player; với blog, trang hiển thị HTML đã sanitize; với test, trang dẫn tới phiên làm bài.
+\placeholderimage{screen4.png}{Giao diện xem bài học}
+\begin{table}[H]\centering\caption{Thành phần lesson viewer}\begin{tabularx}{\textwidth}{L{3.5cm} L{4cm} Y}\toprule Thành phần & Loại & Chức năng \\\midrule VideoLessonViewer & Component & Render video từ provider và provider\_value. \\
+BlogLessonViewer & Component & Hiển thị nội dung bài viết giàu định dạng. \\
+LessonResourceList & List & Cho phép tải tài nguyên gắn với bài học. \\
+Nút hoàn thành & Button/Switch & Ghi nhận \path{lesson_completions}. \\
+Comment thread & Component & Thảo luận liên quan trực tiếp tới bài học. \\\bottomrule\end{tabularx}\end{table}
+
+\section{Giao diện giảng viên và quản trị}
+Mục tiêu là cung cấp công cụ quản lý nội dung, ngân hàng câu hỏi, bài test và người dùng.
+\placeholderimage{screen5.png}{Dashboard giảng viên}
+\placeholderimage{screen6.png}{Dashboard quản trị viên}
+\begin{table}[H]\centering\caption{Thành phần dashboard giảng viên/admin}\begin{tabularx}{\textwidth}{L{3.5cm} L{4cm} Y}\toprule Thành phần & Loại & Chức năng \\\midrule Course editor & Form/Sidebar & Tạo, sửa, sắp xếp module và lesson. \\
+QuestionForm & Form & Tạo câu hỏi và đáp án đúng. \\
+Test builder & Builder & Gắn câu hỏi vào bài test, cấu hình thời gian. \\
+UserRoleTable & Table & Admin xem người dùng và cập nhật vai trò. \\
+Toast/Sonner & Feedback & Thông báo thành công hoặc lỗi sau thao tác. \\\bottomrule\end{tabularx}\end{table}
+
+\chapter{Kiểm thử phần mềm}
+
+\section{Kế hoạch kiểm thử}
+Mục tiêu kiểm thử là đảm bảo hệ thống đáp ứng yêu cầu nghiệp vụ, an toàn khi phân quyền, ổn định khi thao tác dữ liệu và thân thiện với người dùng. Chiến lược kiểm thử gồm: unit test cho service và utility, integration test cho repository/API, end-to-end test cho luồng đăng nhập--ghi danh--học--làm test, kiểm thử bảo mật cho endpoint nhạy cảm, kiểm thử giao diện responsive và kiểm thử triển khai Docker.
+
+\begin{longtable}{L{2.2cm} L{3.2cm} L{4.2cm} L{4.8cm}}
+\caption{Ma trận kiểm thử tổng quát}\label{tab:test-plan}\\
+\toprule
+Mức kiểm thử & Phạm vi & Kỹ thuật & Tiêu chí hoàn thành \\
+\midrule
+\endfirsthead\toprule Mức kiểm thử & Phạm vi & Kỹ thuật & Tiêu chí hoàn thành \\\midrule\endhead
+Unit & Service, util, mapper & Mock repository, kiểm tra nhánh nghiệp vụ & Hàm xử lý đúng input hợp lệ và lỗi. \\
+Integration & Controller, repository, database & Gọi API với dữ liệu test & HTTP status, JSON, transaction đúng. \\
+E2E & Luồng người dùng chính & Trình duyệt mô phỏng & Người dùng hoàn thành nghiệp vụ từ đầu tới cuối. \\
+Security & Endpoint phân quyền & Thử token thiếu/sai vai trò & Không rò rỉ dữ liệu, trả 401/403 đúng. \\
+Hiệu năng & Danh sách khóa học, test answer save & Dữ liệu giả lập lớn & Thời gian phản hồi trong ngưỡng chấp nhận. \\
+Usability & Trang \path{login/course/lesson/test} & Quan sát người dùng thử & Người dùng hiểu thao tác, lỗi rõ ràng. \\
+\bottomrule
+\end{longtable}
+
+\section{Kịch bản kiểm thử chi tiết}
+\begingroup\scriptsize
+\begin{longtable}{L{1.15cm} L{2.0cm} L{2.35cm} L{3.1cm} L{3.0cm} L{1.55cm}}
+\caption{Danh sách Test Case chi tiết}\label{tab:test-cases}\\
+\toprule
+Mã TC & Chức năng & Dữ liệu đầu vào & Các bước thực hiện & Kết quả mong đợi & Kết quả thực tế \\
+\midrule
+\endfirsthead
+\toprule
+Mã TC & Chức năng & Dữ liệu đầu vào & Các bước thực hiện & Kết quả mong đợi & Kết quả thực tế \\
+\midrule
+\endhead
+TC-01 & Đăng nhập OAuth thành công & Tài khoản Google hợp lệ & 1) Mở /login. 2) Bấm Google. 3) Chọn tài khoản. 4) Đồng ý quyền. & Hệ thống tạo session, trả \path{CurrentUserResponse}, chuyển tới dashboard. & Chưa thực hiện \\
+TC-02 & Đăng nhập bị hủy & Người dùng bấm cancel ở Google & 1) Mở /login. 2) Bấm Google. 3) Hủy consent. & Không tạo session, hiển thị thông báo hủy đăng nhập. & Chưa thực hiện \\
+TC-03 & Tạo khóa học & User có vai trò Instructor; title, description, visibility & 1) Vào /courses. 2) Bấm tạo khóa học. 3) Nhập dữ liệu. 4) Lưu. & Course mới ở trạng thái draft/published theo lựa chọn, owner đúng user. & Chưa thực hiện \\
+TC-04 & Ghi danh khóa public & courseId public, học viên chưa enroll & 1) Mở course detail. 2) Bấm tham gia. 3) Tải lại trang. & enrollments có bản ghi; UI hiển thị đã tham gia; mở được lesson. & Chưa thực hiện \\
+TC-05 & Gửi yêu cầu khóa restricted & courseId restricted & 1) Mở course detail. 2) Bấm yêu cầu truy cập. & \path{course_access_requests} có bản ghi; UI hiển thị đang chờ duyệt. & Chưa thực hiện \\
+TC-06 & Duyệt yêu cầu truy cập & Instructor sở hữu course, request tồn tại & 1) Mở dashboard instructor. 2) Chọn request. 3) Bấm chấp nhận. & Request bị xóa; enrollments được tạo; học viên truy cập được khóa học. & Chưa thực hiện \\
+TC-07 & Tạo module & courseId hợp lệ, title module & 1) Mở course editor. 2) Nhập title. 3) Bấm thêm module. & modules có bản ghi mới, order cuối danh sách. & Chưa thực hiện \\
+TC-08 & Tạo lesson blog & moduleId hợp lệ, title, HTML content & 1) Thêm lesson blog. 2) Nhập nội dung. 3) Lưu. & lessons có type BLOG; lesson\_blogs lưu HTML đã sanitize. & Chưa thực hiện \\
+TC-09 & Chặn XSS blog & Nội dung chứa \path|<script>alert(1)</script>| & 1) Cập nhật blog. 2) Mở lesson viewer. & Script bị loại bỏ, không thực thi alert. & Chưa thực hiện \\
+TC-10 & Upload tài nguyên lesson & File PDF hợp lệ & 1) Chọn lesson. 2) Upload file. 3) Gắn vào lesson. & files và lesson\_resources có dữ liệu; học viên tải được file. & Chưa thực hiện \\
+TC-11 & Tạo câu hỏi một lựa chọn & Nội dung, 4 đáp án, 1 đáp án đúng & 1) Mở Question Bank. 2) Nhập câu hỏi. 3) Lưu. & questions và answer options được lưu; validation đúng một đáp án. & Chưa thực hiện \\
+TC-12 & Tạo bài test & lesson test, danh sách questionId & 1) Mở Test Builder. 2) Thêm câu hỏi. 3) Cấu hình time limit. & test\_questions có bản ghi; không thêm trùng câu hỏi. & Chưa thực hiện \\
+TC-13 & Làm bài test và nộp & Học viên đã enroll, test có 5 câu & 1) Bắt đầu test. 2) Chọn đáp án. 3) Nộp bài. & TestSession submitted, score được tính, \path{TestResultResponse} trả chi tiết. & Chưa thực hiện \\
+TC-14 & Hết giờ test & timeLimit ngắn & 1) Bắt đầu test. 2) Chờ quá hạn. 3) Thử lưu đáp án. & Backend từ chối đáp án mới, phiên \path{expired/submitted} tự động. & Chưa thực hiện \\
+TC-15 & Đánh dấu hoàn thành lesson & lessonId hợp lệ & 1) Mở lesson. 2) Bấm hoàn thành. 3) Xem progress. & Bản ghi hoàn thành được tạo; phản hồi tiến độ tăng tỷ lệ. & Chưa thực hiện \\
+TC-16 & Bình luận bài học & Nội dung bình luận hợp lệ & 1) Mở lesson. 2) Nhập bình luận. 3) Gửi. & Bình luận xuất hiện trong thread, userId và createdAt đúng. & Chưa thực hiện \\
+TC-17 & Trả lời bình luận & parentId hợp lệ cùng lesson & 1) Bấm reply. 2) Nhập nội dung. 3) Gửi. & Bình luận con có parentId, hiển thị lồng dưới bình luận cha. & Chưa thực hiện \\
+TC-18 & Quản trị vai trò & Admin, userId, role mới & 1) Vào /admin. 2) Chọn user. 3) Cập nhật role. & Vai trò thay đổi; quyền API tương ứng được áp dụng. & Chưa thực hiện \\
+TC-19 & Truy cập trái quyền & Student gọi API admin & Gửi request với JWT student tới endpoint admin. & Backend trả 403, không trả dữ liệu người dùng khác. & Chưa thực hiện \\
+TC-20 & Responsive UI & Màn hình mobile 390px & 1) Mở courses, lesson, test. 2) Kiểm tra layout. & Không tràn ngang nghiêm trọng; nút chính vẫn thao tác được. & Chưa thực hiện \\
+\bottomrule
+\end{longtable}
+\endgroup
+
+\chapter{Kết luận và hướng phát triển}
+
+\section{Kết luận}
+Báo cáo đã trình bày toàn diện đề tài \textbf{\topic} theo góc nhìn kỹ nghệ phần mềm. Hệ thống có phạm vi nghiệp vụ rõ ràng, phục vụ đúng nhu cầu của nền tảng học tập trực tuyến: quản lý người dùng, khóa học, bài học, tài nguyên, bài kiểm tra, tiến độ, thông báo và bình luận. Kiến trúc frontend React và backend Spring Boot giúp tách biệt trách nhiệm, thuận lợi cho phát triển song song. Cơ sở dữ liệu PostgreSQL được thiết kế theo mô hình quan hệ, có nhiều bảng liên kết và subtype để biểu diễn nghiệp vụ phức tạp nhưng vẫn giữ tính toàn vẹn dữ liệu.
+
+Điểm mạnh của dự án là đã có nền tảng mã nguồn thực tế, tài liệu SRS, quy trình Docker/CI-CD, cấu trúc package rõ ràng và nhiều phân hệ đủ sâu để minh họa các kiến thức nhập môn công nghệ phần mềm. Việc áp dụng Agile/Scrum giúp nhóm linh hoạt trước thay đổi, còn các bảng use case, database và test case trong báo cáo là cơ sở để triển khai, kiểm thử và nghiệm thu.
+
+\section{Hướng phát triển}
+\begin{itemize}
+  \item Bổ sung phân tích học tập nâng cao: biểu đồ tiến độ, tỷ lệ hoàn thành, câu hỏi khó, thời gian học trung bình và cảnh báo học viên có nguy cơ bỏ học.
+  \item Phát triển hệ thống chứng chỉ sau khi hoàn thành khóa học, kèm mã xác thực công khai.
+  \item Mở rộng bài kiểm tra với câu hỏi tự luận, rubric chấm điểm và phản hồi của giảng viên.
+  \item Tích hợp thông báo email hoặc push notification khi có thông báo mới, deadline test hoặc yêu cầu truy cập được duyệt.
+  \item Xây dựng mobile app hoặc PWA để học viên truy cập thuận tiện trên điện thoại.
+  \item Tối ưu bảo mật production: rate limiting, audit log, virus scan file upload, rotation JWT secret và chính sách backup dữ liệu.
+  \item Bổ sung recommendation engine đề xuất bài học dựa trên tiến độ, kết quả test và sở thích học tập.
+\end{itemize}
+
+\appendix
+\chapter{Phụ lục: Mẫu API và mã giả}
+\section{Ví dụ DTO tạo khóa học}
+\begin{lstlisting}[language=Java,caption={Ví dụ cấu trúc request tạo khóa học}]
+public class CreateCourseRequest {
+    private String title;
+    private String description;
+    private String visibility;
+    private Long thumbnailFileId;
+}
+\end{lstlisting}
+
+\section{Mã giả chấm điểm bài kiểm tra}
+\begin{lstlisting}[language=Java,caption={Mã giả chấm điểm phiên test}]
+score = 0
+for each question in test.questions:
+    correct = question.correctAnswerSet
+    submitted = session.answers[question.id]
+    if submitted == correct:
+        score += question.point
+session.status = SUBMITTED
+session.submittedAt = now()
+session.score = score
+save(session)
+\end{lstlisting}
+
+\end{document}
