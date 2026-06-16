@@ -293,6 +293,8 @@ public class LessonCompletionIntegrationTest extends BaseIntegrationTest {
     LessonEntity lesson =
         lessonRepository.save(new LessonEntity(module, "Lesson 1", LessonType.VIDEO, 0));
 
+    enrollmentRepository.save(new EnrollmentEntity(studentUser, publicCourse));
+
     // Call markComplete
     lessonCompletionService.markComplete(studentUser.getId(), lesson.getId());
 
@@ -308,5 +310,31 @@ public class LessonCompletionIntegrationTest extends BaseIntegrationTest {
             lessonCompletionRepository.existsById(
                 new LessonCompletionId(studentUser.getId(), lesson.getId())))
         .isTrue();
+  }
+
+  @Test
+  void shouldNotMarkLessonAsCompletedForUnenrolledUser() {
+    Course publicCourse =
+        courseRepository.save(
+            new Course(
+                "Public Active Course",
+                "Desc",
+                null,
+                true,
+                CourseVisibility.PUBLIC,
+                teacherA,
+                null));
+
+    ModuleEntity module = moduleRepository.save(new ModuleEntity(publicCourse, "Module 1", 0));
+    LessonEntity lesson =
+        lessonRepository.save(new LessonEntity(module, "Lesson 1", LessonType.VIDEO, 0));
+
+    // Call markComplete for teacher (not enrolled)
+    lessonCompletionService.markComplete(teacherA.getId(), lesson.getId());
+
+    assertThat(
+            lessonCompletionRepository.existsById(
+                new LessonCompletionId(teacherA.getId(), lesson.getId())))
+        .isFalse();
   }
 }
