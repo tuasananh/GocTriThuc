@@ -101,10 +101,10 @@ export function MainLayout() {
             <Link to={ROUTES.COURSES} className="hover:text-foreground transition-colors">
               Khóa học
             </Link>
-            <Link to="#" className="hover:text-foreground transition-colors">
+            <Link to={ROUTES.ABOUT} className="hover:text-foreground transition-colors">
               Giới thiệu
             </Link>
-            <Link to="#" className="hover:text-foreground transition-colors">
+            <Link to={ROUTES.HELP} className="hover:text-foreground transition-colors">
               Trợ giúp
             </Link>
           </nav>

@@ -2,6 +2,8 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { MainLayout } from '@/layouts/MainLayout';
 import { LandingPage } from '@/pages';
 import { LoginPage } from '@/pages/login';
+import { AboutPage } from '@/pages/about';
+import { HelpPage } from '@/pages/help';
 import { Dashboard } from '@/pages/dashboard';
 import { CourseListPage } from '@/pages/courses';
 import { CourseDetailPage } from '@/pages/course-detail';
@@ -41,6 +43,8 @@ function App() {
               {/* ── Public (với MainLayout) ────────────────── */}
               <Route element={<MainLayout />}>
                 <Route path={ROUTES.HOME} element={<LandingPage />} />
+                <Route path={ROUTES.ABOUT} element={<AboutPage />} />
+                <Route path={ROUTES.HELP} element={<HelpPage />} />
                 <Route path={ROUTES.COURSE_DETAIL(':id')} element={<CourseDetailPage />} />
                 <Route path={ROUTES.COURSES} element={<CourseListPage />} />
               </Route>
