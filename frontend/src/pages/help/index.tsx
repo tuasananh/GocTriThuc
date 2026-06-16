@@ -83,12 +83,14 @@ export function HelpPage() {
               </a>
             </li>
           </ul>
-          <p className="text-muted-foreground text-lg">
-            * Nếu muốn đăng ký làm giảng viên, hãy gửi email trực tiếp cho ngài Kilkuwu qua địa chỉ:{' '}
-            <a href="mailto:anh.tt2416124@sis.hust.edu.vn" className="text-primary hover:underline font-medium">
-              anh.tt2416124@sis.hust.edu.vn
-            </a>
-          </p>
+          <div className="p-4 bg-primary/10 border border-primary/20 rounded-lg mt-6">
+            <p className="text-foreground text-lg font-medium">
+              Nếu muốn đăng ký làm giảng viên, hãy gửi email trực tiếp cho ngài kilkuwu qua địa chỉ:{' '}
+              <a href="mailto:anh.tt2416124@sis.hust.edu.vn" className="text-primary hover:underline font-bold">
+                anh.tt2416124@sis.hust.edu.vn
+              </a>
+            </p>
+          </div>
         </div>
       </div>
     </PageShell>
