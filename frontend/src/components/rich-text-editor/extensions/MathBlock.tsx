@@ -6,9 +6,9 @@ import { useEffect, useRef, createElement } from 'react';
 // eslint-disable-next-line react-refresh/only-export-components
 const MathBlockRenderer = (props: {
   block: { props: { latex?: string } };
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   editor: {
     focus: () => void;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     updateBlock: (block: any, update: any) => void;
     isEditable: boolean;
   };
