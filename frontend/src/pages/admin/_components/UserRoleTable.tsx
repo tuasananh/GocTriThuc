@@ -42,7 +42,9 @@ export const UserRoleTable = () => {
   const [error, setError] = useState<string | null>(null);
   const auth = useAuth();
   const currentUserId = auth && auth.isAuthenticated ? auth.user.id : null;
-  const [pendingChange, setPendingChange] = useState<{ userId: string; newRole: string } | null>(null);
+  const [pendingChange, setPendingChange] = useState<{ userId: string; newRole: string } | null>(
+    null,
+  );
 
   const fetchUsers = useCallback(async () => {
     setLoading(true);
@@ -179,12 +181,17 @@ export const UserRoleTable = () => {
         </Table>
       </div>
 
-      <AlertDialog open={pendingChange !== null} onOpenChange={(open) => !open && setPendingChange(null)}>
+      <AlertDialog
+        open={pendingChange !== null}
+        onOpenChange={(open) => !open && setPendingChange(null)}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Xác nhận thay đổi quyền của bản thân</AlertDialogTitle>
             <AlertDialogDescription>
-              Bạn đang thay đổi vai trò của chính mình. Nếu thay đổi, bạn có thể mất quyền truy cập vào các chức năng quản trị và không thể tự khôi phục lại. Bạn có chắc chắn muốn tiếp tục?
+              Bạn đang thay đổi vai trò của chính mình. Nếu thay đổi, bạn có thể mất quyền truy cập
+              vào các chức năng quản trị và không thể tự khôi phục lại. Bạn có chắc chắn muốn tiếp
+              tục?
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
