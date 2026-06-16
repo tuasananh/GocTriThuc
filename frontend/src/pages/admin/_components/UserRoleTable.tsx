@@ -24,10 +24,27 @@ import { RoleBadge } from '@/components/RoleBadge';
 import { EmptyState } from '@/components/EmptyState';
 import { Users } from 'lucide-react';
 
+import { useAuth } from '@/contexts/AuthContext';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+
 export const UserRoleTable = () => {
   const [users, setUsers] = useState<AdminUserResponse[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const auth = useAuth();
+  const currentUserId = auth && auth.isAuthenticated ? auth.user.id : null;
+  const [pendingChange, setPendingChange] = useState<{ userId: string; newRole: string } | null>(
+    null,
+  );
 
   const fetchUsers = useCallback(async () => {
     setLoading(true);
@@ -47,7 +64,7 @@ export const UserRoleTable = () => {
     fetchUsers();
   }, [fetchUsers]);
 
-  const handleRoleChange = async (userId: string, newRole: string) => {
+  const executeRoleChange = async (userId: string, newRole: string) => {
     try {
       await api.put(`/api/admin/users/${userId}/role`, { role: newRole });
       toast.success('Cập nhật quyền thành công.');
@@ -60,9 +77,20 @@ export const UserRoleTable = () => {
           return u;
         }),
       );
+      if (userId === currentUserId && auth && auth.isAuthenticated) {
+        await auth.refreshUser();
+      }
     } catch {
       toast.error('Lỗi khi cập nhật quyền.');
     }
+  };
+
+  const handleRoleChange = async (userId: string, newRole: string) => {
+    if (userId === currentUserId) {
+      setPendingChange({ userId, newRole });
+      return;
+    }
+    await executeRoleChange(userId, newRole);
   };
 
   const getHighestRole = (roles: string[]) => {
@@ -96,60 +124,91 @@ export const UserRoleTable = () => {
   }
 
   return (
-    <div className="bg-card rounded-lg border shadow-sm overflow-hidden">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Người dùng</TableHead>
-            <TableHead>Email</TableHead>
-            <TableHead>Quyền hiện tại</TableHead>
-            <TableHead className="w-[180px]">Thay đổi phân quyền</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {users.map((user) => (
-            <TableRow key={user.id}>
-              <TableCell>
-                <div className="flex items-center gap-3">
-                  <Avatar className="h-8 w-8">
-                    <AvatarImage src={user.avatarUrl ?? undefined} />
-                    <AvatarFallback>
-                      {(user.displayName || user.username || 'U').charAt(0).toUpperCase()}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div className="flex flex-col">
-                    <span className="font-medium">{user.displayName || user.username}</span>
-                    <span className="text-xs text-muted-foreground">@{user.username}</span>
-                  </div>
-                </div>
-              </TableCell>
-              <TableCell className="text-muted-foreground">{user.email}</TableCell>
-              <TableCell>
-                <div className="flex gap-1 flex-wrap">
-                  {user.roles.map((r) => (
-                    <RoleBadge key={r} role={r} />
-                  ))}
-                </div>
-              </TableCell>
-              <TableCell>
-                <Select
-                  value={getHighestRole(user.roles)}
-                  onValueChange={(value) => handleRoleChange(user.id, value)}
-                >
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Chọn quyền" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="student">Học viên</SelectItem>
-                    <SelectItem value="teacher">Giảng viên</SelectItem>
-                    <SelectItem value="admin">Quản trị viên</SelectItem>
-                  </SelectContent>
-                </Select>
-              </TableCell>
+    <>
+      <div className="bg-card rounded-lg border shadow-sm overflow-hidden">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Người dùng</TableHead>
+              <TableHead>Email</TableHead>
+              <TableHead>Quyền hiện tại</TableHead>
+              <TableHead className="w-[180px]">Thay đổi phân quyền</TableHead>
             </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-    </div>
+          </TableHeader>
+          <TableBody>
+            {users.map((user) => (
+              <TableRow key={user.id}>
+                <TableCell>
+                  <div className="flex items-center gap-3">
+                    <Avatar className="h-8 w-8">
+                      <AvatarImage src={user.avatarUrl ?? undefined} />
+                      <AvatarFallback>
+                        {(user.displayName || user.username || 'U').charAt(0).toUpperCase()}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="flex flex-col">
+                      <span className="font-medium">{user.displayName || user.username}</span>
+                      <span className="text-xs text-muted-foreground">@{user.username}</span>
+                    </div>
+                  </div>
+                </TableCell>
+                <TableCell className="text-muted-foreground">{user.email}</TableCell>
+                <TableCell>
+                  <div className="flex gap-1 flex-wrap">
+                    {user.roles.map((r) => (
+                      <RoleBadge key={r} role={r} />
+                    ))}
+                  </div>
+                </TableCell>
+                <TableCell>
+                  <Select
+                    value={getHighestRole(user.roles)}
+                    onValueChange={(value) => handleRoleChange(user.id, value)}
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Chọn quyền" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="student">Học viên</SelectItem>
+                      <SelectItem value="teacher">Giảng viên</SelectItem>
+                      <SelectItem value="admin">Quản trị viên</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
+
+      <AlertDialog
+        open={pendingChange !== null}
+        onOpenChange={(open) => !open && setPendingChange(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Xác nhận thay đổi quyền của bản thân</AlertDialogTitle>
+            <AlertDialogDescription>
+              Bạn đang thay đổi vai trò của chính mình. Nếu thay đổi, bạn có thể mất quyền truy cập
+              vào các chức năng quản trị và không thể tự khôi phục lại. Bạn có chắc chắn muốn tiếp
+              tục?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Hủy</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (pendingChange) {
+                  executeRoleChange(pendingChange.userId, pendingChange.newRole);
+                  setPendingChange(null);
+                }
+              }}
+            >
+              Tiếp tục
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 };
