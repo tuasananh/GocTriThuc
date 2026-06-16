@@ -77,6 +77,12 @@ public class LessonCompletionService {
             .findById(lessonId)
             .orElseThrow(
                 () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Lesson not found"));
+
+    Long courseId = lesson.getModule().getCourse().getId();
+    if (!enrollmentRepo.existsById(new EnrollmentId(userId, courseId))) {
+      return; // if not enrolled, do not mark complete (e.g. instructor or admin)
+    }
+
     User user =
         userRepo
             .findById(userId)

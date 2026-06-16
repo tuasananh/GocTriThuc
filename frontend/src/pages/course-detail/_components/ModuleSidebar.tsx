@@ -27,6 +27,8 @@ interface ModuleSidebarProps {
   courseId: string;
   /** Cho phép hiển thị — chỉ render khi enrolled/author/admin */
   visible: boolean;
+  isAuthor?: boolean;
+  isAdmin?: boolean;
 }
 
 async function loadModules(courseId: string): Promise<ModuleDto[]> {
@@ -40,7 +42,12 @@ async function loadModules(courseId: string): Promise<ModuleDto[]> {
  * Accordion hiển thị danh sách modules/lessons cho trang Course Detail.
  * Chỉ hiển thị khi user enrolled, là tác giả, hoặc admin.
  */
-export function ModuleSidebar({ courseId, visible }: ModuleSidebarProps) {
+export function ModuleSidebar({
+  courseId,
+  visible,
+  isAuthor = false,
+  isAdmin = false,
+}: ModuleSidebarProps) {
   const navigate = useNavigate();
   const [modules, setModules] = useState<ModuleDto[]>([]);
   const [loading, setLoading] = useState(true);
@@ -133,6 +140,8 @@ export function ModuleSidebar({ courseId, visible }: ModuleSidebarProps) {
     0,
   );
 
+  console.log('Is author, admin', isAuthor, isAdmin);
+
   return (
     <section className="mt-12" aria-label="Nội dung khóa học">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
@@ -141,7 +150,7 @@ export function ModuleSidebar({ courseId, visible }: ModuleSidebarProps) {
           <span>
             {modules.length} học phần • {totalLessons} bài học
           </span>
-          {completedLessons > 0 && (
+          {!isAuthor && !isAdmin && completedLessons > 0 && (
             <Badge variant="secondary" className="gap-1">
               <CheckCircle2 className="w-3 h-3" />
               {completedLessons}/{totalLessons}
@@ -186,6 +195,7 @@ export function ModuleSidebar({ courseId, visible }: ModuleSidebarProps) {
                       onClick={() => {
                         navigate(ROUTES.LESSON(courseId, lesson.id));
                       }}
+                      showCompletion={!isAuthor && !isAdmin}
                     />
                   ))}
                 </div>
@@ -210,7 +220,15 @@ const lessonTypeConfig = {
   test: { icon: CheckSquare, label: 'Bài kiểm tra', color: 'text-amber-500' },
 } as const;
 
-function LessonRow({ lesson, onClick }: { lesson: LessonDto; onClick: () => void }) {
+function LessonRow({
+  lesson,
+  onClick,
+  showCompletion,
+}: {
+  lesson: LessonDto;
+  onClick: () => void;
+  showCompletion: boolean;
+}) {
   const config = lessonTypeConfig[lesson.type] || lessonTypeConfig.blog;
   const Icon = config.icon;
 
@@ -222,13 +240,15 @@ function LessonRow({ lesson, onClick }: { lesson: LessonDto; onClick: () => void
       aria-label={`${lesson.title} — ${config.label}`}
     >
       {/* Completion indicator */}
-      <span className="shrink-0">
-        {lesson.completed ? (
-          <CheckCircle2 className="w-4 h-4 text-emerald-500" />
-        ) : (
-          <Circle className="w-4 h-4 text-muted-foreground/40" />
-        )}
-      </span>
+      {showCompletion && (
+        <span className="shrink-0">
+          {lesson.completed ? (
+            <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+          ) : (
+            <Circle className="w-4 h-4 text-muted-foreground/40" />
+          )}
+        </span>
+      )}
 
       {/* Lesson type icon */}
       <Icon className={`w-4 h-4 shrink-0 ${config.color}`} />

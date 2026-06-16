@@ -339,6 +339,8 @@ export function CourseDetailPage() {
               <ModuleSidebar
                 courseId={id!}
                 visible={accessStatus === 'enrolled' || isAuthor || isAdmin}
+                isAuthor={isAuthor}
+                isAdmin={isAdmin}
               />
             </TabsContent>
 
