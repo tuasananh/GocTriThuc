@@ -11,7 +11,7 @@ const InlineMathRenderer = ({
 }: {
   inlineContent: { props: { latex?: string } };
   updateInlineContent: (content: { type: 'inlineMath'; props: { latex: string } }) => void;
-  editor: { focus: () => void };
+  editor: { focus: () => void; isEditable: boolean };
   contentRef: React.Ref<HTMLSpanElement>;
 }) => {
   const latex = inlineContent.props.latex ?? '';
@@ -19,7 +19,7 @@ const InlineMathRenderer = ({
 
   useEffect(() => {
     const mathField = ref.current;
-    if (!mathField) return;
+    if (!mathField || !editor.isEditable) return;
 
     let timeoutId: ReturnType<typeof setTimeout> | undefined;
     if (!inlineContent.props.latex) {
@@ -42,10 +42,17 @@ const InlineMathRenderer = ({
 
   return (
     <span ref={contentRef} className="inline-block rounded-sm">
+      <style>{`
+        .inline-math-field::part(container) {
+          padding: 0;
+        }
+      `}</style>
       {createElement(
         'math-field',
         {
           ref,
+          class: 'inline-math-field',
+          'read-only': !editor.isEditable || undefined,
           onInput: (evt: Event) => {
             const target = evt.target as HTMLInputElement | null;
             const value = target && 'value' in target ? (target.value as string) : '';

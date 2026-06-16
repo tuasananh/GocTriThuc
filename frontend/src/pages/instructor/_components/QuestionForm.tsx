@@ -239,7 +239,7 @@ export function QuestionForm({ onSaved, initialData }: QuestionFormProps) {
             return (
               <div
                 key={i}
-                className={`flex items-start gap-3 p-3 rounded-lg border transition-all duration-200 ${
+                className={`flex items-center gap-3 p-3 rounded-lg border transition-all duration-200 ${
                   isCorrect
                     ? 'border-green-500/40 bg-green-50/60 dark:bg-green-900/10'
                     : 'border-border/60 bg-background hover:bg-muted/20'
@@ -249,7 +249,7 @@ export function QuestionForm({ onSaved, initialData }: QuestionFormProps) {
                 <button
                   type="button"
                   onClick={() => toggleCorrect(i)}
-                  className={`mt-2 shrink-0 w-5 h-5 rounded-${isSingleChoice ? 'full' : 'sm'} border-2 transition-all duration-150 flex items-center justify-center ${
+                  className={`shrink-0 w-5 h-5 rounded-${isSingleChoice ? 'full' : 'sm'} border-2 transition-all duration-150 flex items-center justify-center ${
                     isCorrect
                       ? 'border-green-500 bg-green-500 text-white'
                       : 'border-muted-foreground/40 bg-background hover:border-primary/60'
@@ -276,7 +276,9 @@ export function QuestionForm({ onSaved, initialData }: QuestionFormProps) {
                 {/* Input đáp án */}
                 <div className="flex-1 min-w-0">
                   <RichTextEditor
-                    className="min-h-[120px] !bg-transparent !border-0 !shadow-none"
+                    className="min-h-[48px] !bg-transparent !border-0 !shadow-none"
+                    noPadding
+                    hideSideMenu
                     key={choiceIds[i] || `choice-${i}-${editorKey}`}
                     initialHtml={choice}
                     onChange={async (editor) => {

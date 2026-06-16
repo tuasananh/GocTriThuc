@@ -54,7 +54,7 @@ export function RichTextViewer({ htmlContent, className, emptyMessage }: RichTex
       }
 
       try {
-        const blocks = await editor.tryParseHTMLToBlocks(parsedContent);
+        const blocks = editor.tryParseHTMLToBlocks(parsedContent);
         if (!cancelled) {
           editor.replaceBlocks(editor.document, blocks);
         }

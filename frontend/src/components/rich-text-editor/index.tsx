@@ -17,9 +17,9 @@ import { Calculator } from 'lucide-react';
 import { useCallback, useRef, useEffect, useMemo } from 'react';
 import { codeBlockOptions } from '@blocknote/code-block';
 
-// import '@blocknote/core/fonts/inter.css';
 import '@blocknote/shadcn/style.css';
 import 'mathlive';
+import { useTheme } from 'next-themes';
 
 const schema = BlockNoteSchema.create({
   inlineContentSpecs: {
@@ -83,6 +83,10 @@ interface RichTextEditorProps {
   initialHtml?: string;
   onChange?: (editor: typeof schema.BlockNoteEditor) => void;
   className?: string;
+  /** Remove inner padding for compact/embedded use cases */
+  noPadding?: boolean;
+  /** Hide the side menu (+ / drag handle) and remove its reserved left padding */
+  hideSideMenu?: boolean;
 }
 
 export function RichTextEditor({
@@ -90,6 +94,8 @@ export function RichTextEditor({
   initialHtml,
   onChange,
   className,
+  noPadding,
+  hideSideMenu,
 }: RichTextEditorProps) {
   const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastSaveTimeRef = useRef<number>(0);
@@ -172,6 +178,9 @@ export function RichTextEditor({
     }
   }, [storageKey, saveToStorage, onChange, editor]);
 
+  const { resolvedTheme } = useTheme();
+  const theme = resolvedTheme === 'dark' ? 'dark' : 'light';
+
   return (
     <div
       className={`w-full h-full border border-border rounded-xl shadow-sm bg-background flex flex-col ${className || 'min-h-[500px]'}`}
@@ -192,12 +201,18 @@ export function RichTextEditor({
           background: transparent !important;
           --bn-colors-editor-background: transparent !important;
         }
+        .no-side-menu .bn-editor {
+          padding-inline-start: 0 !important;
+        }
       `}</style>
-      <div className="p-4 flex-1 transparent-bg">
+      <div
+        className={`flex-1 transparent-bg ${noPadding ? '' : 'p-4'} ${hideSideMenu ? 'no-side-menu' : ''}`}
+      >
         <BlockNoteView
           editor={editor}
           slashMenu={false}
-          theme="light"
+          sideMenu={!hideSideMenu}
+          theme={theme}
           onChange={handleEditorChange}
         >
           <SuggestionMenuController

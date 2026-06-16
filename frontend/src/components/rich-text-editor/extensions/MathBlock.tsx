@@ -7,14 +7,18 @@ import { useEffect, useRef, createElement } from 'react';
 const MathBlockRenderer = (props: {
   block: { props: { latex?: string } };
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  editor: { focus: () => void; updateBlock: (block: any, update: any) => void };
+  editor: {
+    focus: () => void;
+    updateBlock: (block: any, update: any) => void;
+    isEditable: boolean;
+  };
 }) => {
   const latex = props.block.props.latex ?? '';
   const ref = useRef<MathfieldElement>(null);
 
   useEffect(() => {
     const mathField = ref.current;
-    if (!mathField) return;
+    if (!mathField || !props.editor.isEditable) return;
 
     let timeoutId: ReturnType<typeof setTimeout> | undefined;
     if (!props.block.props.latex) {
@@ -36,11 +40,22 @@ const MathBlockRenderer = (props: {
   }, [props.editor, props.block.props.latex]);
 
   return (
-    <div className="w-full flex justify-center py-4 my-2 rounded-md" data-math-block="true">
+    <div className="w-full flex justify-center py-1 rounded-md" data-math-block="true">
+      <style>{`
+        [data-math-block="true"] math-field::part(container) {
+          border: none !important;
+          outline: none !important;
+          box-shadow: none !important;
+        }
+        [data-math-block="true"] math-field {
+          --highlight-color: transparent;
+        }
+      `}</style>
       {createElement(
         'math-field',
         {
           ref,
+          'read-only': !props.editor.isEditable || undefined,
           onInput: (evt: Event) => {
             const target = evt.target as HTMLInputElement | null;
             const value = target && 'value' in target ? (target.value as string) : '';
@@ -51,8 +66,6 @@ const MathBlockRenderer = (props: {
           },
           style: {
             width: '100%',
-            minHeight: '3em',
-            padding: '0.5em',
             fontSize: '1.2em',
             color: 'inherit',
             background: 'transparent',
@@ -80,6 +93,21 @@ export const MathBlock = createReactBlockSpec(
   } as const,
   {
     render: MathBlockRenderer,
+    parse: (element) => {
+      // Match the wrapper div produced by toExternalHTML
+      if (
+        element instanceof HTMLElement &&
+        (element.classList.contains('math-block-wrapper') || element.hasAttribute('data-latex'))
+      ) {
+        const latex =
+          element.getAttribute('data-latex') ??
+          element.querySelector('[data-latex]')?.getAttribute('data-latex') ??
+          element.textContent ??
+          '';
+        return { latex };
+      }
+      return undefined;
+    },
     toExternalHTML: (props) => {
       return createElement(
         'div',
