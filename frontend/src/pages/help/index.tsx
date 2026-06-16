@@ -51,7 +51,7 @@ export function HelpPage() {
           <p className="text-muted-foreground text-lg mb-4">
             Nếu bạn không tìm thấy câu trả lời, hãy liên hệ trực tiếp với các thành viên trong đội ngũ hỗ trợ của chúng tôi:
           </p>
-          <ul className="list-disc pl-6 space-y-2 text-lg text-muted-foreground">
+          <ul className="list-disc pl-6 space-y-2 text-lg text-muted-foreground mb-6">
             <li>
               Trần Tuấn Anh -{' '}
               <a href="mailto:anh.tt2416124@sis.hust.edu.vn" className="text-primary hover:underline font-medium">
@@ -83,6 +83,12 @@ export function HelpPage() {
               </a>
             </li>
           </ul>
+          <p className="text-muted-foreground text-lg">
+            * Nếu muốn đăng ký làm giảng viên, hãy gửi email trực tiếp cho ngài Kilkuwu qua địa chỉ:{' '}
+            <a href="mailto:anh.tt2416124@sis.hust.edu.vn" className="text-primary hover:underline font-medium">
+              anh.tt2416124@sis.hust.edu.vn
+            </a>
+          </p>
         </div>
       </div>
     </PageShell>
